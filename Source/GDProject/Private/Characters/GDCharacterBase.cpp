@@ -3,18 +3,24 @@
 
 #include "Characters/GDCharacterBase.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
 
 #include "GameplayEffect.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
+#include "Components/CapsuleComponent.h"
+#include "GDProject/GDProject.h"
 
 AGDCharacterBase::AGDCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
 
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 	WeaponComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
 	WeaponComponent->SetupAttachment(GetMesh(), FName(TEXT("WeaponHandSocket")));
 	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::Type::NoCollision);
+
+	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 }
 
 void AGDCharacterBase::PossessedBy(AController* NewController)

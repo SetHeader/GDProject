@@ -3,6 +3,8 @@
 
 #include "AbilitySystem/Abilities/CastSpellAbility.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
+#include "AbilitySystemComponent.h"
 #include "Actor/GDProjectile.h"
 #include "Characters/GDCharacterBase.h"
 
@@ -32,6 +34,9 @@ void UCastSpellAbility::SpawnProjectile(const FRotator Rotation)
 		GetOwningActorFromActorInfo(),
 		Cast<APawn>(GetOwningActorFromActorInfo()),
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+
+	UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
+	Projectile->DamageEffectHandle = SourceASC->MakeOutgoingSpec(EffectClass, GetAbilityLevel(), SourceASC->MakeEffectContext());
 	
 	Projectile->FinishSpawning(SpawnTransform);
 }

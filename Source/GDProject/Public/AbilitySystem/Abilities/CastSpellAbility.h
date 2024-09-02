@@ -20,6 +20,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "CastSpellAbility")
 	TSubclassOf<AGDProjectile> ProjectileClass;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "CastSpellAbility")
+	TSubclassOf<UGameplayEffect> EffectClass;
 protected:
 	/**
 	 * 朝某个方向生成发射物，只在服务端生成发射物

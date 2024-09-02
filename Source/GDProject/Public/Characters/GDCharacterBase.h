@@ -25,7 +25,7 @@ class GDPROJECT_API AGDCharacterBase : public ACharacter, public IAbilitySystemI
 public:
 	AGDCharacterBase();
 
-	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDCharacterBase")
+	UPROPERTY(BlueprintReadOnly, Category = "GDCharacterBase")
 	TObjectPtr<USkeletalMeshComponent> WeaponComponent;
 
 	/// @brief 初始时 拥有的能力
