@@ -29,7 +29,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")
 	UAbilitySystemComponent* SourceASC = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")
-	AActor* SourceActor = nullptr;
+	AActor* SourceAvatarActor = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")
 	AController* SourceController = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")
@@ -39,7 +39,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")
 	UAbilitySystemComponent* TargetASC = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")
-	AActor* TargetActor = nullptr;
+	AActor* TargetAvatarActor = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")
 	AController* TargetController = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "EffectProperties")

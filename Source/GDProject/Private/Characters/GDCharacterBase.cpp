@@ -50,6 +50,27 @@ UAnimMontage* AGDCharacterBase::GetHitReactMontage_Implementation()
 	return HitReactMontage;
 }
 
+void AGDCharacterBase::Die()
+{
+	// 分离武器，让武器掉到地上
+	WeaponComponent->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));;
+	MulticastHandleDeath();
+}
+
+void AGDCharacterBase::MulticastHandleDeath_Implementation()
+{
+	WeaponComponent->SetSimulatePhysics(true);
+	WeaponComponent->SetEnableGravity(true);
+	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	// 先打开模拟物理，再设置碰撞检测包含物理，就能进入布娃娃状态，不会使用角色动画
+	GetMesh()->SetEnableGravity(true);
+	GetMesh()->SetSimulatePhysics(true);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+	GetMesh()->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
+	
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+}
+
 void AGDCharacterBase::InitializeAttributes() const
 {
 	check(ASC);

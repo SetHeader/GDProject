@@ -7,6 +7,8 @@
 #include "GameplayEffect.h"
 #include "GDGameplayTags.h"
 #include "GameFramework/Character.h"
+#include "Interaction/CombatInterface.h"
+#include "Math/UnitConversion.h"
 
 
 UGDAttributeSetBase::UGDAttributeSetBase()
@@ -70,9 +72,16 @@ void UGDAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 			const float NewHealth = GetHealth() - LocalIncomingDamage;
 			SetHealth(FMath::Clamp(NewHealth, 0, GetMaxHealth()));
 			const bool bFatal = NewHealth <= 0.f;
-			// 触发受击反应
-			if (!bFatal)
+			// 触发角色死亡
+			if (bFatal)
 			{
+				if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor))
+				{
+					CombatInterface->Die();
+				} 
+			} else
+			{
+				// 触发受击反应
 				FGameplayTagContainer TagContainer;
 				TagContainer.AddTag(FGDGameplayTags::Get().Effects_HitReact);
 				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
@@ -110,16 +119,16 @@ void UGDAttributeSetBase::SetEffectProperties(const FGameplayEffectModCallbackDa
 {
 	OutProps.EffectContextHandle = InData.EffectSpec.GetContext();
 	OutProps.SourceASC = InData.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
-	OutProps.SourceActor = OutProps.SourceASC->GetAvatarActor();
+	OutProps.SourceAvatarActor = OutProps.SourceASC->GetAvatarActor();
 
-	if (ACharacter* Character = Cast<ACharacter>(OutProps.SourceActor)) {
+	if (ACharacter* Character = Cast<ACharacter>(OutProps.SourceAvatarActor)) {
 		OutProps.SourceCharacter = Character;
 		OutProps.SourceController = Character->GetController();
 	}
 
 	OutProps.TargetASC = &InData.Target;
-	OutProps.TargetActor = InData.Target.GetAvatarActor();
-	if (ACharacter* Character = Cast<ACharacter>(OutProps.TargetActor)) {
+	OutProps.TargetAvatarActor = InData.Target.GetAvatarActor();
+	if (ACharacter* Character = Cast<ACharacter>(OutProps.TargetAvatarActor)) {
 		OutProps.TargetCharacter = Character;
 		OutProps.TargetController = Character->GetController();
 	}

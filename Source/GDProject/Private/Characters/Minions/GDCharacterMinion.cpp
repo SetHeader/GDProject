@@ -91,6 +91,12 @@ void AGDCharacterMinion::HitReactTagChanged(const FGameplayTag CallbackTag, int3
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
 }
 
+void AGDCharacterMinion::Die()
+{
+	SetLifeSpan(LifeSpan);
+	Super::Die();
+}
+
 void AGDCharacterMinion::InitializeAttributes() const
 {
 	UGDAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, ASC);

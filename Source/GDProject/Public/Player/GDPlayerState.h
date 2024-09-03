@@ -16,7 +16,7 @@ struct FGDASBase;
  * 
  */
 UCLASS()
-class GDPROJECT_API AGDPlayerState : public APlayerState, public IAbilitySystemInterface, public ICombatInterface
+class GDPROJECT_API AGDPlayerState : public APlayerState, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -42,7 +42,7 @@ public:
 	virtual UGDAttributeSetBase* GetGDASBase() const { return AS; };
 
 	UFUNCTION(BlueprintCallable, Category = "CombatInterface")
-	FORCEINLINE int32 GetPlayerLevel() const override { return Level; }
+	FORCEINLINE int32 GetPlayerLevel() const { return Level; }
 
 	/* 获取AS中的属性 */
 
