@@ -4,7 +4,7 @@
 #include "UI/Widget/GDUserWidget.h"
 #include "UI/WidgetController/GDWidgetController.h"
 
-void UGDUserWidget::SetWidgetController(UGDWidgetController* InWidgetController)
+void UGDUserWidget::SetWidgetController(UObject* InWidgetController)
 {
 	if (!InWidgetController)
 	{
@@ -15,7 +15,4 @@ void UGDUserWidget::SetWidgetController(UGDWidgetController* InWidgetController)
 	WidgetController = InWidgetController;
 	// 通知控制器设置完成
 	OnWidgetControllerSet();
-	
-	// 通知属性初始化
-	WidgetController->BroadcastInitialValues();
 }

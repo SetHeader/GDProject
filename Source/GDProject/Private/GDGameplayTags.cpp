@@ -71,4 +71,10 @@ void FGDGameplayTags::InitializeGameplayTags()
 	InputTag_2 = FGameplayTag::RequestGameplayTag(FName("InputTag.2"));
 	InputTag_3 = FGameplayTag::RequestGameplayTag(FName("InputTag.3"));
 	InputTag_4 = FGameplayTag::RequestGameplayTag(FName("InputTag.4"));
+
+	/*
+	 * 伤害
+	 */
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage"), FString("Damage"));
+	Damage = FGameplayTag::RequestGameplayTag(FName("Damage"));
 }

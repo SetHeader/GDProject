@@ -37,8 +37,8 @@ float UMMC_MaxMana::CalculateBaseMagnitude_Implementation(const FGameplayEffectS
 	Intelligence = FMath::Max<float>(Intelligence, 0.0f);
 
 
-	if (AGDCharacterHero* Hero = Cast<AGDCharacterHero>(Spec.GetContext().GetSourceObject())) {
-		return  50 + 2 * Intelligence + Hero->GetPlayerLevel() * 4;
+	if (AGDCharacterBase* Character = Cast<AGDCharacterBase>(Spec.GetContext().GetSourceObject())) {
+		return  50 + 2 * Intelligence + Character->GetPlayerLevel() * 4;
 	}
 
 	return 0;

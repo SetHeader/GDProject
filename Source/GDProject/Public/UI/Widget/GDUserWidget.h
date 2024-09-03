@@ -8,9 +8,6 @@
 
 class UGDWidgetController;
 
-/**
- * 
- */
 UCLASS()
 class GDPROJECT_API UGDUserWidget : public UUserWidget
 {
@@ -18,11 +15,11 @@ class GDPROJECT_API UGDUserWidget : public UUserWidget
 	
 public:
 	UPROPERTY(BlueprintReadOnly)
-	TObjectPtr<UGDWidgetController> WidgetController;
+	TObjectPtr<UObject> WidgetController;
 	
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetWidgetController(UGDWidgetController* InWidgetController);
+	void SetWidgetController(UObject* InWidgetController);
 
 protected:
 	UFUNCTION(BlueprintImplementableEvent)

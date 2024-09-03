@@ -187,6 +187,13 @@ public:
 	FGameplayAttributeData Stamina;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Stamina)
 
+	/**
+	 * Meta Attribute
+	 */
+	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase")
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, IncomingDamage)
+
 	/* 客户端属性变化通知 */
 
 	UPROPERTY(BlueprintAssignable, Category = "GDAttributeSetBase")

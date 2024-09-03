@@ -15,6 +15,9 @@ class GDPROJECT_API UGDGameplayAbility : public UGameplayAbility
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category="GDGameplayAbilit")
-	FGameplayTag SetupTag;
+	UPROPERTY(EditDefaultsOnly, Category="GDGameplayAbility")
+	FGameplayTag SetupInputTag;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GDGameplayAbility")
+	FScalableFloat Damage;
 };

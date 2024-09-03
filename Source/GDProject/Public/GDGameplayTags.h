@@ -13,46 +13,31 @@ struct FGDGameplayTags
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY()
+	/** 属性相关 */
 	FGameplayTag Attribute_Primary_Strength;
-	UPROPERTY()
 	FGameplayTag Attribute_Primary_Intelligence;
-	UPROPERTY()
 	FGameplayTag Attribute_Primary_Resilience;
-	UPROPERTY()
 	FGameplayTag Attribute_Primary_Vigor;
 	
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_Armor;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_ArmorPenetration;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_BlockChange;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_CriticalHitChange;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_CriticalHitDamage;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_CriticalHitResistance;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_HealthRegeneration;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_ManaRegeneration;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_MaxHealth;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_MaxMana;
-	UPROPERTY()
 	FGameplayTag Attribute_Secondary_MaxStamina;
 
-	UPROPERTY()
 	FGameplayTag Attribute_Vital_Health;
-	UPROPERTY()
 	FGameplayTag Attribute_Vital_Mana;
-	UPROPERTY()
 	FGameplayTag Attribute_Vital_Stamina;
 
+	FGameplayTag Damage;
 
+	/** 输入相关 */
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
 	FGameplayTag InputTag_1;

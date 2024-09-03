@@ -11,6 +11,7 @@ class UAbilitySystemComponent;
 class UAttributeSet;
 class UGDWidgetController;
 class UGDOverlayWidgetController;
+class UGDAttributeMenuWidgetController;
 
 /**
  * 

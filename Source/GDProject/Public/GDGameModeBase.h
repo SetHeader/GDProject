@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "GDGameModeBase.generated.h"
 
+class UCharacterClassInfo;
 /**
  * 
  */
@@ -15,6 +16,8 @@ class GDPROJECT_API AGDGameModeBase : public AGameModeBase
 	GENERATED_BODY()
 	
 	
-	
+public:
+	UPROPERTY(EditDefaultsOnly, Category="GDGameModeBase")
+	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 	
 };

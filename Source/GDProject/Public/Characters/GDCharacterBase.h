@@ -25,17 +25,19 @@ class GDPROJECT_API AGDCharacterBase : public ACharacter, public IAbilitySystemI
 public:
 	AGDCharacterBase();
 
-	UPROPERTY(BlueprintReadOnly, Category = "GDCharacterBase")
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "GDCharacterBase")
 	TObjectPtr<USkeletalMeshComponent> WeaponComponent;
 
 	/// @brief 初始时 拥有的能力
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GDCharacterBase")
 	TArray<TSubclassOf<UGameplayAbility>> SetupAbilities;
 
+	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> ASC;
+	UPROPERTY()
 	TObjectPtr<UGDAttributeSetBase> AS;
 
-	UPROPERTY(EditDefaultsOnly, Category="GDCharaterBase")
+	UPROPERTY(EditDefaultsOnly, Category="GDCharacterBase")
 	FName WeaponTipSocketName;
 	
 protected:
@@ -55,5 +57,5 @@ public:
 
 	void AddCharacterAbilities();
 protected:
-	void InitializeAttributes() const;
+	virtual void InitializeAttributes() const;
 };

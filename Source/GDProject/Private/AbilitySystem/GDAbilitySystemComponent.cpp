@@ -20,7 +20,7 @@ void UGDAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<U
 		FGameplayAbilitySpec Ability = FGameplayAbilitySpec(AbilityClass, 1);
 		if (UGDGameplayAbility* GDAbility = Cast<UGDGameplayAbility>(Ability.Ability))
 		{
-			Ability.DynamicAbilityTags.AddTag(GDAbility->SetupTag);
+			Ability.DynamicAbilityTags.AddTag(GDAbility->SetupInputTag);
 		}
 		GiveAbility(Ability);
 	}

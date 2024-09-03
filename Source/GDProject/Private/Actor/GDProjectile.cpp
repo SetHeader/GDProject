@@ -48,6 +48,7 @@ void AGDProjectile::Destroyed()
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, ImpactSound, GetActorLocation());
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
+		bool b = AudioComponent.operator bool();
 		if (AudioComponent) AudioComponent->Stop();
 	}
 	Super::Destroyed();

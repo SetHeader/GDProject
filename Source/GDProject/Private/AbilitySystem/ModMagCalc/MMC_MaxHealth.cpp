@@ -37,8 +37,8 @@ float UMMC_MaxHealth::CalculateBaseMagnitude_Implementation(const FGameplayEffec
 	Vigor = FMath::Max<float>(Vigor, 0.0f);
 
 
-	if (AGDCharacterHero* Hero = Cast<AGDCharacterHero>(Spec.GetContext().GetSourceObject())) {
-		return  80 + 2.5 * Vigor + Hero->GetPlayerLevel() * 5;
+	if (AGDCharacterBase* Character = Cast<AGDCharacterBase>(Spec.GetContext().GetSourceObject())) {
+		return  80 + 2.5 * Vigor + Character->GetPlayerLevel() * 5;
 	}
 
 	return 0;
