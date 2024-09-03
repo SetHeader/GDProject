@@ -15,7 +15,9 @@
 	GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
 	GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
 
-
+/**
+ * 封装常用对象，方便后续获取
+ */
 USTRUCT(BlueprintType)
 struct FEffectProperties {
 	GENERATED_BODY()

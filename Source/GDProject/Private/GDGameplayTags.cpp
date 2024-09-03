@@ -77,4 +77,9 @@ void FGDGameplayTags::InitializeGameplayTags()
 	 */
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage"), FString("Damage"));
 	Damage = FGameplayTag::RequestGameplayTag(FName("Damage"));
+	/*
+	 * 击中反应
+	 */
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Effects.HitReact"), FString("HitReact"));
+	Effects_HitReact = FGameplayTag::RequestGameplayTag(FName("Effects.HitReact"));
 }

@@ -63,3 +63,24 @@ void UGDAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldCo
 	ASC->ApplyGameplayEffectSpecToSelf(*VitalEffectSpecHandle.Data);
 	
 }
+
+void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
+{
+	checkf(WorldContextObject, TEXT("WorldContextObject is null"));
+	checkf(ASC, TEXT("ASC is null"));
+	
+	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!IsValid(GDGameMode))
+	{
+		return;
+	}
+
+	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
+	checkf(ClassInfo, TEXT("ClassInfo is null"));
+
+	for (TSubclassOf<UGameplayAbility> CommonAbility : ClassInfo->CommonAbilities)
+	{
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(CommonAbility, 1);
+		ASC->GiveAbility(AbilitySpec);
+	}
+}

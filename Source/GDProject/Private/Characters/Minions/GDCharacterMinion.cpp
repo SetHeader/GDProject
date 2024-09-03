@@ -3,10 +3,12 @@
 
 #include "Characters/Minions/GDCharacterMinion.h"
 #include "AbilitySystemComponent.h"
+#include "GDGameplayTags.h"
 #include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "Components/WidgetComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "UI/Widget/GDUserWidget.h"
 
 AGDCharacterMinion::AGDCharacterMinion()
@@ -26,11 +28,13 @@ AGDCharacterMinion::AGDCharacterMinion()
 void AGDCharacterMinion::BeginPlay()
 {
 	Super::BeginPlay();
+	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	
 	ASC->InitAbilityActorInfo(this, this);
 	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
 	InitializeAttributes();
-
+	UGDAbilitySystemLibrary::GiveStartupAbilities(this, ASC);
+	
 	if (UGDUserWidget* AuraUserWidget = Cast<UGDUserWidget>(WidgetComponent->GetUserWidgetObject()))
 	{
 		AuraUserWidget->SetWidgetController(this);
@@ -39,6 +43,8 @@ void AGDCharacterMinion::BeginPlay()
 		BroadcastInitialValues();
 	}
 
+	ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved)
+		.AddUObject(this, &AGDCharacterMinion::HitReactTagChanged);
 }
 
 void AGDCharacterMinion::HighlightActor()
@@ -77,6 +83,12 @@ void AGDCharacterMinion::BindCallbacksToDependencies() const
 	{
 		OnMaxHealthChanged.Broadcast(ChangedData.NewValue);
 	});
+}
+
+void AGDCharacterMinion::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	bHitReacting = NewCount > 0;
+	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
 }
 
 void AGDCharacterMinion::InitializeAttributes() const

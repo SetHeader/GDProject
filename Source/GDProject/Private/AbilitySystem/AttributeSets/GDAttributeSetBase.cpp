@@ -70,6 +70,13 @@ void UGDAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 			const float NewHealth = GetHealth() - LocalIncomingDamage;
 			SetHealth(FMath::Clamp(NewHealth, 0, GetMaxHealth()));
 			const bool bFatal = NewHealth <= 0.f;
+			// 触发受击反应
+			if (!bFatal)
+			{
+				FGameplayTagContainer TagContainer;
+				TagContainer.AddTag(FGDGameplayTags::Get().Effects_HitReact);
+				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+			}
 		}
 	}
 }
@@ -101,21 +108,20 @@ void UGDAttributeSetBase::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
 void UGDAttributeSetBase::SetEffectProperties(const FGameplayEffectModCallbackData& InData, FEffectProperties& OutProps)
 {
-	FEffectProperties Properties;
-	Properties.EffectContextHandle = InData.EffectSpec.GetContext();
-	Properties.SourceASC = InData.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
-	Properties.SourceActor = Properties.SourceASC->GetAvatarActor();
+	OutProps.EffectContextHandle = InData.EffectSpec.GetContext();
+	OutProps.SourceASC = InData.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
+	OutProps.SourceActor = OutProps.SourceASC->GetAvatarActor();
 
-	if (ACharacter* Character = Cast<ACharacter>(Properties.SourceActor)) {
-		Properties.SourceCharacter = Character;
-		Properties.SourceController = Character->GetController();
+	if (ACharacter* Character = Cast<ACharacter>(OutProps.SourceActor)) {
+		OutProps.SourceCharacter = Character;
+		OutProps.SourceController = Character->GetController();
 	}
 
-	Properties.TargetASC = &InData.Target;
-	Properties.TargetActor = InData.Target.GetAvatarActor();
-	if (ACharacter* Character = Cast<ACharacter>(Properties.TargetActor)) {
-		Properties.TargetCharacter = Character;
-		Properties.TargetController = Character->GetController();
+	OutProps.TargetASC = &InData.Target;
+	OutProps.TargetActor = InData.Target.GetAvatarActor();
+	if (ACharacter* Character = Cast<ACharacter>(OutProps.TargetActor)) {
+		OutProps.TargetCharacter = Character;
+		OutProps.TargetController = Character->GetController();
 	}
 }
 

@@ -35,8 +35,6 @@ public:
 	FGameplayTag Attribute_Vital_Mana;
 	FGameplayTag Attribute_Vital_Stamina;
 
-	FGameplayTag Damage;
-
 	/** 输入相关 */
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
@@ -44,7 +42,10 @@ public:
 	FGameplayTag InputTag_2;
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
-	
+
+	/** 其它 */
+	FGameplayTag Damage;
+	FGameplayTag Effects_HitReact;
 public:
 	static FGDGameplayTags& Get();
 

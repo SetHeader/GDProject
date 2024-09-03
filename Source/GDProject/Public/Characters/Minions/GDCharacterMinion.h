@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayTagContainer.h"
 #include "../GDCharacterBase.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Interaction/EnemyInterface.h"
@@ -30,6 +31,12 @@ public:
 
 	UPROPERTY(VisibleAnywhere, Category = "GDCharacterEnemy")
 	TObjectPtr<UWidgetComponent> WidgetComponent;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bHitReacting = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float BaseWalkSpeed = 250.f;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GDCharacterEnemy")
@@ -51,6 +58,8 @@ public:
 	
 	virtual void BroadcastInitialValues() const;
 	virtual void BindCallbacksToDependencies() const;
+
+	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
 protected:
 	virtual void InitializeAttributes() const override;

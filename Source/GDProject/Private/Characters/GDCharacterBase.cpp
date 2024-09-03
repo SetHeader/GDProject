@@ -45,6 +45,11 @@ void AGDCharacterBase::AddCharacterAbilities()
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterAbilities(SetupAbilities);
 }
 
+UAnimMontage* AGDCharacterBase::GetHitReactMontage_Implementation()
+{
+	return HitReactMontage;
+}
+
 void AGDCharacterBase::InitializeAttributes() const
 {
 	check(ASC);

@@ -39,6 +39,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category="GDCharacterBase")
 	FName WeaponTipSocketName;
+
+	UPROPERTY(EditDefaultsOnly, Category="GDCharacterBase")
+	TObjectPtr<UAnimMontage> HitReactMontage;
 	
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDCharacterBase")
@@ -56,6 +59,8 @@ public:
 	virtual UGDAttributeSetBase* GetGDASBase() const { return AS; };
 
 	void AddCharacterAbilities();
+
+	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
 protected:
 	virtual void InitializeAttributes() const;
 };
