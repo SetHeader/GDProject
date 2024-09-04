@@ -8,7 +8,7 @@
 #include "GDGameplayTags.h"
 #include "GameFramework/Character.h"
 #include "Interaction/CombatInterface.h"
-#include "Math/UnitConversion.h"
+#include "Player/GDPlayerController.h"
 
 
 UGDAttributeSetBase::UGDAttributeSetBase()
@@ -85,6 +85,15 @@ void UGDAttributeSetBase::PostGameplayEffectExecute(const FGameplayEffectModCall
 				FGameplayTagContainer TagContainer;
 				TagContainer.AddTag(FGDGameplayTags::Get().Effects_HitReact);
 				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+			}
+
+			// 显示浮动伤害
+			if (Props.SourceCharacter != Props.TargetCharacter)
+			{
+				if (AGDPlayerController* PC = Cast<AGDPlayerController>(Props.SourceController))
+				{
+					PC->Client_ShowDamageNumber(LocalIncomingDamage, Props.TargetCharacter);
+				}
 			}
 		}
 	}

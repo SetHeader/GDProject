@@ -48,8 +48,7 @@ void AGDProjectile::Destroyed()
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, ImpactSound, GetActorLocation());
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
-		bool b = AudioComponent.operator bool();
-		if (AudioComponent) AudioComponent->Stop();
+		if (IsValid(AudioComponent)) AudioComponent->Stop();
 	}
 	Super::Destroyed();
 }
@@ -60,7 +59,7 @@ void AGDProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 	// 不管是在客户端还是服务端，碰撞到东西就生成碰撞效果
 	UGameplayStatics::SpawnSoundAtLocation(this, ImpactSound, GetActorLocation());
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
-	if (AudioComponent) AudioComponent->Stop();
+	if (IsValid(AudioComponent)) AudioComponent->Stop();
 	
 	// 在服务销毁自身，销毁动作会复制到客户端上
 	if (HasAuthority())

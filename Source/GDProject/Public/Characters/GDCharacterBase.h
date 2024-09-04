@@ -50,6 +50,22 @@ protected:
 	TSubclassOf<UGameplayEffect> DefaultSecondaryAttributes;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDCharacterBase")
 	TSubclassOf<UGameplayEffect> DefaultVitalAttributes;
+
+	/* 角色死亡时 溶解效果 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
+	TObjectPtr<UMaterialInstance> DissolveMaterialInstance;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
+	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
+	
+	void Dissolve();
+
+	/**
+	 * 开始随时间线溶解，蓝图比较好实现
+	 * @param MaterialInstanceDynamic 材质 
+	 */
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartDissolveTimeline(UMaterialInstanceDynamic* MaterialInstanceDynamic);
 public:
 	virtual void PossessedBy(AController* NewController) override;
 
