@@ -2,7 +2,7 @@
 
 
 #include "UI/WidgetController/GDOverlayWidgetController.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayEffectTypes.h"
 #include "UI/Widget/GDUserWidget.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
@@ -10,7 +10,7 @@
 
 void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 {
-	UGDAttributeSetBase* GDAS = CastChecked<UGDAttributeSetBase>(AttributeSet);
+	UGDAttributeSet* GDAS = CastChecked<UGDAttributeSet>(AttributeSet);
 	check(AbilitySystemComponent);
 
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GDAS->GetHealthAttribute()).AddUObject(this, &UGDOverlayWidgetController::HealthChanged);
@@ -39,7 +39,7 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 
 void UGDOverlayWidgetController::BroadcastInitialValues() const
 {
-	UGDAttributeSetBase* GDAS = CastChecked<UGDAttributeSetBase>(AttributeSet);
+	UGDAttributeSet* GDAS = CastChecked<UGDAttributeSet>(AttributeSet);
 
 	OnHealthChanged.Broadcast(GDAS->GetHealth());
 	OnMaxHealthChanged.Broadcast(GDAS->GetMaxHealth());

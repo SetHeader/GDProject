@@ -6,7 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "Interaction/CombatInterface.h"
 
 
@@ -22,9 +22,9 @@ struct GDDamageStatics
 	
 	GDDamageStatics()
 	{
-		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSetBase, Armor, Target, false)
-		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSetBase, ArmorPenetration, Source, false)
-		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSetBase, BlockChange, Target, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, Armor, Target, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, ArmorPenetration, Source, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, BlockChange, Target, false)
 	}
 };
 
@@ -98,7 +98,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	// 应用伤害
 	if (Damage > 0.f)
 	{
-		FGameplayModifierEvaluatedData DamageEvaluatedData(UGDAttributeSetBase::GetIncomingDamageAttribute(), EGameplayModOp::Additive, Damage);
+		FGameplayModifierEvaluatedData DamageEvaluatedData(UGDAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, Damage);
 		OutExecutionOutput.AddOutputModifier(DamageEvaluatedData);
 	}
 }

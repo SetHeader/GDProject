@@ -3,7 +3,7 @@
 
 #include "AbilitySystem/ModMagCalc/MMC_MaxMana.h"
 #include "GameplayEffectAttributeCaptureDefinition.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayEffect.h"
 #include "Characters/Heroes/GDCharacterHero.h"
 
@@ -12,7 +12,7 @@
 UMMC_MaxMana::UMMC_MaxMana()
 {
 	// 定义要捕获的属性
-	IntelligenceDef.AttributeToCapture = UGDAttributeSetBase::GetVigorAttribute();
+	IntelligenceDef.AttributeToCapture = UGDAttributeSet::GetVigorAttribute();
 	// 从GE的目标捕获属性
 	IntelligenceDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
 

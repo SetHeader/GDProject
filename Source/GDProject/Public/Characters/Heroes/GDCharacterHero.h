@@ -28,14 +28,7 @@ public:
 
 	// ClientOnly	用来初始化UI
 	void OnRep_PlayerState() override;
-
-	/// @brief 属性变化时会回调该方法
-	/// @param Attribute 属性标志
-	/// @param NewValue 新值
-	/// @param OldValue 旧值
-	UFUNCTION(BlueprintImplementableEvent, Category = "GDCharacterHero")
-	void OnAttributeChanged(EGDASBase Attribute, float NewValue, float OldValue);
-
+	
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterHero")
 	void AddIMC(UInputMappingContext* IMC, int32 Priority = 0);
 

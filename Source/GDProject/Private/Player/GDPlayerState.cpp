@@ -3,7 +3,7 @@
 #include "Player/GDPlayerState.h"
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
-#include <AbilitySystem/AttributeSets/GDAttributeSetBase.h>
+#include <AbilitySystem/AttributeSets/GDAttributeSet.h>
 #include "GameplayEffectTypes.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
@@ -13,7 +13,7 @@ AGDPlayerState::AGDPlayerState()
 	ASC = CreateDefaultSubobject<UGDAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	ASC->SetIsReplicated(true);
 	ASC->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
-	AS = CreateDefaultSubobject<UGDAttributeSetBase>(TEXT("AttributeSetBase"));
+	AS = CreateDefaultSubobject<UGDAttributeSet>(TEXT("AttributeSetBase"));
 
 	// 自定义网络复制频率
 	NetUpdateFrequency = 100.f;

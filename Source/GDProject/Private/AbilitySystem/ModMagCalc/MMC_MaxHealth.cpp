@@ -3,7 +3,7 @@
 
 #include "AbilitySystem/ModMagCalc/MMC_MaxHealth.h"
 #include "GameplayEffectAttributeCaptureDefinition.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayEffect.h"
 #include "Characters/Heroes/GDCharacterHero.h"
 
@@ -12,7 +12,7 @@
 UMMC_MaxHealth::UMMC_MaxHealth()
 {
 	// 定义要捕获的属性
-	VigorDef.AttributeToCapture = UGDAttributeSetBase::GetVigorAttribute();
+	VigorDef.AttributeToCapture = UGDAttributeSet::GetVigorAttribute();
 	// 从GE的目标捕获属性
 	VigorDef.AttributeSource = EGameplayEffectAttributeCaptureSource::Target;
 

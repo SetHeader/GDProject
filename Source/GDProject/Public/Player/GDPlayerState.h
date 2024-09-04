@@ -8,7 +8,7 @@
 #include "Interaction/CombatInterface.h"
 #include "GDPlayerState.generated.h"
 
-class UGDAttributeSetBase;
+class UGDAttributeSet;
 struct FOnAttributeChangeData;
 struct FGDASBase;
 
@@ -25,7 +25,7 @@ public:
 	TObjectPtr<UAbilitySystemComponent> ASC;
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase")
-	TObjectPtr<UGDAttributeSetBase> AS;
+	TObjectPtr<UGDAttributeSet> AS;
 
 protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Level)
@@ -39,7 +39,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterBase")
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return ASC; }
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterBase")
-	virtual UGDAttributeSetBase* GetGDASBase() const { return AS; };
+	virtual UGDAttributeSet* GetGDASBase() const { return AS; };
 
 	UFUNCTION(BlueprintCallable, Category = "CombatInterface")
 	FORCEINLINE int32 GetPlayerLevel() const { return Level; }

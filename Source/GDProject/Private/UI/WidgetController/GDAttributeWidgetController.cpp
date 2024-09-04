@@ -3,13 +3,13 @@
 
 #include "UI/WidgetController/GDAttributeWidgetController.h"
 #include "AbilitySystem/Data/GDAttributeInfo.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayTagContainer.h"
 
 void UGDAttributeWidgetController::BroadcastInitialValues() const
 {
 	if (IsValid(AttributesInfo)) {
-		UGDAttributeSetBase* AS = CastChecked<UGDAttributeSetBase>(AttributeSet);
+		UGDAttributeSet* AS = CastChecked<UGDAttributeSet>(AttributeSet);
 		
 		for (FAttributeInfo& Info : AttributesInfo->AttributeInfos)
 		{
@@ -25,7 +25,7 @@ void UGDAttributeWidgetController::BroadcastInitialValues() const
 
 void UGDAttributeWidgetController::BindCallbacksToDependencies() const
 {
-	const UGDAttributeSetBase* AS = Cast<UGDAttributeSetBase>(AttributeSet);
+	const UGDAttributeSet* AS = Cast<UGDAttributeSet>(AttributeSet);
 	
 	for (FAttributeInfo& Info : AttributesInfo->AttributeInfos)
 	{

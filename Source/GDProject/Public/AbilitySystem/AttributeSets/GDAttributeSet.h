@@ -1,11 +1,10 @@
-// Copyright 2020 Dan Kestranek.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "AttributeSet.h"
 #include "AbilitySystemComponent.h"
-#include "GDAttributeSetBase.generated.h"
+#include "GDAttributeSet.generated.h"
 
 
 // 使用这个宏来快速生成getter、setter等方法
@@ -46,39 +45,6 @@ public:
 	ACharacter* TargetCharacter = nullptr;
 };
 
-
-/// 基础属性枚举
-UENUM(BlueprintType)
-enum class EGDASBase : uint8
-{
-	Health,
-	MaxHealth,
-	Mana,
-	MaxMana,
-	Stamina,
-	MaxStamina
-};
-
-// 属性结构，对应 UGDAttributeSetBase
-USTRUCT(BlueprintType)
-struct FGDASBase : public FTableRowBase {
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Health = 0.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxHealth = 0.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Mana = 0.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxMana = 0.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Stamina = 0.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxStamina = 0.f;
-};
-
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnAttributeChangedDelegate, const float, NewValue, const float, OldValue);
 
 // 本质是函数指针
@@ -92,15 +58,15 @@ template<class Func>
 using TStaticFuncPtr =  typename TBaseStaticDelegateInstance<Func, FDefaultDelegateUserPolicy>::FFuncPtr;
 
 /**
- * 
+ * 基础属性集
  */
 UCLASS()
-class GDPROJECT_API UGDAttributeSetBase : public UAttributeSet
+class GDPROJECT_API UGDAttributeSet : public UAttributeSet
 {
 	GENERATED_BODY()
 	
 public:
-	UGDAttributeSetBase();
+	UGDAttributeSet();
 	
 	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> Tag2AttributeFuncMap;
 
@@ -116,100 +82,85 @@ public:
 	// 力量
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Strength)
 	FGameplayAttributeData Strength;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Strength)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Strength)
 	// 智力
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Intelligence)
 	FGameplayAttributeData Intelligence;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Intelligence)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Intelligence)
 	// 韧性
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Resilience)
 	FGameplayAttributeData Resilience;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Resilience)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Resilience)
 	// 活力
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Vigor)
 	FGameplayAttributeData Vigor;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Vigor)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Vigor)
 
 
 	// 次要属性，Secondary Attributes
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Armor)
 	FGameplayAttributeData Armor;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Armor)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Armor)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_ArmorPenetration)
 	FGameplayAttributeData ArmorPenetration;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, ArmorPenetration)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, ArmorPenetration)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_BlockChange)
 	FGameplayAttributeData BlockChange;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, BlockChange)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, BlockChange)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_CriticalHitChange)
 	FGameplayAttributeData CriticalHitChange;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, CriticalHitChange)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, CriticalHitChange)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_CriticalHitDamage)
 	FGameplayAttributeData CriticalHitDamage;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, CriticalHitDamage)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, CriticalHitDamage)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_CriticalHitResistance)
 	FGameplayAttributeData CriticalHitResistance;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, CriticalHitResistance)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, CriticalHitResistance)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_HealthRegeneration)
 	FGameplayAttributeData HealthRegeneration;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, HealthRegeneration)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, HealthRegeneration)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_ManaRegeneration)
 	FGameplayAttributeData ManaRegeneration;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, ManaRegeneration)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, ManaRegeneration)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_MaxHealth)
 	FGameplayAttributeData MaxHealth;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, MaxHealth)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, MaxHealth)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_MaxMana)
 	FGameplayAttributeData MaxMana;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, MaxMana)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, MaxMana)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_MaxStamina)
 	FGameplayAttributeData MaxStamina;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, MaxStamina)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, MaxStamina)
 
 	// 重要属性，Vital Attributes
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Health)
 	FGameplayAttributeData Health;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Health)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Health)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Mana)
 	FGameplayAttributeData Mana;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Mana)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Mana)
 
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Stamina)
 	FGameplayAttributeData Stamina;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, Stamina)
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Stamina)
 
 	/**
 	 * Meta Attribute
 	 */
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase")
 	FGameplayAttributeData IncomingDamage;
-	ATTRIBUTE_ACCESSORS(UGDAttributeSetBase, IncomingDamage)
-
-	/* 客户端属性变化通知 */
-
-	UPROPERTY(BlueprintAssignable, Category = "GDAttributeSetBase")
-	FOnAttributeChangedDelegate OnHealthChangedDelegate;
-	UPROPERTY(BlueprintAssignable, Category = "GDAttributeSetBase")
-	FOnAttributeChangedDelegate OnMaxHealthChangedDelegate;
-	UPROPERTY(BlueprintAssignable, Category = "GDAttributeSetBase")
-	FOnAttributeChangedDelegate OnManaChangedDelegate;
-	UPROPERTY(BlueprintAssignable, Category = "GDAttributeSetBase")
-	FOnAttributeChangedDelegate OnMaxManaChangedDelegate;
-	UPROPERTY(BlueprintAssignable, Category = "GDAttributeSetBase")
-	FOnAttributeChangedDelegate OnStaminaChangedDelegate;
-	UPROPERTY(BlueprintAssignable, Category = "GDAttributeSetBase")
-	FOnAttributeChangedDelegate OnMaxStaminaChangedDelegate;
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, IncomingDamage)
 
 public:
 

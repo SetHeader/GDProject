@@ -10,7 +10,7 @@
 
 class UGameplayAbility;
 class UAbilitySystemComponent;
-class UGDAttributeSetBase;
+class UGDAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
 
@@ -35,7 +35,7 @@ public:
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> ASC;
 	UPROPERTY()
-	TObjectPtr<UGDAttributeSetBase> AS;
+	TObjectPtr<UGDAttributeSet> AS;
 
 	UPROPERTY(EditDefaultsOnly, Category="GDCharacterBase")
 	FName WeaponTipSocketName;
@@ -79,7 +79,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterBase")
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override { return ASC; }
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterBase")
-	virtual UGDAttributeSetBase* GetGDASBase() const { return AS; };
+	virtual UGDAttributeSet* GetGDASBase() const { return AS; };
 
 	void AddCharacterAbilities();
 

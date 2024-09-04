@@ -1,13 +1,13 @@
 #include "UI/WidgetController/GDAttributeMenuWidgetController.h"
 
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayTagContainer.h"
 #include "GDGameplayTags.h"
 
 
 void UGDAttributeMenuWidgetController::AddValue(FGameplayTag Tag)
 {
-	UGDAttributeSetBase* AS = Cast<UGDAttributeSetBase>(AttributeSet);
+	UGDAttributeSet* AS = Cast<UGDAttributeSet>(AttributeSet);
 	if (!AS)
 	{
 		return;

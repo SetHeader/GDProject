@@ -4,7 +4,7 @@
 #include "Characters/Minions/GDCharacterMinion.h"
 #include "AbilitySystemComponent.h"
 #include "GDGameplayTags.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "Components/WidgetComponent.h"
@@ -19,7 +19,7 @@ AGDCharacterMinion::AGDCharacterMinion()
 	ASC->SetIsReplicated(true);
 	ASC->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
-	AS = CreateDefaultSubobject<UGDAttributeSetBase>(TEXT("AttributeSetBase"));
+	AS = CreateDefaultSubobject<UGDAttributeSet>(TEXT("AttributeSetBase"));
 
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>("WidgetComponent");
 	WidgetComponent->SetupAttachment(GetRootComponent());

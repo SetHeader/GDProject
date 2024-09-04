@@ -9,7 +9,7 @@
 #include "../GDProject.h"
 #include "InputMappingContext.h"
 #include "AbilitySystemComponent.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSetBase.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "UI/GDHUD.h"
 #include "UI/WidgetController/GDWidgetController.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
