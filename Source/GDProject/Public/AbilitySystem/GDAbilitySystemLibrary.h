@@ -29,4 +29,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|CharacterClassDefault")
 	static void GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC);
+
+	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|CharacterClassDefault")
+	static const UCurveTable* GetDamageCoefficientsCurveTable(const UObject* WorldContextObject);
 };

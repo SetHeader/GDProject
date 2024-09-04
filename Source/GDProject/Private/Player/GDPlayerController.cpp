@@ -68,8 +68,8 @@ void AGDPlayerController::Client_ShowDamageNumber_Implementation(float Damage, A
 		UDamageTextComponent* DamageTextComponent = NewObject<UDamageTextComponent>(Target, DamageTextComponentClass);
 		// 动态创建的组件需要调用 RegisterComponent 方法，处理一些内部逻辑
 		DamageTextComponent->RegisterComponent();
-		DamageTextComponent->SetDamageText(Damage);
 		DamageTextComponent->AttachToComponent(Target->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		DamageTextComponent->SetDamageText(Damage);
 		DamageTextComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 	}
 }

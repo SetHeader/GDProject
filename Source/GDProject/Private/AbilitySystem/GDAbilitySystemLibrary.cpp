@@ -84,3 +84,17 @@ void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextOb
 		ASC->GiveAbility(AbilitySpec);
 	}
 }
+
+const UCurveTable* UGDAbilitySystemLibrary::GetDamageCoefficientsCurveTable(const UObject* WorldContextObject)
+{
+	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!IsValid(GDGameMode))
+	{
+		return nullptr;
+	}
+
+	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
+	checkf(ClassInfo, TEXT("ClassInfo is null"));
+
+	return ClassInfo->DamageCalculationCoefficients;
+}
