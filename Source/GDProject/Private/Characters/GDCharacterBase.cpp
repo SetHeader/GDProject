@@ -38,7 +38,7 @@ void AGDCharacterBase::Dissolve()
 		UMaterialInstanceDynamic* DynamicMatInst = UMaterialInstanceDynamic::Create(WeaponDissolveMaterialInstance, this);
 		WeaponComponent->SetMaterial(0, DynamicMatInst);
 
-		StartDissolveTimeline(DynamicMatInst);
+		StartWeaponDissolveTimeline(DynamicMatInst);
 	}
 }
 

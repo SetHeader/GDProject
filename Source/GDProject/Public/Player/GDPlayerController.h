@@ -4,17 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GameplayTagContainer.h"
 #include "GDPlayerController.generated.h"
 
 class USplineComponent;
-struct FGameplayTag;
 class UGDInputConfig;
 class UGDAbilitySystemComponent;
 class IEnemyInterface;
+class UDamageTextComponent;
 
-/**
- * 
- */
 UCLASS()
 class GDPROJECT_API AGDPlayerController : public APlayerController
 {
@@ -53,7 +51,11 @@ private:
 	// 自动行走的终点位置
 	FVector Destination;
 	// 用于把离散的点位置 转换成圆滑的 位置曲线
-	TObjectPtr<USplineComponent> SplineComponent; 
+	TObjectPtr<USplineComponent> SplineComponent;
+
+	// 浮动伤害组件类，用于动态的在敌人上面显示伤害文本
+	UPROPERTY(EditDefaultsOnly, Category="GDPlayerController")
+	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
 	
 public:
 	AGDPlayerController();
@@ -68,6 +70,14 @@ public:
 	void OnAbilityInputHeld(FGameplayTag InputTag);
 
 	inline UGDAbilitySystemComponent* GetASC();
+
+	/**
+	 * 动态在指定角色上显示伤害数字。
+	 * @param Damage 伤害值
+	 * @param Target 指定角色
+	 */
+	UFUNCTION(Client, Reliable)
+	void Client_ShowDamageNumber(float Damage, ACharacter* Target);
 
 protected:
 	virtual void SetupInputComponent() override;

@@ -66,6 +66,13 @@ protected:
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartDissolveTimeline(UMaterialInstanceDynamic* MaterialInstanceDynamic);
+
+	/**
+	 * 开始随时间线溶解，蓝图比较好实现
+	 * @param MaterialInstanceDynamic 材质 
+	 */
+	UFUNCTION(BlueprintImplementableEvent)
+	void StartWeaponDissolveTimeline(UMaterialInstanceDynamic* MaterialInstanceDynamic);
 public:
 	virtual void PossessedBy(AController* NewController) override;
 

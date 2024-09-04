@@ -4,7 +4,6 @@
 #include "Player/GDPlayerController.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
-#include "AbilitySystemComponent.h"
 #include "GDGameplayTags.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
@@ -12,6 +11,8 @@
 #include "Components/SplineComponent.h"
 #include "Input/GDInputComponent.h"
 #include "Interaction/EnemyInterface.h"
+#include "GameFramework/Character.h"
+#include "UI/Widget/DamageTextComponent.h"
 
 AGDPlayerController::AGDPlayerController()
 {
@@ -20,47 +21,9 @@ AGDPlayerController::AGDPlayerController()
 	SplineComponent = CreateDefaultSubobject<USplineComponent>("SplineComponent");
 }
 
-struct TestStruct
-{
-public:
-	int sa;
-	int* psa;
-};
-
-class Test1
-{
-public:
-	int a;
-	int* pa;
-	TestStruct str;
-	TestStruct* pstr;
-
-	Test1() {}
-};
-
-class Test2
-{
-public:
-	int a;
-	int* pa;
-	TestStruct str;
-	TestStruct* pstr;
-
-	Test2()
-	{
-		
-	}
-};
-
 void AGDPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	Test1 t1;
-	Test2 t2;
-
-	UE_LOG(LogTemp, Log, TEXT("t1.a: %d, t1.pa: %p, &t1.str: %p, t1.pstr: %p"), t1.a, t1.pa, &t1.str, t1.pstr);
-	UE_LOG(LogTemp, Log, TEXT("t2.a: %d, t2.pa: %p, &t2.str: %p, t2.pstr: %p"), t2.a, t2.pa, &t2.str, t2.pstr);
 	
 	// 显示鼠标
 	bShowMouseCursor = true;
@@ -94,6 +57,21 @@ inline UGDAbilitySystemComponent* AGDPlayerController::GetASC()
 		ASC = Cast<UGDAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn()));
 	}
 	return ASC;
+}
+
+void AGDPlayerController::Client_ShowDamageNumber_Implementation(float Damage, ACharacter* Target)
+{
+	// IsValid不只是检查非空，还会检查指针是否准备销毁
+	if (IsValid(Target) && DamageTextComponentClass)
+	{
+		// 不在构造函数中不能调 CreateDefaultSubobject，需要动态NewObject出来。
+		UDamageTextComponent* DamageTextComponent = NewObject<UDamageTextComponent>(Target, DamageTextComponentClass);
+		// 动态创建的组件需要调用 RegisterComponent 方法，处理一些内部逻辑
+		DamageTextComponent->RegisterComponent();
+		DamageTextComponent->SetDamageText(Damage);
+		DamageTextComponent->AttachToComponent(Target->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		DamageTextComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+	}
 }
 
 void AGDPlayerController::SetupInputComponent()
