@@ -19,12 +19,18 @@ struct GDDamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor)
 	DECLARE_ATTRIBUTE_CAPTUREDEF(ArmorPenetration)
 	DECLARE_ATTRIBUTE_CAPTUREDEF(BlockChange)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitChange)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitDamage)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitResistance)
 	
 	GDDamageStatics()
 	{
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, Armor, Target, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, ArmorPenetration, Source, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, BlockChange, Target, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, CriticalHitChange, Source, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, CriticalHitDamage, Source, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, CriticalHitResistance, Target, false)
 	}
 };
 
@@ -43,6 +49,9 @@ UExecCalc_Damage::UExecCalc_Damage()
 	RelevantAttributesToCapture.Add(DamageStatic().ArmorDef);
 	RelevantAttributesToCapture.Add(DamageStatic().BlockChangeDef);
 	RelevantAttributesToCapture.Add(DamageStatic().ArmorPenetrationDef);
+	RelevantAttributesToCapture.Add(DamageStatic().CriticalHitChangeDef);
+	RelevantAttributesToCapture.Add(DamageStatic().CriticalHitDamageDef);
+	RelevantAttributesToCapture.Add(DamageStatic().CriticalHitResistanceDef);
 }
 
 void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
@@ -66,41 +75,55 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	EvaluationParameters.SourceTags = EffectSpec.CapturedSourceTags.GetAggregatedTags();
 	EvaluationParameters.TargetTags = EffectSpec.CapturedTargetTags.GetAggregatedTags();
 
+	// 捕获属性值，并限制值要大于等于0
+	const float TargetBlockChange = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().BlockChangeDef);
+	const float TargetArmor = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().ArmorDef);
+	const float SourceArmorPenetration = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().ArmorPenetrationDef);
+	const float SourceCriticalHitChange = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitChangeDef);
+	const float SourceCriticalHitDamage = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitDamageDef);
+	const float TargetCriticalHitResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitResistanceDef);
+	
+	
 	// 获取伤害
 	float Damage = EffectSpec.GetSetByCallerMagnitude(FGDGameplayTags::Get().Damage);
 
 	// 获取伤害计算中的各种系数
-	float ArmorPenetrationCoeff = GetCoeficientInCurve(FName("ArmorPenetration"), SourceCombatLevel);
-	float EffectiveArmorCoeff = GetCoeficientInCurve(FName("EffectiveArmor"), TargetCombatLevel);
+	const float ArmorPenetrationCoeff = GetCoeficientInCurve(FName("ArmorPenetration"), SourceCombatLevel);
+	const float EffectiveArmorCoeff = GetCoeficientInCurve(FName("EffectiveArmor"), TargetCombatLevel);
+	// 暴击伤害抵抗系数，范围 0-1，该系统越小，造成的暴击伤害越低
+	const float CriticalHitResistanceCoeff = GetCoeficientInCurve(FName("CriticalHitResistance"), TargetCombatLevel);
 	
 	// 获取 Target的BlockChange，决定是否要格挡成功
 	// 格挡成功要将伤害减半
-	float TargetBlockChange = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().BlockChangeDef);
-	float RandomValue = FMath::RandRange(0, 100);
-
-	if (RandomValue <= TargetBlockChange)
+	const bool bBlock = FMath::RandRange(0, 100) <= TargetBlockChange;
+	if (bBlock)
 	{
 		Damage = Damage / 2;
 	}
 
-	// 敌人护甲
-	float TargetArmor = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().ArmorDef);
-
-	// 护甲穿透要按比例忽略敌方的护甲
-	float SourceArmorPenetration = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().ArmorPenetrationDef);
-
 	// 应用护甲穿透后，敌人的有效护甲。即每四点护甲穿透，能穿透 1% 的护甲
-	const float EffectiveArmor = TargetArmor * (100 - SourceArmorPenetration * ArmorPenetrationCoeff) / 100.f;
-
+	float EffectiveArmor = TargetArmor * (100 - SourceArmorPenetration * ArmorPenetrationCoeff) / 100.f;
+	EffectiveArmor = FMath::Max(0.f, EffectiveArmor);
+	
 	// 每 3点 有效护甲减免 1% 的伤害
 	Damage *= (100.f - EffectiveArmor * EffectiveArmorCoeff) / 100.f;
 	
-	// 应用伤害
-	if (Damage > 0.f)
+	// 有效暴击率。每6.666个暴击抵抗点数 能降低 1% 的暴击率
+	const float EffectiveCriticalHitChange = SourceCriticalHitChange - TargetCriticalHitResistance * CriticalHitResistanceCoeff;
+	// 是否暴击
+	const bool bCriticalHit = (EffectiveCriticalHitChange) <= FMath::RandRange(0, 100);
+
+	if (bCriticalHit)
 	{
-		FGameplayModifierEvaluatedData DamageEvaluatedData(UGDAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, Damage);
-		OutExecutionOutput.AddOutputModifier(DamageEvaluatedData);
+		// 暴击就产生2倍伤害，再加上额外伤害
+		Damage = Damage * 2.f + SourceCriticalHitDamage;
 	}
+
+	Damage = FMath::Max(0.f, Damage);
+	
+	// 应用伤害
+	FGameplayModifierEvaluatedData DamageEvaluatedData(UGDAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, Damage);
+	OutExecutionOutput.AddOutputModifier(DamageEvaluatedData);
 }
 
 float UExecCalc_Damage::CaptureAttributeValue(

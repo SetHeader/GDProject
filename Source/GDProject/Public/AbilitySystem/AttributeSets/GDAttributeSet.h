@@ -70,14 +70,6 @@ public:
 	
 	TMap<FGameplayTag, TStaticFuncPtr<FGameplayAttribute()>> Tag2AttributeFuncMap;
 
-	// 属性变化前回调
-	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
-	// 执行效果后回调
-	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
-	// 复制
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-
 	// 主要属性，Primary Attributes
 	// 力量
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Strength)
@@ -98,34 +90,35 @@ public:
 
 
 	// 次要属性，Secondary Attributes
+	// 护甲点数
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_Armor)
 	FGameplayAttributeData Armor;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Armor)
-
+	// 护甲穿透点数
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_ArmorPenetration)
 	FGameplayAttributeData ArmorPenetration;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, ArmorPenetration)
-
+	// 格挡成功率，范围：0-100
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_BlockChange)
 	FGameplayAttributeData BlockChange;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, BlockChange)
-
+	// 致命一击率（暴击率），暴击造成2倍伤害，再加上暴击额外伤害
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_CriticalHitChange)
 	FGameplayAttributeData CriticalHitChange;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, CriticalHitChange)
-
+	// 致命一击额外伤害
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_CriticalHitDamage)
 	FGameplayAttributeData CriticalHitDamage;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, CriticalHitDamage)
-
+	// 致命一击抵抗点数
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_CriticalHitResistance)
 	FGameplayAttributeData CriticalHitResistance;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, CriticalHitResistance)
-
+	// 每秒生命回复点数
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_HealthRegeneration)
 	FGameplayAttributeData HealthRegeneration;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, HealthRegeneration)
-
+	// 每秒魔力回复点数
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase", ReplicatedUsing = OnRep_ManaRegeneration)
 	FGameplayAttributeData ManaRegeneration;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, ManaRegeneration)
@@ -156,13 +149,20 @@ public:
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, Stamina)
 
 	/**
-	 * Meta Attribute
+	 * 元属性，Meta Attribute
 	 */
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase")
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, IncomingDamage)
 
 public:
+
+	// 属性变化前回调
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
+	// 执行效果后回调
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	// 复制
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void SetEffectProperties(const FGameplayEffectModCallbackData& InData, FEffectProperties& OutProps);
 
