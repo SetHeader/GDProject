@@ -26,7 +26,7 @@ public:
 	FORCEINLINE bool IsCriticalHit() const { return bIsCriticalHit; }
 
 	void SetIsBlockedHit(bool BlockedHit) { bIsBlockedHit = BlockedHit; }
-	void SetIsCriticalHit1(bool CriticalHit) { bIsCriticalHit = CriticalHit; }
+	void SetIsCriticalHit(bool CriticalHit) { bIsCriticalHit = CriticalHit; }
 };
 
 template<>
@@ -34,7 +34,7 @@ struct TStructOpsTypeTraits<FGDGameplayEffectContext> : public TStructOpsTypeTra
 {
 	enum
 	{
-		WidthNetSerializer = true,
+		WithNetSerializer = true,
 		WithCopy = true
 	};
 };

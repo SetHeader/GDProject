@@ -23,7 +23,13 @@ struct GDDamageStatics
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitChange)
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitDamage)
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CriticalHitResistance)
-	
+	DECLARE_ATTRIBUTE_CAPTUREDEF(FireResistance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(LightingResistance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(ArcaneResistance)
+	DECLARE_ATTRIBUTE_CAPTUREDEF(PhysicalResistance)
+
+	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagToDef;
+
 	GDDamageStatics()
 	{
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, Armor, Target, false)
@@ -32,6 +38,23 @@ struct GDDamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, CriticalHitChange, Source, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, CriticalHitDamage, Source, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, CriticalHitResistance, Target, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, FireResistance, Target, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, LightingResistance, Target, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, ArcaneResistance, Target, false)
+		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, PhysicalResistance, Target, false)
+
+		const FGDGameplayTags& Tags = FGDGameplayTags::Get();
+
+		TagToDef.Add(Tags.Attribute_Secondary_Armor, ArmorDef);
+		TagToDef.Add(Tags.Attribute_Secondary_ArmorPenetration, ArmorPenetrationDef);
+		TagToDef.Add(Tags.Attribute_Secondary_BlockChange, BlockChangeDef);
+		TagToDef.Add(Tags.Attribute_Secondary_CriticalHitChange, CriticalHitChangeDef);
+		TagToDef.Add(Tags.Attribute_Secondary_CriticalHitDamage, CriticalHitDamageDef);
+		TagToDef.Add(Tags.Attribute_Secondary_CriticalHitResistance, CriticalHitResistanceDef);
+		TagToDef.Add(Tags.Attribute_Resistance_Fire, FireResistanceDef);
+		TagToDef.Add(Tags.Attribute_Resistance_Lighting, LightingResistanceDef);
+		TagToDef.Add(Tags.Attribute_Resistance_Arcane, ArcaneResistanceDef);
+		TagToDef.Add(Tags.Attribute_Resistance_Physical, PhysicalResistanceDef);
 	}
 };
 
@@ -53,6 +76,10 @@ UExecCalc_Damage::UExecCalc_Damage()
 	RelevantAttributesToCapture.Add(DamageStatic().CriticalHitChangeDef);
 	RelevantAttributesToCapture.Add(DamageStatic().CriticalHitDamageDef);
 	RelevantAttributesToCapture.Add(DamageStatic().CriticalHitResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatic().FireResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatic().LightingResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatic().ArcaneResistanceDef);
+	RelevantAttributesToCapture.Add(DamageStatic().PhysicalResistanceDef);
 }
 
 void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
@@ -75,7 +102,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	FAggregatorEvaluateParameters EvaluationParameters;
 	EvaluationParameters.SourceTags = EffectSpec.CapturedSourceTags.GetAggregatedTags();
 	EvaluationParameters.TargetTags = EffectSpec.CapturedTargetTags.GetAggregatedTags();
-
+	
 	// 捕获属性值，并限制值要大于等于0
 	const float TargetBlockChange = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().BlockChangeDef);
 	const float TargetArmor = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().ArmorDef);
@@ -85,8 +112,25 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const float TargetCriticalHitResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitResistanceDef);
 	
 	// 获取伤害
-	float Damage = EffectSpec.GetSetByCallerMagnitude(FGDGameplayTags::Get().Damage);
+	float Damage = 0.f;
+	// 计算伤害与伤害抵抗
+	for (const auto& DamageType : FGDGameplayTags::Get().DamageTypesToResistance)
+	{
+		const FGameplayTag& DamageTypeTag = DamageType.Key;
+		const FGameplayTag& ResistanceTypeTag = DamageType.Value;
 
+		checkf(DamageStatic().TagToDef.Contains(ResistanceTypeTag), TEXT("ExecCalc_Damage\t TagToDef doesn't contain Tag: [%s]"), *ResistanceTypeTag.ToString());
+
+		const FGameplayEffectAttributeCaptureDefinition ResistanceTypeDef = DamageStatic().TagToDef[ResistanceTypeTag];
+		
+		const float DamageTypeValue = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag);
+		float TargetResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, ResistanceTypeDef);
+		
+		TargetResistance = FMath::Clamp(TargetResistance, 0.f, 100.f);
+		
+		Damage += DamageTypeValue * (100.f - TargetResistance) / 100.f;
+	}
+	
 	// 获取伤害计算中的各种系数
 	const float ArmorPenetrationCoeff = GetCoeficientInCurve(FName("ArmorPenetration"), SourceCombatLevel);
 	const float EffectiveArmorCoeff = GetCoeficientInCurve(FName("EffectiveArmor"), TargetCombatLevel);

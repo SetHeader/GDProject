@@ -42,6 +42,7 @@ public:
 		BindCallbacksToDependencies();
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "GDWidgetController")
 	virtual void BroadcastInitialValues() const {}
 
 	virtual void BindCallbacksToDependencies() const {}

@@ -56,6 +56,15 @@ void FGDGameplayTags::InitializeGameplayTags()
 	Attribute_Vital_Mana = FGameplayTag::RequestGameplayTag(FName("Attribute.Vital.Mana"));
 	Attribute_Vital_Stamina = FGameplayTag::RequestGameplayTag(FName("Attribute.Vital.Stamina"));
 	
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attribute.Resistance.Fire"), FString("This is a Attribute_Resistance_Fire"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attribute.Resistance.Lighting"), FString("This is a Attribute_Resistance_Lighting"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attribute.Resistance.Arcane"), FString("This is a Attribute_Resistance_Arcane"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attribute.Resistance.Physical"), FString("This is a Attribute_Resistance_Physical"));
+	Attribute_Resistance_Fire = FGameplayTag::RequestGameplayTag(FName("Attribute.Resistance.Fire"));
+	Attribute_Resistance_Lighting = FGameplayTag::RequestGameplayTag(FName("Attribute.Resistance.Lighting"));
+	Attribute_Resistance_Arcane = FGameplayTag::RequestGameplayTag(FName("Attribute.Resistance.Arcane"));
+	Attribute_Resistance_Physical = FGameplayTag::RequestGameplayTag(FName("Attribute.Resistance.Physical"));
+	
 	/*
 	 * Input Tag
 	 */
@@ -75,8 +84,20 @@ void FGDGameplayTags::InitializeGameplayTags()
 	/*
 	 * 伤害
 	 */
-	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage"), FString("Damage"));
-	Damage = FGameplayTag::RequestGameplayTag(FName("Damage"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Fire"), FString("Damage Fire"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Lighting"), FString("Damage Lighting"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Arcane"), FString("Damage Arcane"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Physical"), FString("Damage Physical"));
+	Damage_Fire = FGameplayTag::RequestGameplayTag(FName("Damage.Fire"));
+	Damage_Lighting = FGameplayTag::RequestGameplayTag(FName("Damage.Lighting"));
+	Damage_Arcane = FGameplayTag::RequestGameplayTag(FName("Damage.Arcane"));
+	Damage_Physical = FGameplayTag::RequestGameplayTag(FName("Damage.Physical"));
+
+	DamageTypesToResistance.Add(Damage_Fire, Attribute_Resistance_Fire);
+	DamageTypesToResistance.Add(Damage_Lighting, Attribute_Resistance_Lighting);
+	DamageTypesToResistance.Add(Damage_Arcane, Attribute_Resistance_Arcane);
+	DamageTypesToResistance.Add(Damage_Physical, Attribute_Resistance_Physical);
+	
 	/*
 	 * 击中反应
 	 */

@@ -3,13 +3,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GDGameplayAbility.h"
-#include "CastSpellAbility.generated.h"
+#include "GDDamageGameplayAbility.h"
+#include "GDProjectileSpellAbility.generated.h"
 
 class AGDProjectile;
 
 UCLASS()
-class GDPROJECT_API UCastSpellAbility : public UGDGameplayAbility
+class GDPROJECT_API UGDProjectileSpellAbility : public UGDDamageGameplayAbility
 {
 	GENERATED_BODY()
 
@@ -19,9 +19,7 @@ public:
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "CastSpellAbility")
 	TSubclassOf<AGDProjectile> ProjectileClass;
-	
-	UPROPERTY(EditDefaultsOnly, Category = "CastSpellAbility")
-	TSubclassOf<UGameplayEffect> EffectClass;
+
 protected:
 	/**
 	 * 朝某个方向生成发射物，只在服务端生成发射物

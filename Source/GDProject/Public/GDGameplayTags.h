@@ -31,6 +31,11 @@ public:
 	FGameplayTag Attribute_Secondary_MaxMana;
 	FGameplayTag Attribute_Secondary_MaxStamina;
 
+	FGameplayTag Attribute_Resistance_Fire;
+	FGameplayTag Attribute_Resistance_Lighting;
+	FGameplayTag Attribute_Resistance_Arcane;
+	FGameplayTag Attribute_Resistance_Physical;
+
 	FGameplayTag Attribute_Vital_Health;
 	FGameplayTag Attribute_Vital_Mana;
 	FGameplayTag Attribute_Vital_Stamina;
@@ -43,9 +48,18 @@ public:
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
 
+	/** 伤害类型 */
+	FGameplayTag Damage_Fire;
+	FGameplayTag Damage_Lighting;
+	FGameplayTag Damage_Arcane;
+	FGameplayTag Damage_Physical;
+	
+	// 存放所有类型的伤害标签，方便遍历
+	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistance;
+	
 	/** 其它 */
-	FGameplayTag Damage;
 	FGameplayTag Effects_HitReact;
+
 public:
 	static FGDGameplayTags& Get();
 

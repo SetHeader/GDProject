@@ -34,6 +34,11 @@ UGDAttributeSet::UGDAttributeSet()
 	Tag2AttributeFuncMap.Add(FGDGameplayTags::Get().Attribute_Vital_Health, GetHealthAttribute);
 	Tag2AttributeFuncMap.Add(FGDGameplayTags::Get().Attribute_Vital_Mana, GetManaAttribute);
 	Tag2AttributeFuncMap.Add(FGDGameplayTags::Get().Attribute_Vital_Stamina, GetStaminaAttribute);
+	
+	Tag2AttributeFuncMap.Add(FGDGameplayTags::Get().Attribute_Resistance_Fire, GetFireResistanceAttribute);
+	Tag2AttributeFuncMap.Add(FGDGameplayTags::Get().Attribute_Resistance_Lighting, GetLightingResistanceAttribute);
+	Tag2AttributeFuncMap.Add(FGDGameplayTags::Get().Attribute_Resistance_Arcane, GetArcaneResistanceAttribute);
+	Tag2AttributeFuncMap.Add(FGDGameplayTags::Get().Attribute_Resistance_Physical, GetPhysicalResistanceAttribute);
 }
 
 void UGDAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
@@ -125,6 +130,11 @@ void UGDAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME_CONDITION_NOTIFY(UGDAttributeSet, CriticalHitResistance, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGDAttributeSet, HealthRegeneration, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(UGDAttributeSet, ManaRegeneration, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(UGDAttributeSet, FireResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGDAttributeSet, LightingResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGDAttributeSet, ArcaneResistance, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(UGDAttributeSet, PhysicalResistance, COND_None, REPNOTIFY_Always)
 }
 
 void UGDAttributeSet::SetEffectProperties(const FGameplayEffectModCallbackData& InData, FEffectProperties& OutProps)
@@ -234,4 +244,24 @@ void UGDAttributeSet::OnRep_Stamina(const FGameplayAttributeData& OldStamina)
 void UGDAttributeSet::OnRep_MaxStamina(const FGameplayAttributeData& OldMaxStamina)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGDAttributeSet, MaxStamina, OldMaxStamina);
+}
+
+void UGDAttributeSet::OnRep_FireResistance(const FGameplayAttributeData& OldFireResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGDAttributeSet, FireResistance, OldFireResistance);
+}
+
+void UGDAttributeSet::OnRep_LightingResistance(const FGameplayAttributeData& OldLightingResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGDAttributeSet, LightingResistance, OldLightingResistance);
+}
+
+void UGDAttributeSet::OnRep_ArcaneResistance(const FGameplayAttributeData& OldArcaneResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGDAttributeSet, ArcaneResistance, OldArcaneResistance);
+}
+
+void UGDAttributeSet::OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(UGDAttributeSet, PhysicalResistance, OldPhysicalResistance);
 }
