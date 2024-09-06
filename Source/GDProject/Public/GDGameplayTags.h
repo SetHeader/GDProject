@@ -8,6 +8,8 @@
 
 struct FGameplayTag;
 
+DECLARE_MULTICAST_DELEGATE(FOnInitedSignature);
+
 USTRUCT()
 struct FGDGameplayTags
 {
@@ -60,12 +62,15 @@ public:
 	/** 其它 */
 	FGameplayTag Effects_HitReact;
 
+private:
+	bool bInitialized = false;
+
 public:
+	FOnInitedSignature OnInitedDelegate;
+	
 	static FGDGameplayTags& Get();
 
 	void InitializeGameplayTags();
 
-private:
-	// FIXME 不知道为啥，不注释掉这个编译不过
-	//FGDGameplayTags();
+	bool IsInitialized() const { return  bInitialized; }
 };

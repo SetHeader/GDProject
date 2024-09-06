@@ -42,9 +42,27 @@ struct GDDamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, LightingResistance, Target, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, ArcaneResistance, Target, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, PhysicalResistance, Target, false)
+		
+		// 不能在构造函数中初始化映射，因为构造函数中的FGDGameplayTags也没初始化，Tag全是None。
+		if (FGDGameplayTags::Get().IsInitialized())
+		{
+			Initialize();
+		}
+		else
+		{
+			InitializeHandle = FGDGameplayTags::Get().OnInitedDelegate.AddRaw(this, &GDDamageStatics::Initialize);
+		}
+	}
 
+private:
+	bool bInitialized = false;
+	FDelegateHandle InitializeHandle;
+
+public:
+	void Initialize()
+	{
+		FGDGameplayTags::Get().OnInitedDelegate.Remove(InitializeHandle);
 		const FGDGameplayTags& Tags = FGDGameplayTags::Get();
-
 		TagToDef.Add(Tags.Attribute_Secondary_Armor, ArmorDef);
 		TagToDef.Add(Tags.Attribute_Secondary_ArmorPenetration, ArmorPenetrationDef);
 		TagToDef.Add(Tags.Attribute_Secondary_BlockChange, BlockChangeDef);
@@ -163,7 +181,9 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 		// 暴击就产生2倍伤害，再加上额外伤害
 		Damage = Damage * 2.f + SourceCriticalHitDamage;
 	}
-	
+
+	// 向上取整
+	Damage = FMath::CeilToInt(Damage);
 	Damage = FMath::Max(0.f, Damage);
 
 	// 设置一些信息到效果上下文
