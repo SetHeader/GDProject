@@ -6,6 +6,7 @@
 #include "AbilitySystemComponent.h"
 #include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
+#include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "Interaction/CombatInterface.h"
 
@@ -83,7 +84,6 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const float SourceCriticalHitDamage = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitDamageDef);
 	const float TargetCriticalHitResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitResistanceDef);
 	
-	
 	// 获取伤害
 	float Damage = EffectSpec.GetSetByCallerMagnitude(FGDGameplayTags::Get().Damage);
 
@@ -96,6 +96,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	// 获取 Target的BlockChange，决定是否要格挡成功
 	// 格挡成功要将伤害减半
 	const bool bBlock = FMath::RandRange(0, 100) <= TargetBlockChange;
+	
 	if (bBlock)
 	{
 		Damage = Damage / 2;
@@ -112,14 +113,19 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const float EffectiveCriticalHitChange = SourceCriticalHitChange - TargetCriticalHitResistance * CriticalHitResistanceCoeff;
 	// 是否暴击
 	const bool bCriticalHit = (EffectiveCriticalHitChange) <= FMath::RandRange(0, 100);
-
+	
 	if (bCriticalHit)
 	{
 		// 暴击就产生2倍伤害，再加上额外伤害
 		Damage = Damage * 2.f + SourceCriticalHitDamage;
 	}
-
+	
 	Damage = FMath::Max(0.f, Damage);
+
+	// 设置一些信息到效果上下文
+	FGameplayEffectContextHandle EffectContextHandle = EffectSpec.GetContext();
+	UGDAbilitySystemLibrary::SetIsBlockedHit(EffectContextHandle, bBlock);
+	UGDAbilitySystemLibrary::SetIsCriticalHit(EffectContextHandle, bCriticalHit);
 	
 	// 应用伤害
 	FGameplayModifierEvaluatedData DamageEvaluatedData(UGDAttributeSet::GetIncomingDamageAttribute(), EGameplayModOp::Additive, Damage);

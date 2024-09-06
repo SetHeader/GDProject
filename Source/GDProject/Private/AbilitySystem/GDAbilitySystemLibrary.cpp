@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "GDGameModeBase.h"
+#include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
@@ -97,4 +98,52 @@ const UCurveTable* UGDAbilitySystemLibrary::GetDamageCoefficientsCurveTable(cons
 	checkf(ClassInfo, TEXT("ClassInfo is null"));
 
 	return ClassInfo->DamageCalculationCoefficients;
+}
+
+bool UGDAbilitySystemLibrary::IsBlockedHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	const FGDGameplayEffectContext* Context = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get());
+	if (Context)
+	{
+		return Context->IsBlockedHit();
+	}
+	
+	UE_LOG(LogTemp, Error, TEXT("UGDAbilitySystemLibrary\t Can't Cast To FGDGameplayEffectContext."));
+	return false;
+}
+
+bool UGDAbilitySystemLibrary::IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	const FGDGameplayEffectContext* Context = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get());
+	if (Context)
+	{
+		return Context->IsCriticalHit();
+	}
+	
+	UE_LOG(LogTemp, Error, TEXT("UGDAbilitySystemLibrary\t Can't Cast To FGDGameplayEffectContext."));
+	return false;
+}
+
+void UGDAbilitySystemLibrary::SetIsBlockedHit(FGameplayEffectContextHandle& EffectContextHandle, bool bValue)
+{
+	FGDGameplayEffectContext* Context = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get());
+	if (Context)
+	{
+		Context->SetIsBlockedHit(bValue);
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGDAbilitySystemLibrary\t Can't Cast To FGDGameplayEffectContext."));
+	}
+}
+
+void UGDAbilitySystemLibrary::SetIsCriticalHit(FGameplayEffectContextHandle& EffectContextHandle, bool bValue)
+{
+	FGDGameplayEffectContext* Context = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get());
+	if (Context)
+	{
+		Context->SetIsCriticalHit(bValue);
+	} else
+	{
+		UE_LOG(LogTemp, Error, TEXT("UGDAbilitySystemLibrary\t Can't Cast To FGDGameplayEffectContext."));
+	}
 }

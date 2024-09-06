@@ -59,7 +59,7 @@ inline UGDAbilitySystemComponent* AGDPlayerController::GetASC()
 	return ASC;
 }
 
-void AGDPlayerController::Client_ShowDamageNumber_Implementation(float Damage, ACharacter* Target)
+void AGDPlayerController::Client_ShowDamageNumber_Implementation(float Damage, ACharacter* Target, const bool bBlockedHit, const bool bCriticalHit)
 {
 	// IsValid不只是检查非空，还会检查指针是否准备销毁
 	if (IsValid(Target) && DamageTextComponentClass)
@@ -69,7 +69,7 @@ void AGDPlayerController::Client_ShowDamageNumber_Implementation(float Damage, A
 		// 动态创建的组件需要调用 RegisterComponent 方法，处理一些内部逻辑
 		DamageTextComponent->RegisterComponent();
 		DamageTextComponent->AttachToComponent(Target->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-		DamageTextComponent->SetDamageText(Damage);
+		DamageTextComponent->SetDamageText(Damage, bBlockedHit, bCriticalHit);
 		DamageTextComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 	}
 }

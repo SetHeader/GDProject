@@ -18,8 +18,10 @@ class GDPROJECT_API UDamageTextComponent : public UWidgetComponent
 public:
 	/**
 	 * 设置伤害文本的数值
-	 * @param Damage 伤害 
+	 * @param Damage 伤害
+	 * @param bBlockedHit
+	 * @param bCriticalHit 
 	 */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
-	void SetDamageText(float Damage);
+	void SetDamageText(float Damage, bool bBlockedHit = false, bool bCriticalHit = false);
 };

@@ -28,11 +28,11 @@ void AGDHUD::InitOverlay(APlayerController* PlayerController, APlayerState* Play
 	
 	OverlayWidget = CreateWidget<UGDUserWidget>(GetWorld(), OverlayWidgetClass);
 	OverlayWidget->SetWidgetController(OverlayWidgetController);
-	// 通知属性初始化
 	OverlayWidgetController->BroadcastInitialValues();
 	
 	AttributeMenuWidgetController = NewObject<UGDAttributeMenuWidgetController>(this, AttributeMenuWidgetControllerClass);
 	AttributeMenuWidgetController->SetParams(PlayerController, PlayerState, AbilitySystemComponent, AttributeSet);
+	AttributeMenuWidgetController->BroadcastInitialValues();
 	
 	OverlayWidget->AddToViewport();
 }

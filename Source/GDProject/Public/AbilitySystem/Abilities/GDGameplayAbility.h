@@ -17,7 +17,4 @@ class GDPROJECT_API UGDGameplayAbility : public UGameplayAbility
 public:
 	UPROPERTY(EditDefaultsOnly, Category="GDGameplayAbility")
 	FGameplayTag SetupInputTag;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GDGameplayAbility")
-	FScalableFloat Damage;
 };

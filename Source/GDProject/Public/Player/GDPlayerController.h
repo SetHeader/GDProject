@@ -75,9 +75,11 @@ public:
 	 * 动态在指定角色上显示伤害数字。
 	 * @param Damage 伤害值
 	 * @param Target 指定角色
+	 * @param bBlockedHit
+	 * @param bCriticalHit
 	 */
 	UFUNCTION(Client, Reliable)
-	void Client_ShowDamageNumber(float Damage, ACharacter* Target);
+	void Client_ShowDamageNumber(float Damage, ACharacter* Target, bool bBlockedHit = false, bool bCriticalHit = false);
 
 protected:
 	virtual void SetupInputComponent() override;

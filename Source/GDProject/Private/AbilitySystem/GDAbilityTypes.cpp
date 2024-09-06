@@ -40,14 +40,14 @@ bool FGDGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool
 
 	if (Ar.IsLoading())
 	{
-		if (RepBits & 1 << 0)
+		if (RepBits & (1 << 0))
 		{
 			SetIsBlockedHit(true);
 		}
 		
-		if (RepBits & 1 << 1)
+		if (RepBits & (1 << 1))
 		{
-			SetIsCriticalHit1(true);
+			SetIsCriticalHit(true);
 		}
 	}
 	

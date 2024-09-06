@@ -9,6 +9,7 @@
 #include "UI/WidgetController/GDOverlayWidgetController.h"
 #include "GDAbilitySystemLibrary.generated.h"
 
+struct FGameplayEffectContextHandle;
 /**
  * 
  */
@@ -32,4 +33,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|CharacterClassDefault")
 	static const UCurveTable* GetDamageCoefficientsCurveTable(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintPure, Category="GDAbilitySystemLibrary|GameplayEffects")
+	static bool IsBlockedHit(const FGameplayEffectContextHandle& EffectContextHandle);
+
+	UFUNCTION(BlueprintPure, Category="GDAbilitySystemLibrary|GameplayEffects")
+	static bool IsCriticalHit(const FGameplayEffectContextHandle& EffectContextHandle);
+
+	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|GameplayEffects")
+	static void SetIsBlockedHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bValue);
+
+	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|GameplayEffects")
+	static void SetIsCriticalHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bValue);
 };

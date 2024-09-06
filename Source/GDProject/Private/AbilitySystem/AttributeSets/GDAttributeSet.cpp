@@ -6,6 +6,7 @@
 #include "GameplayEffectExtension.h"
 #include "GameplayEffect.h"
 #include "GDGameplayTags.h"
+#include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "Interaction/CombatInterface.h"
 #include "Player/GDPlayerController.h"
@@ -92,7 +93,9 @@ void UGDAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 			{
 				if (AGDPlayerController* PC = Cast<AGDPlayerController>(Props.SourceController))
 				{
-					PC->Client_ShowDamageNumber(LocalIncomingDamage, Props.TargetCharacter);
+					const bool bBlockedHit = UGDAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+					const bool bCriticalHit = UGDAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+					PC->Client_ShowDamageNumber(LocalIncomingDamage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
 				}
 			}
 		}
