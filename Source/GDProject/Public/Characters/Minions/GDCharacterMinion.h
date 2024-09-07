@@ -12,6 +12,8 @@
 class UWidgetComponent;
 class UGDUserWidget;
 class UGDWidgetController;
+class UBehaviorTree;
+class AGDAIController;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAttributeChangedSignature, float, NewValue);
 
@@ -46,11 +48,17 @@ protected:
 	ECharacterClass CharacterClass = ECharacterClass::Warrior;
 	
 	int32 Level = 1.f;
+	UPROPERTY(EditAnywhere, Category="AI")
+	TObjectPtr<UBehaviorTree> BehaviorTree;
+	UPROPERTY()
+	TObjectPtr<AGDAIController> GDAIController;
 	
 public:
 	AGDCharacterMinion();
 
 	void BeginPlay() override;
+
+	virtual void PossessedBy(AController* NewController) override;
 
 	virtual void HighlightActor() override;
 

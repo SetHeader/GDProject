@@ -7,8 +7,11 @@
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
+#include "AI/GDAIController.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Runtime/AIModule/Classes/BehaviorTree/BehaviorTree.h"
+#include "Runtime/AIModule/Classes/BehaviorTree/BlackboardComponent.h"
 #include "UI/Widget/GDUserWidget.h"
 
 AGDCharacterMinion::AGDCharacterMinion()
@@ -48,6 +51,18 @@ void AGDCharacterMinion::BeginPlay()
 
 	ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved)
 		.AddUObject(this, &AGDCharacterMinion::HitReactTagChanged);
+}
+
+void AGDCharacterMinion::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (!HasAuthority()) return;
+	
+	GDAIController = Cast<AGDAIController>(NewController);
+	checkf(GDAIController, TEXT("GDCharacterMinion\t Not Set AIController"))
+	GDAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+	GDAIController->RunBehaviorTree(BehaviorTree);
 }
 
 void AGDCharacterMinion::HighlightActor()

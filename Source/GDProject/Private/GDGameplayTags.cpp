@@ -103,4 +103,10 @@ void FGDGameplayTags::InitializeGameplayTags()
 	 */
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Effects.HitReact"), FString("HitReact"));
 	Effects_HitReact = FGameplayTag::RequestGameplayTag(FName("Effects.HitReact"));
+
+
+	/*
+	 * 广播初始化完毕
+	 */
+	OnInitedDelegate.Broadcast();
 }
