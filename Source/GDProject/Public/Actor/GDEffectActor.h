@@ -74,6 +74,11 @@ public:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDEffectActor")
 	float ActorLevel = 1;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GDEffectActor")
+	bool bDestroyOnEffectApplication = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="GDEffectActor")
+	bool bApplyEffectsToEnemies = false;
 private:
 	TMap<FActiveGameplayEffectHandle, TPair<UAbilitySystemComponent*, TSubclassOf<UGameplayEffect>>> CachedEffectMap;
 

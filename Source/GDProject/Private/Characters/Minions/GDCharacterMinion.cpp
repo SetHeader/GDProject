@@ -63,6 +63,17 @@ void AGDCharacterMinion::PossessedBy(AController* NewController)
 	checkf(GDAIController, TEXT("GDCharacterMinion\t Not Set AIController"))
 	GDAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 	GDAIController->RunBehaviorTree(BehaviorTree);
+
+	// 设置黑板键
+	GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), false);
+	
+	if (CharacterClass == ECharacterClass::Warrior)
+	{
+		GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), false);
+	} else
+	{
+		GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("RangedAttacker"), true);
+	}
 }
 
 void AGDCharacterMinion::HighlightActor()
@@ -107,6 +118,7 @@ void AGDCharacterMinion::HitReactTagChanged(const FGameplayTag CallbackTag, int3
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
+	GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
 }
 
 void AGDCharacterMinion::Die()

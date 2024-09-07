@@ -51,6 +51,12 @@ void AGDEffectActor::OnBeginOverlap(AActor* TargetActor)
 		return;
 	}
 
+	bool bIsEnemy = TargetActor->ActorHasTag(FName("Enemy"));
+	if (bIsEnemy && !bApplyEffectsToEnemies)
+	{
+		return;
+	}
+
 	if (InstantEffectApplicationPolicy == EInstantEffectApplicationPolicy::ApplyOnBeginOverlap) {
 		ApplyEffectToActor(TargetActor, InstantGameplayEffectClass);
 	}
@@ -61,6 +67,11 @@ void AGDEffectActor::OnBeginOverlap(AActor* TargetActor)
 
 	if (InfiniteEffectApplicationPolicy == EInfiniteEffectApplicationPolicy::ApplyOnBeginOverlap) {
 		ApplyEffectToActor(TargetActor, InfiniteGameplayEffectClass);
+	}
+
+	if (bDestroyOnEffectApplication)
+	{
+		Destroy();
 	}
 }
 
