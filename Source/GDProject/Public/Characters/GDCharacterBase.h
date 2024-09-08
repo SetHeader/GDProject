@@ -36,7 +36,7 @@ public:
 	TObjectPtr<UAbilitySystemComponent> ASC;
 	UPROPERTY()
 	TObjectPtr<UGDAttributeSet> AS;
-
+	// 武器尖端插槽名
 	UPROPERTY(EditDefaultsOnly, Category="GDCharacterBase")
 	FName WeaponTipSocketName;
 
@@ -83,12 +83,15 @@ public:
 
 	void AddCharacterAbilities();
 
+	/** Combat Interface */
+	FVector GetCombatSocketLocation_Implementation();
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
-
 	virtual void Die() override;
-
+	/** End Combat Interface */
+	
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
+
 protected:
 	virtual void InitializeAttributes() const;
 };

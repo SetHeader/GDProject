@@ -64,6 +64,12 @@ void AGDCharacterBase::AddCharacterAbilities()
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterAbilities(SetupAbilities);
 }
 
+FVector AGDCharacterBase::GetCombatSocketLocation_Implementation()
+{
+	check(WeaponComponent);
+	return WeaponComponent->GetSocketLocation(WeaponTipSocketName);
+}
+
 UAnimMontage* AGDCharacterBase::GetHitReactMontage_Implementation()
 {
 	return HitReactMontage;

@@ -43,13 +43,4 @@ protected:
 
 	// Server & Client 初始化gas系统
 	void InitAbilityActorInfo();
-
-public:
-	/**
-	 * ICombatInterface start
-	 */
-	virtual FVector GetCombatSocketLocation() override;
-	/**
-	 * ICombatInterface end
-	 */
 };

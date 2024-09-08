@@ -90,8 +90,3 @@ int32 AGDCharacterHero::GetPlayerLevel() const
 {
 	return GetPlayerState<AGDPlayerState>()->GetPlayerLevel();
 }
-
-FVector AGDCharacterHero::GetCombatSocketLocation()
-{
-	return WeaponComponent->GetSocketLocation(WeaponTipSocketName);
-}

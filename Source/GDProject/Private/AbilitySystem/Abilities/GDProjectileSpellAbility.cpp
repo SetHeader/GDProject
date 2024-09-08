@@ -25,8 +25,8 @@ void UGDProjectileSpellAbility::SpawnProjectile(const FRotator Rotation)
 	{
 		return;
 	}
-	
-	SpawnTransform.SetLocation(Owner->GetCombatSocketLocation());
+	// 接口中的BlueprintCallable方法，需要用Execute_的方式调用
+	SpawnTransform.SetLocation(ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo()));
 	SpawnTransform.SetRotation(Rotation.Quaternion());
 	
 	AGDProjectile* Projectile = GetWorld()->SpawnActorDeferred<AGDProjectile>(

@@ -38,7 +38,7 @@ void AGDCharacterMinion::BeginPlay()
 	if (HasAuthority())
 	{
 		InitializeAttributes();
-		UGDAbilitySystemLibrary::GiveStartupAbilities(this, ASC);
+		UGDAbilitySystemLibrary::GiveStartupAbilities(this, ASC, CharacterClass);
 	}
 	
 	if (UGDUserWidget* AuraUserWidget = Cast<UGDUserWidget>(WidgetComponent->GetUserWidgetObject()))
@@ -130,4 +130,14 @@ void AGDCharacterMinion::Die()
 void AGDCharacterMinion::InitializeAttributes() const
 {
 	UGDAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, ASC);
+}
+
+AActor* AGDCharacterMinion::GetCombatTarget_Implementation() const
+{
+	return CombatTarget;
+}
+
+void AGDCharacterMinion::SetCombatTarget_Implementation(AActor* Target)
+{
+	CombatTarget = Target;
 }

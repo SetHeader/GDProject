@@ -55,6 +55,9 @@ public:
 	FGameplayTag Damage_Lighting;
 	FGameplayTag Damage_Arcane;
 	FGameplayTag Damage_Physical;
+
+	/** 能力相关 */
+	FGameplayTag Abilities_Attack;
 	
 	// 存放所有类型的伤害标签，方便遍历
 	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistance;

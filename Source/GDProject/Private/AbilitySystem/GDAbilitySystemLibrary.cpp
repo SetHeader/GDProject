@@ -7,6 +7,7 @@
 #include "GDGameModeBase.h"
 #include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
 
@@ -65,7 +66,7 @@ void UGDAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldCo
 	
 }
 
-void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC)
+void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass)
 {
 	checkf(WorldContextObject, TEXT("WorldContextObject is null"));
 	checkf(ASC, TEXT("ASC is null"));
@@ -77,12 +78,30 @@ void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextOb
 	}
 
 	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
-	checkf(ClassInfo, TEXT("ClassInfo is null"));
+	if (!ClassInfo)
+	{
+		return;
+	}
 
 	for (TSubclassOf<UGameplayAbility> CommonAbility : ClassInfo->CommonAbilities)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(CommonAbility, 1);
 		ASC->GiveAbility(AbilitySpec);
+	}
+
+	FCharacterClassDefaultInfo ClassDefaultInfo = ClassInfo->GetClassDefaultInfo(CharacterClass);
+	if (!IsValid(ClassInfo))
+	{
+		return;
+	}
+	for (TSubclassOf<UGameplayAbility> CommonAbility : ClassDefaultInfo.CommonAbilities)
+	{
+		ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor());
+		if (CombatInterface)
+		{
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(CommonAbility, CombatInterface->GetPlayerLevel());
+			ASC->GiveAbility(AbilitySpec);
+		}
 	}
 }
 

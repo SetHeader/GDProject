@@ -103,7 +103,12 @@ void FGDGameplayTags::InitializeGameplayTags()
 	 */
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Effects.HitReact"), FString("HitReact"));
 	Effects_HitReact = FGameplayTag::RequestGameplayTag(FName("Effects.HitReact"));
-
+	
+	/*
+	 * 能力相关
+	 */
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Attack"), FString("Attack Ability Tag"));
+	Abilities_Attack = FGameplayTag::RequestGameplayTag(FName("Abilities.Attack"));
 
 	/*
 	 * 广播初始化完毕

@@ -22,7 +22,9 @@ class GDPROJECT_API ICombatInterface
 
 public:
 	virtual int32 GetPlayerLevel() const { return 1.f; }
-	virtual FVector GetCombatSocketLocation() { return FVector::Zero(); }
+	
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	FVector GetCombatSocketLocation();
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateFacingTarget(FVector Location);

@@ -43,6 +43,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	float LifeSpan = 5.f;
 	
+	UPROPERTY(BlueprintReadWrite, Category = "Combat")
+	TObjectPtr<AActor> CombatTarget;
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GDCharacterEnemy")
 	ECharacterClass CharacterClass = ECharacterClass::Warrior;
@@ -59,20 +61,26 @@ public:
 	void BeginPlay() override;
 
 	virtual void PossessedBy(AController* NewController) override;
-
+	
+	/** Enemy Interface */
 	virtual void HighlightActor() override;
-
 	virtual void UnHighlightActor() override;
+	virtual AActor* GetCombatTarget_Implementation() const override;
+	virtual void SetCombatTarget_Implementation(AActor* Target) override;
+	/** End Enemy Interface */
 
+	/** Combat Interface */
 	UFUNCTION(BlueprintCallable, Category = "CombatInterface")
 	FORCEINLINE int32 GetPlayerLevel() const override { return Level; }
+	virtual void Die() override;
+	/** End Combat Interface */
 	
 	virtual void BroadcastInitialValues() const;
 	virtual void BindCallbacksToDependencies() const;
 
 	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
-	virtual void Die() override;
 protected:
 	virtual void InitializeAttributes() const override;
+
 };
