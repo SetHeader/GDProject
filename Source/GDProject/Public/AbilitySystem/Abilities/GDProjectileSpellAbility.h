@@ -26,6 +26,6 @@ protected:
 	 * @param Rotation 发射方向
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CastSpellAbility")
-	virtual void SpawnProjectile(const FRotator Rotation);
+	virtual void SpawnProjectile(const FRotator Rotation, const FGameplayTag& SocketTag);
 
 };

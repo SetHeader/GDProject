@@ -9,7 +9,7 @@
 #include "Actor/GDProjectile.h"
 #include "Characters/GDCharacterBase.h"
 
-void UGDProjectileSpellAbility::SpawnProjectile(const FRotator Rotation)
+void UGDProjectileSpellAbility::SpawnProjectile(const FRotator Rotation, const FGameplayTag& SocketTag)
 {
 	if (!GetAvatarActorFromActorInfo()->HasAuthority())
 	{
@@ -26,7 +26,7 @@ void UGDProjectileSpellAbility::SpawnProjectile(const FRotator Rotation)
 		return;
 	}
 	// 接口中的BlueprintCallable方法，需要用Execute_的方式调用
-	SpawnTransform.SetLocation(ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo()));
+	SpawnTransform.SetLocation(ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), SocketTag));
 	SpawnTransform.SetRotation(Rotation.Quaternion());
 	
 	AGDProjectile* Projectile = GetWorld()->SpawnActorDeferred<AGDProjectile>(

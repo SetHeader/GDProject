@@ -46,6 +46,7 @@ void AGDProjectile::Destroyed()
 	// 没碰到东西的话，在销毁时也要生成效果
 	if (!bHit && !HasAuthority())
 	{
+		bHit = true;
 		UGameplayStatics::SpawnSoundAtLocation(this, ImpactSound, GetActorLocation());
 		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
 		if (IsValid(AudioComponent)) AudioComponent->Stop();
@@ -56,22 +57,34 @@ void AGDProjectile::Destroyed()
 void AGDProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                    UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	// 不管是在客户端还是服务端，碰撞到东西就生成碰撞效果
-	UGameplayStatics::SpawnSoundAtLocation(this, ImpactSound, GetActorLocation());
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
-	if (IsValid(AudioComponent)) AudioComponent->Stop();
+	if (!DamageEffectHandle.IsValid())
+	{
+		UE_LOG(LogTemp, Error, TEXT("GDProjectile\t DamageEffectHandle Is Not Valid!"));
+		return;
+	}
+	// 不会对自己造成伤害
+	if (OtherActor == DamageEffectHandle.Data.Get()->GetContext().GetEffectCauser())
+	{
+		return;
+	}
+
+	if (!bHit)
+	{
+		bHit = true;
+		// 不管是在客户端还是服务端，碰撞到东西就生成碰撞效果
+		UGameplayStatics::SpawnSoundAtLocation(this, ImpactSound, GetActorLocation());
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
+		if (IsValid(AudioComponent)) AudioComponent->Stop();
+	}
 	
 	// 在服务销毁自身，销毁动作会复制到客户端上
 	if (HasAuthority())
 	{
 		if (UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 		{
-			if (DamageEffectHandle.IsValid())
-			{
-				ASC->ApplyGameplayEffectSpecToSelf(*DamageEffectHandle.Data.Get());
-			}
+			ASC->ApplyGameplayEffectSpecToSelf(*DamageEffectHandle.Data.Get());
 		}
-		
+
 		Destroy();
 	} else
 	{

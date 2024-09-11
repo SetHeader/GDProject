@@ -118,12 +118,19 @@ void AGDCharacterMinion::HitReactTagChanged(const FGameplayTag CallbackTag, int3
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
-	GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	if (GDAIController)
+	{
+		GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	}
 }
 
 void AGDCharacterMinion::Die()
 {
 	SetLifeSpan(LifeSpan);
+	if (GDAIController)
+	{
+		GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("Dead"), true);
+	}
 	Super::Die();
 }
 

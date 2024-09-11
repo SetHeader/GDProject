@@ -92,7 +92,7 @@ void AGDPlayerController::OnAbilityInputPressed(FGameplayTag InputTag)
 			bAutoRunning = false;
 			bTriggerAutoRunning = true;
 			Destination = CursorHit.ImpactPoint;
-			DrawDebugSphere(GetWorld(), CursorHit.ImpactPoint, 8, 8, FColor::Red, false, 10.f);
+			//DrawDebugSphere(GetWorld(), CursorHit.ImpactPoint, 8, 8, FColor::Red, false, 10.f);
 			return;
 		}
 	}
@@ -125,7 +125,7 @@ void AGDPlayerController::OnAbilityInputReleased(FGameplayTag InputTag)
 				for (const FVector& PathPoint : PathPoints)
 				{
 					SplineComponent->AddSplineWorldPoint(PathPoint);
-					DrawDebugSphere(GetWorld(), PathPoint, 8, 8, FColor::Green, false, 10.f);
+					//DrawDebugSphere(GetWorld(), PathPoint, 8, 8, FColor::Green, false, 10.f);
 				}
 				if (!PathPoints.IsEmpty())
 				{

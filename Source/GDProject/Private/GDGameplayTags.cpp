@@ -111,6 +111,16 @@ void FGDGameplayTags::InitializeGameplayTags()
 	Abilities_Attack = FGameplayTag::RequestGameplayTag(FName("Abilities.Attack"));
 
 	/*
+	 * Montage
+	 */
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.Weapon"), FString("Combat Socket Weapon"));
+	CombatSocket_Weapon = FGameplayTag::RequestGameplayTag(FName("CombatSocket.Weapon"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.RightHand"), FString("Combat Socket RightHand"));
+	CombatSocket_RightHand = FGameplayTag::RequestGameplayTag(FName("CombatSocket.RightHand"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.LeftHand"), FString("Combat Socket LeftHand"));
+	CombatSocket_LeftHand = FGameplayTag::RequestGameplayTag(FName("CombatSocket.LeftHand"));
+
+	/*
 	 * 广播初始化完毕
 	 */
 	OnInitedDelegate.Broadcast();

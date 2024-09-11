@@ -96,7 +96,16 @@ void UGDAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 			// 显示浮动伤害
 			if (Props.SourceCharacter != Props.TargetCharacter)
 			{
-				if (AGDPlayerController* PC = Cast<AGDPlayerController>(Props.SourceController))
+				AGDPlayerController* PC = Cast<AGDPlayerController>(Props.SourceController);
+				if (PC)
+				{
+					const bool bBlockedHit = UGDAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+					const bool bCriticalHit = UGDAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+					PC->Client_ShowDamageNumber(LocalIncomingDamage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
+					return;
+				}
+				PC = Cast<AGDPlayerController>(Props.TargetController);
+				if (PC)
 				{
 					const bool bBlockedHit = UGDAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
 					const bool bCriticalHit = UGDAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);

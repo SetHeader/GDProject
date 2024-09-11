@@ -55,7 +55,7 @@ public:
 	FGameplayTag Damage_Lighting;
 	FGameplayTag Damage_Arcane;
 	FGameplayTag Damage_Physical;
-
+	
 	/** 能力相关 */
 	FGameplayTag Abilities_Attack;
 	
@@ -65,6 +65,17 @@ public:
 	/** 其它 */
 	FGameplayTag Effects_HitReact;
 
+	/** Montage */
+	FGameplayTag CombatSocket_Weapon;
+	FGameplayTag CombatSocket_RightHand;
+	FGameplayTag CombatSocket_LeftHand;
+	FGameplayTag CombatSocket_Tail;
+	
+	FGameplayTag Montage_Attack_1;
+	FGameplayTag Montage_Attack_2;
+	FGameplayTag Montage_Attack_3;
+	FGameplayTag Montage_Attack_4;
+	
 private:
 	bool bInitialized = false;
 

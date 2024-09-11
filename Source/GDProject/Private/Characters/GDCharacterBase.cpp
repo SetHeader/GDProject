@@ -5,9 +5,12 @@
 #include "AbilitySystemComponent.h"
 
 #include "GameplayEffect.h"
+#include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/SkeletalMeshSocket.h"
 #include "GDProject/GDProject.h"
+#include "Kismet/GameplayStatics.h"
 
 AGDCharacterBase::AGDCharacterBase()
 {
@@ -64,10 +67,22 @@ void AGDCharacterBase::AddCharacterAbilities()
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterAbilities(SetupAbilities);
 }
 
-FVector AGDCharacterBase::GetCombatSocketLocation_Implementation()
+FVector AGDCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag)
 {
-	check(WeaponComponent);
-	return WeaponComponent->GetSocketLocation(WeaponTipSocketName);
+	FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
+	if (MontageTag == GameplayTags.CombatSocket_Weapon)
+	{
+		return WeaponComponent->GetSocketLocation(WeaponTipSocketName);
+	}
+	if (MontageTag == GameplayTags.CombatSocket_LeftHand)
+	{
+		return GetMesh()->GetSocketLocation(LeftHandSocketName);
+	}
+	if (MontageTag == GameplayTags.CombatSocket_RightHand)
+	{
+		return GetMesh()->GetSocketLocation(LeftHandSocketName);
+	}
+	return FVector();
 }
 
 UAnimMontage* AGDCharacterBase::GetHitReactMontage_Implementation()
@@ -82,8 +97,30 @@ void AGDCharacterBase::Die()
 	MulticastHandleDeath();
 }
 
+bool AGDCharacterBase::IsDead_Implementation() const
+{
+	return bIsDead;
+}
+
+AActor* AGDCharacterBase::GetAvatar_Implementation()
+{
+	return this;
+}
+
+TArray<FTaggedMontage> AGDCharacterBase::GetTaggedMontages_Implementation()
+{
+	return AttackMongages;
+}
+
+UNiagaraSystem* AGDCharacterBase::GetBloodEffect_Implementation() const
+{
+	return BloodEffect;
+}
+
 void AGDCharacterBase::MulticastHandleDeath_Implementation()
 {
+	UGameplayStatics::PlaySoundAtLocation(this, DeadSound, GetActorLocation());
+	
 	WeaponComponent->SetSimulatePhysics(true);
 	WeaponComponent->SetEnableGravity(true);
 	WeaponComponent->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
@@ -95,6 +132,7 @@ void AGDCharacterBase::MulticastHandleDeath_Implementation()
 	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Dissolve();
+	bIsDead = true;
 }
 
 void AGDCharacterBase::InitializeAttributes() const

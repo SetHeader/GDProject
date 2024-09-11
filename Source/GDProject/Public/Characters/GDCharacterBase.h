@@ -8,6 +8,7 @@
 #include "Interaction/CombatInterface.h"
 #include "GDCharacterBase.generated.h"
 
+class UNiagaraSystem;
 class UGameplayAbility;
 class UAbilitySystemComponent;
 class UGDAttributeSet;
@@ -37,12 +38,26 @@ public:
 	UPROPERTY()
 	TObjectPtr<UGDAttributeSet> AS;
 	// 武器尖端插槽名
-	UPROPERTY(EditDefaultsOnly, Category="GDCharacterBase")
+	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	FName WeaponTipSocketName;
 
-	UPROPERTY(EditDefaultsOnly, Category="GDCharacterBase")
+	UPROPERTY(EditDefaultsOnly, Category="Combat")
+	FName LeftHandSocketName;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat")
+	FName RightHandSocketName;
+
+	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	TObjectPtr<UAnimMontage> HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category="Combat")
+	TArray<FTaggedMontage> AttackMongages;
+
+	UPROPERTY(EditAnywhere, Category="Combat")
+	UNiagaraSystem* BloodEffect;
 	
+	UPROPERTY(EditAnywhere, Category="Combat")
+	USoundBase* DeadSound;
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDCharacterBase")
 	TSubclassOf<UGameplayEffect> DefaultPrimaryAttributes;
@@ -57,6 +72,8 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
 	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
+
+	bool bIsDead = false;
 	
 	void Dissolve();
 
@@ -84,9 +101,13 @@ public:
 	void AddCharacterAbilities();
 
 	/** Combat Interface */
-	FVector GetCombatSocketLocation_Implementation();
+	FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag);
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
 	virtual void Die() override;
+	bool IsDead_Implementation() const override;
+	AActor* GetAvatar_Implementation() override;
+	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() const override;
 	/** End Combat Interface */
 	
 	UFUNCTION(NetMulticast, Reliable)

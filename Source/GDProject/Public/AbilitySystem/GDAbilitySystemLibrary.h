@@ -45,4 +45,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|GameplayEffects")
 	static void SetIsCriticalHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bValue);
+
+	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|GameplayEffects")
+	static void GetLivePlayersWithInRadius(const UObject* WorldContextObject, TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius, const FVector& SphereOrigin);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category="GDAbilitySystemLibrary|GameplayEffects")
+	static bool IsNotFriend(const AActor* FirstActor, const AActor* SecondActor);
 };

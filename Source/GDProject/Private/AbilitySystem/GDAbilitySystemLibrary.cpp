@@ -166,3 +166,48 @@ void UGDAbilitySystemLibrary::SetIsCriticalHit(FGameplayEffectContextHandle& Eff
 		UE_LOG(LogTemp, Error, TEXT("UGDAbilitySystemLibrary\t Can't Cast To FGDGameplayEffectContext."));
 	}
 }
+
+void UGDAbilitySystemLibrary::GetLivePlayersWithInRadius(const UObject* WorldContextObject,
+	TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius,
+	const FVector& SphereOrigin)
+{
+	
+	UWorld* World = WorldContextObject->GetWorld();
+
+	if (World)
+	{
+		FCollisionObjectQueryParams ObjectQueryParams(FCollisionObjectQueryParams::InitType::AllDynamicObjects);
+		FCollisionQueryParams QueryParams;
+		QueryParams.AddIgnoredActors(ActorsToIgnore);
+		
+		TArray<FOverlapResult> Overlaps;
+		World->OverlapMultiByObjectType(Overlaps, SphereOrigin, FQuat::Identity, ObjectQueryParams, FCollisionShape::MakeSphere(Radius), QueryParams);
+
+		for (const FOverlapResult& Overlap : Overlaps)
+		{
+			AActor* OverlapActor = Overlap.GetActor();
+			
+			// 注意这里是使用UCombatInterface，不是ICombatInterface
+			const bool ImplementsCombatInterface = OverlapActor->Implements<UCombatInterface>();
+			
+			if (ImplementsCombatInterface)
+			{
+				if (!ICombatInterface::Execute_IsDead(OverlapActor)) {
+					OutOverlappingActors.Add(ICombatInterface::Execute_GetAvatar(OverlapActor));
+				}
+			}
+		}
+	}
+	
+}
+
+bool UGDAbilitySystemLibrary::IsNotFriend(const AActor* FirstActor, const AActor* SecondActor)
+{
+	if (IsValid(FirstActor) && IsValid(SecondActor))
+	{
+		const bool bBothArePlayers = FirstActor->ActorHasTag("Player") && SecondActor->ActorHasTag("Player");
+		const bool bBothAreEnemies = FirstActor->ActorHasTag("Enemy") && SecondActor->ActorHasTag("Enemy");
+		return !(bBothArePlayers && bBothAreEnemies);
+	}
+	return true;
+}

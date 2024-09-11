@@ -21,4 +21,7 @@ public:
 	// 不同类型的伤害值
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TMap<FGameplayTag, FScalableFloat> DamageTypes;
+
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+	virtual void CauseDamage(AActor* TargetActor);
 };

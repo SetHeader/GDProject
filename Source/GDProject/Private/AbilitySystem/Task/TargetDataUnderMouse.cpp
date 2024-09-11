@@ -29,6 +29,7 @@ void UTargetDataUnderMouse::Activate()
 		AbilitySystemComponent->AbilityTargetDataSetDelegate(SpecHandle, PredictionKey)
 			.AddUObject(this, &UTargetDataUnderMouse::OnTargetDataReplicatedCallback);
 		
+		// 可能出现服务端已经收到数据后，才执行Activate方法，所以需要判断下是否已经收到数据。
 		AbilitySystemComponent->CallReplicatedTargetDataDelegatesIfSet(SpecHandle, PredictionKey);
 	}
 }
@@ -46,6 +47,7 @@ void UTargetDataUnderMouse::SendMouseCursorData()
 		FGameplayAbilityTargetData_SingleTargetHit* Data = new FGameplayAbilityTargetData_SingleTargetHit();
 		Data->HitResult = HitResult;
 		DataHandle.Add(Data);
+		// 复制鼠标数据到服务端
 		AbilitySystemComponent->ServerSetReplicatedTargetData(
 			GetAbilitySpecHandle(),
 			GetActivationPredictionKey(),
