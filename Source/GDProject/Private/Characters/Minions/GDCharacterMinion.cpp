@@ -17,6 +17,8 @@
 AGDCharacterMinion::AGDCharacterMinion()
 {
 	GetMesh()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	// 这样播放蒙太奇时，服务端也能查询到骨骼位置信息
+	GetMesh()->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickMontagesAndRefreshBonesWhenPlayingMontages;
 	
 	ASC = CreateDefaultSubobject<UGDAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	ASC->SetIsReplicated(true);
@@ -60,7 +62,10 @@ void AGDCharacterMinion::PossessedBy(AController* NewController)
 	if (!HasAuthority()) return;
 	
 	GDAIController = Cast<AGDAIController>(NewController);
-	checkf(GDAIController, TEXT("GDCharacterMinion\t Not Set AIController"))
+	if (!GDAIController)
+	{
+		return;
+	}
 	GDAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 	GDAIController->RunBehaviorTree(BehaviorTree);
 

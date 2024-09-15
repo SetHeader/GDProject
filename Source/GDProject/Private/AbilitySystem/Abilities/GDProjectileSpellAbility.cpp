@@ -9,7 +9,7 @@
 #include "Actor/GDProjectile.h"
 #include "Characters/GDCharacterBase.h"
 
-void UGDProjectileSpellAbility::SpawnProjectile(const FRotator Rotation, const FGameplayTag& SocketTag)
+void UGDProjectileSpellAbility::SpawnProjectile(const FVector Destination, const FGameplayTag& SocketTag, const float Pitch, const bool bOverridePitch)
 {
 	if (!GetAvatarActorFromActorInfo()->HasAuthority())
 	{
@@ -26,7 +26,17 @@ void UGDProjectileSpellAbility::SpawnProjectile(const FRotator Rotation, const F
 		return;
 	}
 	// 接口中的BlueprintCallable方法，需要用Execute_的方式调用
-	SpawnTransform.SetLocation(ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), SocketTag));
+	FVector SocketLocation = ICombatInterface::Execute_GetCombatSocketLocation(GetAvatarActorFromActorInfo(), SocketTag);
+	SpawnTransform.SetLocation(SocketLocation);
+	FRotator Rotation = (Destination - SocketLocation).Rotation();
+	Rotation.Pitch = 0;
+	if (bOverridePitch)
+	{
+		Rotation.Pitch = Pitch;
+	} else
+	{
+		Rotation.Pitch += Pitch;
+	}
 	SpawnTransform.SetRotation(Rotation.Quaternion());
 	
 	AGDProjectile* Projectile = GetWorld()->SpawnActorDeferred<AGDProjectile>(
@@ -45,7 +55,6 @@ void UGDProjectileSpellAbility::SpawnProjectile(const FRotator Rotation, const F
 		const float ScaledDamage = Pair.Value.GetValueAtLevel(10);
 		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, Pair.Key, ScaledDamage);
 	}
-	
 	Projectile->DamageEffectHandle = SpecHandle;
 	
 	Projectile->FinishSpawning(SpawnTransform);

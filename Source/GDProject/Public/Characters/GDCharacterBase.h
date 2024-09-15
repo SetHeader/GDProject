@@ -40,7 +40,10 @@ public:
 	// 武器尖端插槽名
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	FName WeaponTipSocketName;
-
+	
+	UPROPERTY(EditDefaultsOnly, Category="Combat")
+	FName TailSocketName;
+	
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	FName LeftHandSocketName;
 
@@ -58,6 +61,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category="Combat")
 	USoundBase* DeadSound;
+
+	/* Minions */
+	int32 MinionCount = 0;
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDCharacterBase")
 	TSubclassOf<UGameplayEffect> DefaultPrimaryAttributes;
@@ -101,13 +107,14 @@ public:
 	void AddCharacterAbilities();
 
 	/** Combat Interface */
-	FVector GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag);
+	FVector GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag);
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
 	virtual void Die() override;
 	bool IsDead_Implementation() const override;
 	AActor* GetAvatar_Implementation() override;
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() const override;
+	virtual int32 GetMinionCount_Implementation() const override;
 	/** End Combat Interface */
 	
 	UFUNCTION(NetMulticast, Reliable)

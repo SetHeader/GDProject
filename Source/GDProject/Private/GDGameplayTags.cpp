@@ -109,7 +109,8 @@ void FGDGameplayTags::InitializeGameplayTags()
 	 */
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Attack"), FString("Attack Ability Tag"));
 	Abilities_Attack = FGameplayTag::RequestGameplayTag(FName("Abilities.Attack"));
-
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Summon"), FString("Summon Ability Tag"));
+	Abilities_Summon = FGameplayTag::RequestGameplayTag(FName("Abilities.Summon"));
 	/*
 	 * Montage
 	 */
@@ -119,7 +120,19 @@ void FGDGameplayTags::InitializeGameplayTags()
 	CombatSocket_RightHand = FGameplayTag::RequestGameplayTag(FName("CombatSocket.RightHand"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.LeftHand"), FString("Combat Socket LeftHand"));
 	CombatSocket_LeftHand = FGameplayTag::RequestGameplayTag(FName("CombatSocket.LeftHand"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("CombatSocket.Tail"), FString("Combat Socket Tail"));
+	CombatSocket_Tail = FGameplayTag::RequestGameplayTag(FName("CombatSocket.Tail"));
 
+
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.1"), FString("Montage Attack 1"));
+	Montage_Attack_1 = FGameplayTag::RequestGameplayTag(FName("Montage.Attack.1"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.2"), FString("Montage Attack 2"));
+	Montage_Attack_2 = FGameplayTag::RequestGameplayTag(FName("Montage.Attack.2"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.3"), FString("Montage Attack 3"));
+	Montage_Attack_3 = FGameplayTag::RequestGameplayTag(FName("Montage.Attack.3"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.4"), FString("Montage Attack 4"));
+	Montage_Attack_4 = FGameplayTag::RequestGameplayTag(FName("Montage.Attack.4"));
+	
 	/*
 	 * 广播初始化完毕
 	 */

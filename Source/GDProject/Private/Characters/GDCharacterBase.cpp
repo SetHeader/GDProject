@@ -67,18 +67,22 @@ void AGDCharacterBase::AddCharacterAbilities()
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterAbilities(SetupAbilities);
 }
 
-FVector AGDCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& MontageTag)
+FVector AGDCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag)
 {
 	FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
-	if (MontageTag == GameplayTags.CombatSocket_Weapon)
+	if (CombatSocketTag == GameplayTags.CombatSocket_Weapon)
 	{
 		return WeaponComponent->GetSocketLocation(WeaponTipSocketName);
 	}
-	if (MontageTag == GameplayTags.CombatSocket_LeftHand)
+	if (CombatSocketTag == GameplayTags.CombatSocket_Tail)
+	{
+		return GetMesh()->GetSocketLocation(TailSocketName);
+	}
+	if (CombatSocketTag == GameplayTags.CombatSocket_LeftHand)
 	{
 		return GetMesh()->GetSocketLocation(LeftHandSocketName);
 	}
-	if (MontageTag == GameplayTags.CombatSocket_RightHand)
+	if (CombatSocketTag == GameplayTags.CombatSocket_RightHand)
 	{
 		return GetMesh()->GetSocketLocation(LeftHandSocketName);
 	}
@@ -115,6 +119,11 @@ TArray<FTaggedMontage> AGDCharacterBase::GetTaggedMontages_Implementation()
 UNiagaraSystem* AGDCharacterBase::GetBloodEffect_Implementation() const
 {
 	return BloodEffect;
+}
+
+int32 AGDCharacterBase::GetMinionCount_Implementation() const
+{
+	return MinionCount;
 }
 
 void AGDCharacterBase::MulticastHandleDeath_Implementation()

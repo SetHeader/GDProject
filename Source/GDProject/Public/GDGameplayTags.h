@@ -58,6 +58,7 @@ public:
 	
 	/** 能力相关 */
 	FGameplayTag Abilities_Attack;
+	FGameplayTag Abilities_Summon;
 	
 	// 存放所有类型的伤害标签，方便遍历
 	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistance;
