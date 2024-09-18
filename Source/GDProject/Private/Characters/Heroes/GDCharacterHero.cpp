@@ -5,14 +5,44 @@
 #include "Player/GDPlayerState.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameplayEffectTypes.h"
-#include "Abilities/GameplayAbility.h"
-#include "../GDProject.h"
 #include "InputMappingContext.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "UI/GDHUD.h"
-#include "UI/WidgetController/GDWidgetController.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
+#include "AbilitySystem/GDAbilitySystemLibrary.h"
+#include "AbilitySystem/Data/LevelUpInfo.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Niagara\Public\NiagaraComponent.h"
+
+AGDCharacterHero::AGDCharacterHero()
+{
+	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
+	SpringArmComponent->SetupAttachment(RootComponent);
+	SpringArmComponent->SetUsingAbsoluteRotation(true);
+	SpringArmComponent->bDoCollisionTest = false;
+	
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
+	CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
+	CameraComponent->bUsePawnControlRotation = false;
+	
+	LevelUpNiagraComponent = CreateDefaultSubobject<UNiagaraComponent>("NiagaraComponent");
+	LevelUpNiagraComponent->SetupAttachment(GetRootComponent());
+	LevelUpNiagraComponent->bAutoActivate = false;
+	
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0, 400, 0);
+	GetCharacterMovement()->bConstrainToPlane = true;
+	GetCharacterMovement()->bSnapToPlaneAtStart = true;
+
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
+	
+	CharacterClass = ECharacterClass::Elementalist;
+}
 
 void AGDCharacterHero::PossessedBy(AController* NewController)
 {
@@ -86,7 +116,96 @@ void AGDCharacterHero::InitAbilityActorInfo()
 	}
 }
 
-int32 AGDCharacterHero::GetPlayerLevel() const
+int32 AGDCharacterHero::GetPlayerLevel_Implementation() const
 {
 	return GetPlayerState<AGDPlayerState>()->GetPlayerLevel();
+}
+
+int32 AGDCharacterHero::GetXP_Implementation()
+{
+	return GetPlayerState<AGDPlayerState>()->GetXP();
+}
+
+void AGDCharacterHero::AddToXP_Implementation(int32 InXP)
+{
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(GetPlayerState());
+	GDPS->AddToXP(InXP);
+}
+
+int32 AGDCharacterHero::FindLevelForXP_Implementation(int32 XP)
+{
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(GetPlayerState());
+	
+	if (GDPS->LevelUpInfo)
+	{
+		return GDPS->LevelUpInfo->FindLevelForXP(XP);
+	}
+	
+	return 1;
+}
+
+int32 AGDCharacterHero::GetAttributePointsReward_Implementation(const int32 InLevel) const
+{
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(GetPlayerState());
+	
+	if (GDPS->LevelUpInfo && GDPS->LevelUpInfo->LevelUpInfos.Num() > InLevel)
+	{
+		return GDPS->LevelUpInfo->LevelUpInfos[InLevel].AttributePointAward;
+	}
+	
+	return 0;
+}
+
+int32 AGDCharacterHero::GetSpellPointsReward_Implementation(const int32 InLevel) const
+{
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(GetPlayerState());
+	
+	if (GDPS->LevelUpInfo && GDPS->LevelUpInfo->LevelUpInfos.Num() > InLevel)
+	{
+		return GDPS->LevelUpInfo->LevelUpInfos[InLevel].SpellPointAward;
+	}
+		
+	return 0;
+}
+
+int32 AGDCharacterHero::GetAttributePoints_Implementation()
+{
+	return CastChecked<AGDPlayerState>(GetPlayerState())->GetAttributePoints();
+}
+
+int32 AGDCharacterHero::GetSpellPoints_Implementation()
+{
+	return CastChecked<AGDPlayerState>(GetPlayerState())->GetSpellPoints();
+}
+
+void AGDCharacterHero::AddToPlayerLevel_Implementation(int32 InLevel)
+{
+	CastChecked<AGDPlayerState>(GetPlayerState())->AddToLevel(InLevel);
+}
+
+void AGDCharacterHero::AddToAttributePoints_Implementation(int32 InPoints)
+{
+	CastChecked<AGDPlayerState>(GetPlayerState())->AddToAttributePoints(InPoints);
+}
+
+void AGDCharacterHero::AddToSpellPoints_Implementation(int32 InPoints)
+{
+	CastChecked<AGDPlayerState>(GetPlayerState())->AddToSpellPoints(InPoints);
+}
+
+void AGDCharacterHero::LevelUp_Implementation()
+{
+	Multicast_LevelUpParticles();
+}
+
+void AGDCharacterHero::Multicast_LevelUpParticles_Implementation() const
+{
+	if (IsValid(LevelUpNiagraComponent))
+	{
+		const FVector CameraLocation= CameraComponent->GetComponentLocation();
+		const FVector NiagaraLocation= LevelUpNiagraComponent->GetComponentLocation();
+		const FRotator ToCameraRotation = (CameraLocation - NiagaraLocation).Rotation();
+		LevelUpNiagraComponent->SetWorldRotation(ToCameraRotation);
+		LevelUpNiagraComponent->Activate(true);
+	}
 }

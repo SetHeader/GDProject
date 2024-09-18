@@ -15,6 +15,10 @@ struct FGDGameplayTags
 {
 	GENERATED_BODY()
 public:
+	/** 各种类型的前缀 */
+	FGameplayTag Attribute_Primary;
+	FGameplayTag Abilities;
+	
 	/** 属性相关 */
 	FGameplayTag Attribute_Primary_Strength;
 	FGameplayTag Attribute_Primary_Intelligence;
@@ -42,6 +46,8 @@ public:
 	FGameplayTag Attribute_Vital_Mana;
 	FGameplayTag Attribute_Vital_Stamina;
 
+	FGameplayTag Attribute_Meta_IncomingXP;
+
 	/** 输入相关 */
 	FGameplayTag InputTag_LMB;
 	FGameplayTag InputTag_RMB;
@@ -59,6 +65,10 @@ public:
 	/** 能力相关 */
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
+	
+	FGameplayTag Abilities_Fire_FireBolt;
+
+	FGameplayTag Cooldown_Fire_FireBolt;
 	
 	// 存放所有类型的伤害标签，方便遍历
 	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistance;

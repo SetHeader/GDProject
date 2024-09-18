@@ -108,13 +108,18 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 	const AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
 	const AActor* TargetAvatar = TargetASC ? SourceASC->GetAvatarActor() : nullptr;
-	
-	const ICombatInterface* SourceCombatInterface = Cast<ICombatInterface>(SourceAvatar);
-	const ICombatInterface* TargetCombatInterface = Cast<ICombatInterface>(TargetAvatar);
-	
-	const int SourceCombatLevel = SourceCombatInterface ? SourceCombatInterface->GetPlayerLevel() : 1;
-	const int TargetCombatLevel = TargetCombatInterface ? TargetCombatInterface->GetPlayerLevel() : 1;
-	
+
+	int SourceCombatLevel = 1;
+	if (SourceAvatar->Implements<UCombatInterface>())
+	{
+		SourceCombatLevel = ICombatInterface::Execute_GetPlayerLevel(SourceAvatar);
+	}
+	int TargetCombatLevel = 1;
+	if (TargetAvatar->Implements<UCombatInterface>())
+	{
+		TargetCombatLevel = ICombatInterface::Execute_GetPlayerLevel(TargetAvatar);
+	}
+
 	const FGameplayEffectSpec& EffectSpec = ExecutionParams.GetOwningSpec();
 
 	FAggregatorEvaluateParameters EvaluationParameters;

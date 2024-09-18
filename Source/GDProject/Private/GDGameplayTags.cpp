@@ -65,6 +65,9 @@ void FGDGameplayTags::InitializeGameplayTags()
 	Attribute_Resistance_Arcane = FGameplayTag::RequestGameplayTag(FName("Attribute.Resistance.Arcane"));
 	Attribute_Resistance_Physical = FGameplayTag::RequestGameplayTag(FName("Attribute.Resistance.Physical"));
 	
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attribute.Meta.IncomingXP"), FString("This is a Attribute_Meta_IncomingXP"));
+	Attribute_Meta_IncomingXP = FGameplayTag::RequestGameplayTag(FName("Attribute.Meta.IncomingXP"));
+	
 	/*
 	 * Input Tag
 	 */
@@ -97,6 +100,11 @@ void FGDGameplayTags::InitializeGameplayTags()
 	DamageTypesToResistance.Add(Damage_Lighting, Attribute_Resistance_Lighting);
 	DamageTypesToResistance.Add(Damage_Arcane, Attribute_Resistance_Arcane);
 	DamageTypesToResistance.Add(Damage_Physical, Attribute_Resistance_Physical);
+	
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Fire.FireBolt"), FString("Abilities_Fire_FireBolt"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.FireBolt"), FString("Cooldown_Fire_FireBolt"));
+	Abilities_Fire_FireBolt = FGameplayTag::RequestGameplayTag(FName("Abilities.Fire.FireBolt"));
+	Cooldown_Fire_FireBolt = FGameplayTag::RequestGameplayTag(FName("Cooldown.Fire.FireBolt"));
 	
 	/*
 	 * 击中反应
@@ -132,6 +140,13 @@ void FGDGameplayTags::InitializeGameplayTags()
 	Montage_Attack_3 = FGameplayTag::RequestGameplayTag(FName("Montage.Attack.3"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.4"), FString("Montage Attack 4"));
 	Montage_Attack_4 = FGameplayTag::RequestGameplayTag(FName("Montage.Attack.4"));
+
+
+	/*
+	 * 各种类型的前缀
+	 */
+	Attribute_Primary = FGameplayTag::RequestGameplayTag(FName("Attribute.Primary"));
+	Abilities = FGameplayTag::RequestGameplayTag(FName("Abilities"));
 	
 	/*
 	 * 广播初始化完毕

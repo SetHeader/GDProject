@@ -5,9 +5,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "AbilitySystemInterface.h"
+#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Interaction/CombatInterface.h"
 #include "GDCharacterBase.generated.h"
 
+struct FEffectProperties;
 class UNiagaraSystem;
 class UGameplayAbility;
 class UAbilitySystemComponent;
@@ -29,10 +31,13 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "GDCharacterBase")
 	TObjectPtr<USkeletalMeshComponent> WeaponComponent;
 
-	/// @brief 初始时 拥有的能力
+	/// @brief 初始时 拥有的能力，在初始化时会给予能力
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GDCharacterBase")
 	TArray<TSubclassOf<UGameplayAbility>> SetupAbilities;
-
+	/// @brief 初始时 拥有的被动能力，在初始化时会给予并激活一次
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GDCharacterBase")
+	TArray<TSubclassOf<UGameplayAbility>> SetupPassiveAbilities;
+	
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> ASC;
 	UPROPERTY()
@@ -61,6 +66,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, Category="Combat")
 	USoundBase* DeadSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
+	ECharacterClass CharacterClass = ECharacterClass::Warrior;
 
 	/* Minions */
 	int32 MinionCount = 0;
@@ -115,6 +123,7 @@ public:
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() const override;
 	virtual int32 GetMinionCount_Implementation() const override;
+	virtual ECharacterClass GetCharacterClass_Implementation() override;
 	/** End Combat Interface */
 	
 	UFUNCTION(NetMulticast, Reliable)

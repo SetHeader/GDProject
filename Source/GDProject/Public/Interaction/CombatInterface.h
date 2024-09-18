@@ -8,6 +8,8 @@
 
 #include "CombatInterface.generated.h"
 
+enum class ECharacterClass : uint8;
+
 USTRUCT(BlueprintType)
 struct FTaggedMontage
 {
@@ -40,7 +42,8 @@ class GDPROJECT_API ICombatInterface
 	GENERATED_BODY()
 
 public:
-	virtual int32 GetPlayerLevel() const { return 1.f; }
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	int32 GetPlayerLevel() const;
 	
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void UpdateFacingTarget(FVector Location);
@@ -67,4 +70,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	int32 GetMinionCount() const;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	ECharacterClass GetCharacterClass();
 };

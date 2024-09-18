@@ -36,9 +36,10 @@ float UMMC_MaxHealth::CalculateBaseMagnitude_Implementation(const FGameplayEffec
 	GetCapturedAttributeMagnitude(VigorDef, Spec, EvaluationParameters, Vigor);
 	Vigor = FMath::Max<float>(Vigor, 0.0f);
 
-
-	if (AGDCharacterBase* Character = Cast<AGDCharacterBase>(Spec.GetContext().GetSourceObject())) {
-		return  80 + 2.5 * Vigor + Character->GetPlayerLevel() * 5;
+	if (Spec.GetContext().GetSourceObject()->Implements<UCombatInterface>())
+	{
+		const int32 Level = ICombatInterface::Execute_GetPlayerLevel(Spec.GetContext().GetSourceObject());
+		return 80 + 2.5 * Vigor + Level * 5;
 	}
 
 	return 0;

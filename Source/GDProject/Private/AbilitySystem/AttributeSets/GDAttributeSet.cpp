@@ -2,6 +2,8 @@
 
 
 #include "AbilitySystem//AttributeSets/GDAttributeSet.h"
+
+#include "AbilitySystemBlueprintLibrary.h"
 #include "Net/UnrealNetwork.h"
 #include "GameplayEffectExtension.h"
 #include "GameplayEffect.h"
@@ -9,6 +11,7 @@
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "Interaction/CombatInterface.h"
+#include "Interaction/PlayerInterface.h"
 #include "Player/GDPlayerController.h"
 
 
@@ -84,7 +87,8 @@ void UGDAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 				if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor))
 				{
 					CombatInterface->Die();
-				} 
+				}
+				SendXPEvent(Props);
 			} else
 			{
 				// 触发受击反应
@@ -113,6 +117,53 @@ void UGDAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 				}
 			}
 		}
+	}
+	else if (Data.EvaluatedData.Attribute == GetIncomingXPAttribute())
+	{
+		const float LocalIncomingXP = GetIncomingXP();
+		SetIncomingXP(0.f);
+
+		// 增加经验，并检查升级
+		if (Props.SourceCharacter->Implements<UPlayerInterface>() && Props.SourceCharacter->Implements<UCombatInterface>())
+		{
+			const int32 CurrentXP = IPlayerInterface::Execute_GetXP(Props.SourceCharacter);
+			const int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
+			
+			const int32 NewXP = CurrentXP + LocalIncomingXP;
+			const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(Props.SourceCharacter, NewXP);
+
+			// 升级
+			if (NewLevel > CurrentLevel)
+			{
+				int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, NewLevel);
+				int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, NewLevel);
+				IPlayerInterface::Execute_AddToPlayerLevel(Props.SourceCharacter, NewLevel - CurrentLevel);
+				IPlayerInterface::Execute_AddToAttributePoints(Props.SourceCharacter, AttributePointsReward);
+				IPlayerInterface::Execute_AddToSpellPoints(Props.SourceCharacter, SpellPointsReward);
+
+				// 回满血和魔力
+				bTopOffHealth = true;
+				bTopOffMana = true;
+				
+				IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
+			}
+			IPlayerInterface::Execute_AddToXP(Props.SourceCharacter, LocalIncomingXP);
+		}
+	}
+}
+
+void UGDAttributeSet::PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue)
+{
+	Super::PostAttributeChange(Attribute, OldValue, NewValue);
+	if (Attribute == GetMaxHealthAttribute() && bTopOffHealth)
+	{
+		bTopOffHealth = false;
+		SetHealth(GetMaxHealth());
+	}
+	else if (Attribute == GetMaxManaAttribute() && bTopOffMana)
+	{
+		bTopOffMana = false;
+		SetMana(GetMaxMana());
 	}
 }
 
@@ -273,4 +324,24 @@ void UGDAttributeSet::OnRep_ArcaneResistance(const FGameplayAttributeData& OldAr
 void UGDAttributeSet::OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(UGDAttributeSet, PhysicalResistance, OldPhysicalResistance);
+}
+
+void UGDAttributeSet::SendXPEvent(const FEffectProperties& Props)
+{
+	if (Props.TargetCharacter->Implements<UCombatInterface>())
+	{
+		const int32 TargetLevel = ICombatInterface::Execute_GetPlayerLevel(Props.TargetCharacter);
+		// GetCharacterClass是BlueprintNativeEvent方法，故需要调静态方法获才行
+		const ECharacterClass CharacterClass = ICombatInterface::Execute_GetCharacterClass(Props.TargetCharacter);
+		const int32 XPReward = UGDAbilitySystemLibrary::GetXPRewardForClassAndLevel(Props.TargetCharacter, CharacterClass, TargetLevel);
+
+		FGameplayEventData EventData;
+		EventData.EventTag = FGDGameplayTags::Get().Attribute_Meta_IncomingXP;
+		EventData.EventMagnitude = XPReward;
+		
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			Props.SourceCharacter,
+			FGDGameplayTags::Get().Attribute_Meta_IncomingXP,
+			EventData);
+	}
 }

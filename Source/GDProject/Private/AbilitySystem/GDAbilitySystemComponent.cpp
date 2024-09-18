@@ -4,7 +4,10 @@
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include <AbilitySystemComponent.h>
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystem/Abilities/GDGameplayAbility.h"
+#include "GDProject/GDLogChannels.h"
+#include "Interaction/PlayerInterface.h"
 
 
 void UGDAbilitySystemComponent::OnAbilityActorInfoSet()
@@ -23,6 +26,66 @@ void UGDAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<U
 			Ability.DynamicAbilityTags.AddTag(GDAbility->SetupInputTag);
 		}
 		GiveAbility(Ability);
+	}
+	bStartupAbilitiesGiven = true;
+	AbilitiesGivenDelegate.Broadcast(this);
+}
+
+void UGDAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupPassiveAbilities)
+{
+	for (const TSubclassOf<UGameplayAbility>& AbilityClass : SetupPassiveAbilities)
+	{
+		FGameplayAbilitySpec Ability = FGameplayAbilitySpec(AbilityClass, 1);
+		GiveAbilityAndActivateOnce(Ability);
+	}
+}
+
+void UGDAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+
+		/*
+		 1、GDCharacterHero->OnRep_PlayerState()
+		 1.1、HUD->InitOverlay
+		 1.1.1、OverlayWidgetController->SetParams
+		 1.1.1.1、OverlayWidgetController->BindCallbacksToDependencies
+		 1.1.1.1.1、如果能力初始化完成，就回调给组件蓝图；否则就监听
+						if (GDASC->bStartupAbilitiesGiven)
+						{
+							OnInitializeStartupAbilities(GDASC);
+						}
+						else
+						{
+							GDASC->AbilitiesGivenDelegate.AddUObject(this, &UGDOverlayWidgetController::OnInitializeStartupAbilities);
+						}
+
+		 1.1.1.2、OverlayWidget->SetWidgetController(OverlayWidgetController)
+		 1.1.1.2.1、OnWidgetControllerSet，触发蓝图中的逻辑，即绑定OnAbilityInfoDelegate，监听能力是否被给予
+		 ......
+		 2、GDAbilitySystemComponent->OnRep_ActivateAbilities()
+		 2.1、GDAbilitySystemComponent->AbilitiesGivenDelegate.Broadcast(this)	广播能力初始化完成
+			分支1：当OverlayWidgetController没有初始化时，是没反应的。
+			等到OverlayWidgetController初始化后，会直接执行OnInitializeStartupAbilities，而不是监听GDASC->AbilitiesGivenDelegate
+				2.1.1、OverlayWidgetController->OnInitializeStartupAbilities
+				2.1.1.1、OnAbilityInfoDelegate.Broadcast(AbilityInfo)	回调所有已初始化的能力给蓝图
+			分支2：正常情况下OverlayWidgetController已经初始化了。
+				2.1.1、OverlayWidgetController->OnInitializeStartupAbilities
+				2.1.1.1、OnAbilityInfoDelegate.Broadcast(AbilityInfo)	回调所有已初始化的能力给蓝图
+			
+		 以上流程中，GDCharacterHero->OnRep_PlayerState() 和 GDAbilitySystemComponent->OnRep_ActivateAbilities() 哪个先回调是不确定的，
+		 故在OverlayWidgetController->BindCallbacksToDependencies中需要判断是否已经初始化了能力。
+		 所有情况都会回调 OnAbilityInfoDelegate.Broadcast(AbilityInfo) 给组件蓝图。
+		*/
+	
+	// TODO 有一个问题：回调给组件蓝图的时机（OnAbilityInfoDelegate.Broadcast） 和 组件蓝图初始化的时机（OnWidgetControllerSet） 不固定。 
+	//		可能会先回调给组件蓝图，再执行组件蓝图初始化，这样就导致组件蓝图收不到能力广播。			
+	//		在先执行流程2，再执行海程1时，可能会出现。但实际测试下来，永远是先执行流程1，再执行流程2。	
+	//		故先不处理。
+	
+	if (!bStartupAbilitiesGiven)
+	{
+		bStartupAbilitiesGiven = true;
+		AbilitiesGivenDelegate.Broadcast(this);
 	}
 }
 
@@ -72,4 +135,66 @@ void UGDAbilitySystemComponent::OnAbilityInputHeld(FGameplayTag InputTag)
 			}
 		}
 	}
+}
+
+void UGDAbilitySystemComponent::ForEachAbility(const FForEachAbility& Delegate)
+{
+	// 锁住能力列表，防止遍历过程中 可激活的能力 变成 不可激活
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (const FGameplayAbilitySpec& AbilitySpec : GetActivatableAbilities())
+	{
+		if (!Delegate.ExecuteIfBound(AbilitySpec))
+		{
+			UE_LOG(LogGD, Warning, TEXT("Failed to execute delegate in %hs"), __FUNCTION__);
+		}
+	}
+}
+
+FGameplayTag UGDAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec) const
+{
+	if (UGameplayAbility* Ability = AbilitySpec.Ability)
+	{
+		const FGameplayTag& AbilityTagPrefix = FGameplayTag::RequestGameplayTag("Abilities");
+		for (const FGameplayTag& Tag : Ability->AbilityTags)
+		{
+			if (Tag.MatchesTag(AbilityTagPrefix))
+			{
+				return Tag;
+			}
+		}
+	}
+	
+	return FGameplayTag();
+}
+
+FGameplayTag UGDAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec) const
+{
+	// 输入标签是加到DynamicAbilityTags中的，所以遍历这个就行
+	const FGameplayTag& InputTagPrefix = FGameplayTag::RequestGameplayTag("InputTag");
+	for (const FGameplayTag& Tag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (Tag.MatchesTag(InputTagPrefix))
+		{
+			return Tag;
+		}
+	}
+	return FGameplayTag();
+}
+
+void UGDAbilitySystemComponent::UpgradeAttributePoint(const FGameplayTag& Tag)
+{
+	if (IPlayerInterface::Execute_GetAttributePoints(GetAvatarActor()) > 0)
+	{
+		Server_UpgradeAttributePoint(Tag);
+	}
+}
+
+void UGDAbilitySystemComponent::Server_UpgradeAttributePoint_Implementation(const FGameplayTag& Tag)
+{
+	FGameplayEventData Payload;
+	Payload.EventTag = Tag;
+	Payload.EventMagnitude = 1;
+	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), Tag, Payload);
+
+	IPlayerInterface::Execute_AddToAttributePoints(GetAvatarActor(), -1);
 }

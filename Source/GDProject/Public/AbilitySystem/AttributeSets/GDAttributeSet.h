@@ -170,16 +170,27 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase")
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(UGDAttributeSet, IncomingDamage)
+	
+	UPROPERTY(BlueprintReadOnly, Category = "GDAttributeSetBase")
+	FGameplayAttributeData IncomingXP;
+	ATTRIBUTE_ACCESSORS(UGDAttributeSet, IncomingXP)
 
+private:
+	// 是否要补满血量
+	bool bTopOffHealth = false;
+	// 是否要补满魔力
+	bool bTopOffMana = false;
 public:
 
 	// 属性变化前回调
 	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 	// 执行效果后回调
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	// 属性更新完成后回调
+	virtual void PostAttributeChange(const FGameplayAttribute& Attribute, float OldValue, float NewValue) override;
 	// 复制
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+	
 	void SetEffectProperties(const FGameplayEffectModCallbackData& InData, FEffectProperties& OutProps);
 
 	UFUNCTION()
@@ -237,4 +248,8 @@ public:
 
 	UFUNCTION()
 	virtual void OnRep_PhysicalResistance(const FGameplayAttributeData& OldPhysicalResistance);
+
+private:
+	void SendXPEvent(const FEffectProperties& Props);
+
 };

@@ -7,6 +7,8 @@
 #include "GameplayEffect.h"
 #include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
+#include "AbilitySystem/GDAbilitySystemLibrary.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "GDProject/GDProject.h"
@@ -65,6 +67,7 @@ void AGDCharacterBase::AddCharacterAbilities()
 	}
 
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterAbilities(SetupAbilities);
+	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterPassiveAbilities(SetupPassiveAbilities);
 }
 
 FVector AGDCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag)
@@ -124,6 +127,11 @@ UNiagaraSystem* AGDCharacterBase::GetBloodEffect_Implementation() const
 int32 AGDCharacterBase::GetMinionCount_Implementation() const
 {
 	return MinionCount;
+}
+
+ECharacterClass AGDCharacterBase::GetCharacterClass_Implementation()
+{
+	return CharacterClass;
 }
 
 void AGDCharacterBase::MulticastHandleDeath_Implementation()

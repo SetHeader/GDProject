@@ -7,6 +7,8 @@
 #include "GDGameModeBase.h"
 #include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
+#include "Characters/Minions/GDCharacterMinion.h"
+#include "GDProject/GDLogChannels.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
@@ -96,10 +98,10 @@ void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextOb
 	}
 	for (TSubclassOf<UGameplayAbility> CommonAbility : ClassDefaultInfo.CommonAbilities)
 	{
-		ICombatInterface* CombatInterface = Cast<ICombatInterface>(ASC->GetAvatarActor());
-		if (CombatInterface)
+		if (ASC->GetAvatarActor()->Implements<UCombatInterface>())
 		{
-			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(CommonAbility, CombatInterface->GetPlayerLevel());
+			const int32 Level = ICombatInterface::Execute_GetPlayerLevel(ASC->GetAvatarActor());
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(CommonAbility, Level);
 			ASC->GiveAbility(AbilitySpec);
 		}
 	}
@@ -210,4 +212,44 @@ bool UGDAbilitySystemLibrary::IsNotFriend(const AActor* FirstActor, const AActor
 		return !(bBothArePlayers && bBothAreEnemies);
 	}
 	return true;
+}
+
+ECharacterClass UGDAbilitySystemLibrary::GetCharacterClass(AActor* Character)
+{
+	return ICombatInterface::Execute_GetCharacterClass(Character);
+}
+
+int32 UGDAbilitySystemLibrary::GetCharacterLevel(const AActor* Character)
+{
+	if (Character->Implements<UCombatInterface>())
+	{
+		return ICombatInterface::Execute_GetPlayerLevel(Character);
+	}
+	
+	UE_LOG(LogGD, Warning, TEXT("%hs\t Character Is Not Valid"), __FUNCTION__)
+	return 1;
+}
+
+int32 UGDAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* WorldContextObject,
+	ECharacterClass CharacterClass, int32 CharacterLevel)
+{
+	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!IsValid(GDGameMode))
+	{
+		return 0;
+	}
+
+	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
+	if (!ClassInfo)
+	{
+		return 0;
+	}
+
+	FCharacterClassDefaultInfo* ClassDefaultInfo = ClassInfo->CharacterClassInformation.Find(CharacterClass);
+	if (ClassDefaultInfo && ClassDefaultInfo->XPReward.IsValid())
+	{
+		return ClassDefaultInfo->XPReward.GetValueAtLevel(CharacterLevel);
+	}
+
+	return 0;
 }

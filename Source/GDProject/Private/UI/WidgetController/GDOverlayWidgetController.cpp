@@ -4,15 +4,34 @@
 #include "UI/WidgetController/GDOverlayWidgetController.h"
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayEffectTypes.h"
-#include "UI/Widget/GDUserWidget.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
+#include "AbilitySystem/Abilities/GDGameplayAbility.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
+#include "AbilitySystem/Data/LevelUpInfo.h"
+#include "GDProject/GDLogChannels.h"
+#include "Player/GDPlayerState.h"
 
 void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 {
 	UGDAttributeSet* GDAS = CastChecked<UGDAttributeSet>(AttributeSet);
 	check(AbilitySystemComponent);
 
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+	GDPS->OnXPChangedDelegate.AddUObject(this, &UGDOverlayWidgetController::OnXPChanged);
+	GDPS->OnLevelChangedDelegate.AddLambda([this](const int32 NewLevel)
+	{
+		OnPlayerLevelChangedDelegate.Broadcast(NewLevel);
+	});
+	GDPS->OnAttributePointsChangedDelegate.AddLambda([this](const int32 NewPoints)
+	{
+		OnAttributePointsChangedDelegate.Broadcast(NewPoints);
+	});
+	GDPS->OnSpellPointsChangedDelegate.AddLambda([this](const int32 NewPoints)
+	{
+		OnSpellPointsChangedDelegate.Broadcast(NewPoints);
+	});
+	
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GDAS->GetHealthAttribute()).AddUObject(this, &UGDOverlayWidgetController::HealthChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GDAS->GetMaxHealthAttribute()).AddUObject(this, &UGDOverlayWidgetController::MaxHealthChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GDAS->GetManaAttribute()).AddUObject(this, &UGDOverlayWidgetController::ManaChanged);
@@ -34,7 +53,17 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 				}
 			}
 		});
+		
+		if (GDASC->bStartupAbilitiesGiven)
+		{
+			OnInitializeStartupAbilities(GDASC);
+		}
+		else
+		{
+			GDASC->AbilitiesGivenDelegate.AddUObject(this, &UGDOverlayWidgetController::OnInitializeStartupAbilities);
+		}
 	}
+
 }
 
 void UGDOverlayWidgetController::BroadcastInitialValues() const
@@ -47,6 +76,31 @@ void UGDOverlayWidgetController::BroadcastInitialValues() const
 	OnMaxManaChanged.Broadcast(GDAS->GetMaxMana());
 	OnStaminaChanged.Broadcast(GDAS->GetStamina());
 	OnMaxStaminChanged.Broadcast(GDAS->GetMaxStamina());
+}
+
+void UGDOverlayWidgetController::OnInitializeStartupAbilities(UGDAbilitySystemComponent* ASC) const
+{
+	if (!ASC->bStartupAbilitiesGiven)
+	{
+		return;
+	}
+
+	FForEachAbility BroadcastDelegate;
+	BroadcastDelegate.BindLambda([ASC, this](const FGameplayAbilitySpec& AbilitySpec)
+	{
+		const FGameplayTag AbilityTag = ASC->GetAbilityTagFromSpec(AbilitySpec);
+		const FGameplayTag InputTag = ASC->GetInputTagFromSpec(AbilitySpec);
+		if (AbilityTag.IsValid() && InputTag.IsValid())
+		{
+			FGDAbilityInfo AbilityInfo = AbilityInfoAsset->FindAbilityInfoForTag(AbilityTag, true);
+			if (AbilityInfo.AbilityTag.IsValid())
+			{
+				AbilityInfo.InputTag = InputTag;
+				OnAbilityInfoDelegate.Broadcast(AbilityInfo);
+			}
+		}
+	});
+	ASC->ForEachAbility(BroadcastDelegate);
 }
 
 
@@ -78,4 +132,43 @@ void UGDOverlayWidgetController::StaminaChanged(const FOnAttributeChangeData& Ch
 void UGDOverlayWidgetController::MaxStaminaChanged(const FOnAttributeChangeData& ChangedData) const
 {
 	OnMaxStaminChanged.Broadcast(ChangedData.NewValue);
+}
+
+void UGDOverlayWidgetController::OnXPChanged(int32 NewXP) const
+{
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+	
+	if (!GDPS->LevelUpInfo)
+	{
+		UE_LOG(LogGD, Error, TEXT("%hs\t Not Set LevelUpInfo"), __FUNCTION__);
+		OnXPPercentChangedDelegate.Broadcast(0.f);
+		return;
+	}
+	
+	int32 Level = GDPS->LevelUpInfo->FindLevelForXP(NewXP);
+	// 满级后就 通知 满进度条
+	if (Level >= GDPS->LevelUpInfo->LevelUpInfos.Num() - 1)
+	{
+		OnXPPercentChangedDelegate.Broadcast(1.f);
+		return;
+	}
+	
+	// 当前级 经验条上限
+	int32 XPCurrentLevel = GDPS->LevelUpInfo->LevelUpInfos[Level].LevelUpRequirement;
+	// 上一级 经验条上限
+	int32 XPPreviousLevel = GDPS->LevelUpInfo->LevelUpInfos[Level - 1].LevelUpRequirement;
+	
+	OnXPPercentChangedDelegate.Broadcast(static_cast<float>(NewXP - XPPreviousLevel) / (XPCurrentLevel - XPPreviousLevel));
+}
+
+FGDAbilityInfo UGDOverlayWidgetController::FindAbilityInfoByInputTag(FGameplayTag InputTag) const
+{
+	for (FGDAbilityInfo& AbilityInfo : AbilityInfoAsset->AbilityInfos)
+	{
+		if (AbilityInfo.InputTag == InputTag)
+		{
+			return AbilityInfo;
+		}
+	}
+	return FGDAbilityInfo();
 }

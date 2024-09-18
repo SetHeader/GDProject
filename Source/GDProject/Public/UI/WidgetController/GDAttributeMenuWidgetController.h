@@ -6,13 +6,20 @@
 #include "GDAttributeWidgetController.h"
 #include "GDAttributeMenuWidgetController.generated.h"
 
+
+
 UCLASS(BlueprintType, Blueprintable)
 class GDPROJECT_API UGDAttributeMenuWidgetController : public UGDAttributeWidgetController
 {
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(BlueprintAssignable)
+	FOnStatChangedSignature OnAttributePointsChangedDelegate;
+
+	void BroadcastInitialValues() const override;
+	void BindCallbacksToDependencies() const override;
 
 	UFUNCTION(BlueprintCallable, Category = "GDAttributeMenuWidgetController")
-	void AddValue(FGameplayTag Tag);
+	void UpgradeAttributePoint(FGameplayTag Tag);
 };

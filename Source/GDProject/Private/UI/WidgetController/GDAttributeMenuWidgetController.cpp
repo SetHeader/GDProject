@@ -1,29 +1,30 @@
 #include "UI/WidgetController/GDAttributeMenuWidgetController.h"
 
-#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayTagContainer.h"
-#include "GDGameplayTags.h"
+#include "AbilitySystem/GDAbilitySystemComponent.h"
+#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
+#include "Player/GDPlayerState.h"
 
-
-void UGDAttributeMenuWidgetController::AddValue(FGameplayTag Tag)
+void UGDAttributeMenuWidgetController::BroadcastInitialValues() const
 {
-	UGDAttributeSet* AS = Cast<UGDAttributeSet>(AttributeSet);
-	if (!AS)
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+	OnAttributePointsChangedDelegate.Broadcast(GDPS->GetAttributePoints());
+}
+
+void UGDAttributeMenuWidgetController::BindCallbacksToDependencies() const
+{
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+
+	GDPS->OnAttributePointsChangedDelegate.AddLambda([this](const int32 Points)
 	{
-		return;
-	}
-	
-	if (Tag == FGDGameplayTags::Get().Attribute_Primary_Strength)
+		OnAttributePointsChangedDelegate.Broadcast(Points);
+	});
+}
+
+void UGDAttributeMenuWidgetController::UpgradeAttributePoint(FGameplayTag Tag)
+{
+	if (UGDAbilitySystemComponent* ASC = Cast<UGDAbilitySystemComponent>(AbilitySystemComponent))
 	{
-		AS->SetHealth(AS->GetHealth() + 1);
-	} else if (Tag == FGDGameplayTags::Get().Attribute_Primary_Intelligence)
-	{
-		AS->SetIntelligence(AS->GetIntelligence() + 1);
-	} else if (Tag == FGDGameplayTags::Get().Attribute_Primary_Resilience)
-	{
-		AS->SetResilience(AS->GetResilience() + 1);
-	} else if (Tag == FGDGameplayTags::Get().Attribute_Primary_Vigor)
-	{
-		AS->SetVigor(AS->GetVigor() + 1);
+		ASC->UpgradeAttributePoint(Tag);
 	}
 }

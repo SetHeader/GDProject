@@ -4,11 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
+#include "ScalableFloat.h"
 #include "../GDCharacterBase.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Interaction/EnemyInterface.h"
 #include "GDCharacterMinion.generated.h"
 
+struct FScalableFloat;
 class UWidgetComponent;
 class UGDUserWidget;
 class UGDWidgetController;
@@ -45,10 +47,11 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, Category = "Combat")
 	TObjectPtr<AActor> CombatTarget;
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="GDCharacterEnemy")
-	ECharacterClass CharacterClass = ECharacterClass::Warrior;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	FScalableFloat XPReward;
 	
+protected:
 	int32 Level = 1.f;
 	UPROPERTY(EditAnywhere, Category="AI")
 	TObjectPtr<UBehaviorTree> BehaviorTree;
@@ -71,7 +74,7 @@ public:
 
 	/** Combat Interface */
 	UFUNCTION(BlueprintCallable, Category = "CombatInterface")
-	FORCEINLINE int32 GetPlayerLevel() const override { return Level; }
+	FORCEINLINE int32 GetPlayerLevel_Implementation() const { return Level; }
 	virtual void Die() override;
 	/** End Combat Interface */
 	
