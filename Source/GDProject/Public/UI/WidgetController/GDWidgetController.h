@@ -6,6 +6,7 @@
 #include "UObject/NoExportTypes.h"
 #include "GDWidgetController.generated.h"
 
+class UGDAbilitySystemComponent;
 class UAbilitySystemComponent;
 class UAttributeSet;
 
@@ -48,4 +49,6 @@ public:
 	virtual void BroadcastInitialValues() const {}
 
 	virtual void BindCallbacksToDependencies() const {}
+
+	UGDAbilitySystemComponent* GetGDASC() const;
 };

@@ -55,6 +55,8 @@ public:
 	FGameplayTag InputTag_2;
 	FGameplayTag InputTag_3;
 	FGameplayTag InputTag_4;
+	FGameplayTag InputTag_Passive_1;
+	FGameplayTag InputTag_Passive_2;
 
 	/** 伤害类型 */
 	FGameplayTag Damage_Fire;
@@ -63,12 +65,42 @@ public:
 	FGameplayTag Damage_Physical;
 	
 	/** 能力相关 */
+	FGameplayTag Abilities_None;
+	
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
 	
 	FGameplayTag Abilities_Fire_FireBolt;
-
+	FGameplayTag Abilities_Lightning_Electrocute;
+	
 	FGameplayTag Cooldown_Fire_FireBolt;
+	// 未解锁
+	FGameplayTag Abilities_Status_Locked;
+	// 解锁，但不可用
+	FGameplayTag Abilities_Status_Eligible;
+	// 解锁，且可用
+	FGameplayTag Abilities_Status_Unlocked;
+	// 解锁，可用，且已装备
+	FGameplayTag Abilities_Status_Equipped;
+	// 能力类型，主动、被动、未定义
+	FGameplayTag Abilities_Type_Offensive;
+	FGameplayTag Abilities_Type_Passive;
+	FGameplayTag Abilities_Type_None;
+	
+	// 属性抵抗
+	FGameplayTag Attributes_Resistance_Fire;
+	FGameplayTag Attributes_Resistance_Lightning;
+	FGameplayTag Attributes_Resistance_Arcane;
+	FGameplayTag Attributes_Resistance_Physical;
+
+	// Debuff
+	FGameplayTag Debuff_Burn;
+	FGameplayTag Debuff_Stun;
+	FGameplayTag Debuff_Arcane;
+	FGameplayTag Debuff_Physical;
+
+	
+	
 	
 	// 存放所有类型的伤害标签，方便遍历
 	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistance;

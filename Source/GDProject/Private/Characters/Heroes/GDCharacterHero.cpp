@@ -181,6 +181,11 @@ int32 AGDCharacterHero::GetSpellPoints_Implementation()
 void AGDCharacterHero::AddToPlayerLevel_Implementation(int32 InLevel)
 {
 	CastChecked<AGDPlayerState>(GetPlayerState())->AddToLevel(InLevel);
+	// 更新技能树
+	if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(GetAbilitySystemComponent()))
+	{
+		GDASC->UpdateAbilityStatus(GetPlayerLevel());
+	}
 }
 
 void AGDCharacterHero::AddToAttributePoints_Implementation(int32 InPoints)

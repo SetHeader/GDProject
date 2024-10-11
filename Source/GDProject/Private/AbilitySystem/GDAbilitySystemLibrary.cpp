@@ -12,6 +12,7 @@
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
+#include "UI/WidgetController/SpellMenuWidgetController.h"
 
 UGDOverlayWidgetController* UGDAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
 {
@@ -32,6 +33,19 @@ UGDAttributeMenuWidgetController* UGDAbilitySystemLibrary::GetAttributeMenuWidge
 		if (AGDHUD* GDHUD = Cast<AGDHUD>(PC->GetHUD()))
 		{
 			return Cast<UGDAttributeMenuWidgetController>(GDHUD->GetAttributeMenuWidgetController());
+		}
+	}
+	return nullptr;
+}
+
+USpellMenuWidgetController* UGDAbilitySystemLibrary::GetSpellMenuWidgetController(
+	const UObject* WorldContextObject)
+{
+	if (APlayerController* PC = UGameplayStatics::GetPlayerController(WorldContextObject, 0))
+	{
+		if (AGDHUD* GDHUD = Cast<AGDHUD>(PC->GetHUD()))
+		{
+			return Cast<USpellMenuWidgetController>(GDHUD->GetSpellMenuWidgetController());
 		}
 	}
 	return nullptr;
@@ -252,4 +266,26 @@ int32 UGDAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* WorldC
 	}
 
 	return 0;
+}
+
+UCharacterClassInfo* UGDAbilitySystemLibrary::GetCharacterClassInfo(const UObject* WorldContextObject)
+{
+	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!IsValid(GDGameMode))
+	{
+		return nullptr;
+	}
+
+	return GDGameMode->CharacterClassInfo;
+}
+
+UAbilityInfo* UGDAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldContextObject)
+{
+	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
+	if (!IsValid(GDGameMode))
+	{
+		return nullptr;
+	}
+
+	return GDGameMode->AbilityInfo;
 }

@@ -141,7 +141,35 @@ void FGDGameplayTags::InitializeGameplayTags()
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Montage.Attack.4"), FString("Montage Attack 4"));
 	Montage_Attack_4 = FGameplayTag::RequestGameplayTag(FName("Montage.Attack.4"));
 
+	/**
+	 *	能力的状态
+	 */
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Status.Locked"), FString("Abilities Status Locked"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Status.Eligible"), FString("Abilities Status Eligible"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Status.Unlocked"), FString("Abilities Status Unlocked"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Status.Equipped"), FString("Abilities Status Equipped"));
+	Abilities_Status_Locked = FGameplayTag::RequestGameplayTag(FName("Abilities.Status.Locked"));
+	Abilities_Status_Eligible = FGameplayTag::RequestGameplayTag(FName("Abilities.Status.Eligible"));
+	Abilities_Status_Unlocked = FGameplayTag::RequestGameplayTag(FName("Abilities.Status.Unlocked"));
+	Abilities_Status_Equipped = FGameplayTag::RequestGameplayTag(FName("Abilities.Status.Equipped"));
 
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Resistance.Fire"), FString("Attributes_Resistance_Fire"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Resistance.Lightning"), FString("Attributes_Resistance_Lightning"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Resistance.Arcane"), FString("Attributes_Resistance_Arcane"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Attributes.Resistance.Physical"), FString("Attributes_Resistance_Physical"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Burn"), FString("Debuff_Burn"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Stun"), FString("Debuff_Stun"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Arcane"), FString("Debuff_Arcane"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Physical"), FString("Debuff_Physical"));
+	Attributes_Resistance_Fire = FGameplayTag::RequestGameplayTag(FName("Attributes.Resistance.Fire"));
+	Attributes_Resistance_Lightning = FGameplayTag::RequestGameplayTag(FName("Attributes.Resistance.Lightning"));
+	Attributes_Resistance_Arcane = FGameplayTag::RequestGameplayTag(FName("Attributes.Resistance.Arcane"));
+	Attributes_Resistance_Physical = FGameplayTag::RequestGameplayTag(FName("Attributes.Resistance.Physical"));
+	Debuff_Burn = FGameplayTag::RequestGameplayTag(FName("Debuff.Burn"));
+	Debuff_Stun = FGameplayTag::RequestGameplayTag(FName("Debuff.Stun"));
+	Debuff_Arcane = FGameplayTag::RequestGameplayTag(FName("Debuff.Arcane"));
+	Debuff_Physical = FGameplayTag::RequestGameplayTag(FName("Debuff.Physical"));
+	
 	/*
 	 * 各种类型的前缀
 	 */

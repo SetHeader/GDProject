@@ -40,11 +40,19 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UGDAttributeMenuWidgetController> AttributeMenuWidgetController;
+
+	UPROPERTY(EditAnywhere, Category = "GDHUD")
+	TSubclassOf<UGDAttributeMenuWidgetController> SpellMenuWidgetControllerClass;
+
+	UPROPERTY()
+	TObjectPtr<USpellMenuWidgetController> SpellMenuWidgetController;
 public:
 
 	UGDOverlayWidgetController* GetOverlayWidgetController() const;
 
 	UGDAttributeMenuWidgetController* GetAttributeMenuWidgetController() const;
+
+	USpellMenuWidgetController* GetSpellMenuWidgetController() const;
 	
 	void InitOverlay(APlayerController* PlayerController, APlayerState* PlayerState, UAbilitySystemComponent* AbilitySystemComponent, UAttributeSet* AttributeSet);
 };

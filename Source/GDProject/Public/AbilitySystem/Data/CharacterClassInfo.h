@@ -10,6 +10,9 @@
 class UGameplayAbility;
 class UGameplayEffect;
 
+/**
+ * 敌人类型
+ */
 UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
@@ -18,11 +21,14 @@ enum class ECharacterClass : uint8
 	Ranger
 };
 
+/**
+ * 属性配置、能力配置、击倒时的回报配置
+ */
 USTRUCT(BlueprintType)
 struct FCharacterClassDefaultInfo
 {
 	GENERATED_BODY()
-
+	// 默认属性
 	UPROPERTY(EditDefaultsOnly, Category="Class Defaults")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes;
 
@@ -40,20 +46,21 @@ class GDPROJECT_API UCharacterClassInfo : public UDataAsset
 	GENERATED_BODY()
 
 public:
+	// 为每个类型的敌人进行配置
 	UPROPERTY(EditDefaultsOnly, Category="Character Class Defaults")
 	TMap<ECharacterClass, FCharacterClassDefaultInfo> CharacterClassInformation;
-	
+	// 主角的配置
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> SecondaryAttributes;
-
+	// 主角的配置
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> VitalAttributes;
-	// 受击反应这种能力
+	// 主角的配置，受击反应这种能力
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TArray<TSubclassOf<UGameplayAbility>> CommonAbilities;
-
+	// 伤害计算系数
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TObjectPtr<UCurveTable> DamageCalculationCoefficients;
-
+	
 	FCharacterClassDefaultInfo GetClassDefaultInfo(ECharacterClass CharacterClass);
 };

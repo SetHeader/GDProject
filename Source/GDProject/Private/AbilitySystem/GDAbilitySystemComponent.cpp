@@ -5,9 +5,13 @@
 #include <AbilitySystemComponent.h>
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "GDGameplayTags.h"
+#include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Abilities/GDGameplayAbility.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 #include "GDProject/GDLogChannels.h"
 #include "Interaction/PlayerInterface.h"
+#include "Player/GDPlayerState.h"
 
 
 void UGDAbilitySystemComponent::OnAbilityActorInfoSet()
@@ -181,15 +185,67 @@ FGameplayTag UGDAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbili
 	return FGameplayTag();
 }
 
+FGameplayAbilitySpec* UGDAbilitySystemComponent::GetSpecFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& ActivatableAbility : GetActivatableAbilities())
+	{
+		if (ActivatableAbility.Ability->AbilityTags.HasTagExact(AbilityTag))
+		{
+			return &ActivatableAbility;
+		}
+	}
+
+	return nullptr;
+}
+
 void UGDAbilitySystemComponent::UpgradeAttributePoint(const FGameplayTag& Tag)
 {
 	if (IPlayerInterface::Execute_GetAttributePoints(GetAvatarActor()) > 0)
 	{
-		Server_UpgradeAttributePoint(Tag);
+		ServerUpgradeAttributePoint(Tag);
 	}
 }
 
-void UGDAbilitySystemComponent::Server_UpgradeAttributePoint_Implementation(const FGameplayTag& Tag)
+void UGDAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
+{
+	UAbilityInfo* AbilityInfo = UGDAbilitySystemLibrary::GetAbilityInfo(this);
+	for (const FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
+	{
+		if (!Info.AbilityTag.IsValid())
+		{
+			continue;
+		}
+		if (Info.LevelRequirement > Level)
+		{
+			continue;
+		}
+		// 如果该能力还没被给予，就给予能力
+		if (!GetSpecFromAbilityTag(Info.AbilityTag))
+		{
+			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Info.Ability, 1);
+			AbilitySpec.DynamicAbilityTags.AddTag(FGDGameplayTags::Get().Abilities_Status_Eligible);
+			GiveAbility(AbilitySpec);
+			// 立即强制复制能力到客户端，而不是等到下次更新时机
+			MarkAbilitySpecDirty(AbilitySpec);
+			ClientUpdateAbilityStatus(Info.AbilityTag, FGDGameplayTags::Get().Abilities_Status_Eligible, AbilitySpec.Level);
+		}
+		
+	}
+}
+
+void UGDAbilitySystemComponent::ServerSpendSpellPoint_Implementation(const FGameplayTag& AbilityTag)
+{
+	GetSpecFromAbilityTag(AbilityTag);
+}
+
+void UGDAbilitySystemComponent::ClientUpdateAbilityStatus_Implementation(const FGameplayTag& AbilityTag,
+                                                                         const FGameplayTag& StatusTag, int32 AbilityLevel)
+{
+	OnAbilityStatusChangedDelegate.Broadcast(AbilityTag, StatusTag, AbilityLevel);
+}
+
+void UGDAbilitySystemComponent::ServerUpgradeAttributePoint_Implementation(const FGameplayTag& Tag)
 {
 	FGameplayEventData Payload;
 	Payload.EventTag = Tag;
@@ -197,4 +253,51 @@ void UGDAbilitySystemComponent::Server_UpgradeAttributePoint_Implementation(cons
 	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetAvatarActor(), Tag, Payload);
 
 	IPlayerInterface::Execute_AddToAttributePoints(GetAvatarActor(), -1);
+}
+
+
+void UGDAbilitySystemComponent::ServerUpgradeAbility_Implementation(FGameplayTag AbilityTag)
+{
+	if (UAbilityInfo* AbilityInfo = UGDAbilitySystemLibrary::GetAbilityInfo(GetOwner()))
+	{
+		FGDAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
+		AGDPlayerState* GDPlayerState = CastChecked<AGDPlayerState>(GetOwner());
+		
+		if (GDPlayerState->GetPlayerLevel() >= Info.LevelRequirement && GDPlayerState->GetSpellPoints() > 0)
+		{
+			FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+			
+			// 升级能力
+			if (AbilitySpec)
+			{
+				int32 AbilityLevel = AbilitySpec->Ability->GetAbilityLevel() + 1;
+				if (AbilityLevel < 9)
+				{
+					GDPlayerState->AddToSpellPoints(-1);
+					ClearAbility(AbilitySpec->Handle);
+					GiveAbility(FGameplayAbilitySpec(Info.Ability, AbilityLevel));
+				}
+			}
+			// 解锁能力
+			else
+			{
+				GiveAbility(FGameplayAbilitySpec(Info.Ability, 1));
+				ClientUpdateAbilityStatus(AbilityTag, FGDGameplayTags::Get().Abilities_Status_Unlocked, 1);
+			}
+		}
+	}
+}
+
+void UGDAbilitySystemComponent::ServerEquipAbility_Implementation(FGameplayTag AbilityTag, FGameplayTag InputTag)
+{
+	FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+	UGDGameplayAbility* GDAbility = Cast<UGDGameplayAbility>(AbilitySpec->Ability);
+	if (GDAbility)
+	{
+		if (GDAbility->SetupInputTag != InputTag)
+		{
+			GDAbility->SetupInputTag = InputTag;
+			ClientUpdateAbilityStatus(AbilityTag, FGDGameplayTags::Get().Abilities_Status_Equipped, GDAbility->GetAbilityLevel());
+		}
+	}
 }

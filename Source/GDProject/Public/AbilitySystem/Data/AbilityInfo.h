@@ -7,6 +7,11 @@
 #include "Engine/DataAsset.h"
 #include "AbilityInfo.generated.h"
 
+class UGameplayAbility;
+
+/**
+ * 用于角色的能力信息定义
+ */
 USTRUCT(BlueprintType)
 struct FGDAbilityInfo
 {
@@ -20,12 +25,21 @@ struct FGDAbilityInfo
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag CooldownTag = FGameplayTag();
+	// 技能状态，是否解锁、是否可用、是否已装备
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag StatusTag = FGameplayTag();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<const UTexture2D> Icon = nullptr;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<UMaterialInstance> BackgroundMaterial = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	int32 LevelRequirement = 0;
+	// 对应的能力类型
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TSubclassOf<UGameplayAbility> Ability;
 };
 
 /**

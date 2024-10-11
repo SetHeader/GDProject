@@ -6,6 +6,7 @@
 #include "UI/WidgetController/GDAttributeMenuWidgetController.h"
 #include "UI/WidgetController/GDOverlayWidgetController.h"
 #include "UI/WidgetController/GDWidgetController.h"
+#include "UI/WidgetController/SpellMenuWidgetController.h"
 
 UGDOverlayWidgetController* AGDHUD::GetOverlayWidgetController() const
 {
@@ -15,6 +16,11 @@ UGDOverlayWidgetController* AGDHUD::GetOverlayWidgetController() const
 UGDAttributeMenuWidgetController* AGDHUD::GetAttributeMenuWidgetController() const
 {
 	return AttributeMenuWidgetController;
+}
+
+USpellMenuWidgetController* AGDHUD::GetSpellMenuWidgetController() const
+{
+	return SpellMenuWidgetController;
 }
 
 void AGDHUD::InitOverlay(APlayerController* PlayerController, APlayerState* PlayerState, UAbilitySystemComponent* AbilitySystemComponent, UAttributeSet* AttributeSet)
@@ -33,6 +39,10 @@ void AGDHUD::InitOverlay(APlayerController* PlayerController, APlayerState* Play
 	AttributeMenuWidgetController = NewObject<UGDAttributeMenuWidgetController>(this, AttributeMenuWidgetControllerClass);
 	AttributeMenuWidgetController->SetParams(PlayerController, PlayerState, AbilitySystemComponent, AttributeSet);
 	AttributeMenuWidgetController->BroadcastInitialValues();
+	
+	SpellMenuWidgetController = NewObject<USpellMenuWidgetController>(this, SpellMenuWidgetControllerClass);
+	SpellMenuWidgetController->SetParams(PlayerController, PlayerState, AbilitySystemComponent, AttributeSet);
+	SpellMenuWidgetController->BroadcastInitialValues();
 	
 	OverlayWidget->AddToViewport();
 }
