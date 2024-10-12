@@ -12,7 +12,7 @@ class UAttributeSet;
 class UGDWidgetController;
 class UGDOverlayWidgetController;
 class UGDAttributeMenuWidgetController;
-
+class USpellMenuWidgetController;
 /**
  * 
  */

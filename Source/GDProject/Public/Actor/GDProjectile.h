@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameplayEffectTypes.h"
+#include "AbilitySystem/GDAbilityTypes.h"
 #include "GameFramework/Actor.h"
 #include "GDProjectile.generated.h"
 
@@ -34,7 +35,8 @@ public:
 	UPROPERTY(EditAnywhere, Category="GDProjectile")
 	TObjectPtr<UNiagaraSystem> ImpactEffect;
 
-	FGameplayEffectSpecHandle DamageEffectHandle;
+	UPROPERTY(BlueprintReadWrite, meta = (ExposeOnSpawn = true))
+	FDamageEffectParams DamageEffectParams;
 
 	TObjectPtr<UAudioComponent> AudioComponent;
 
@@ -54,4 +56,6 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	void OnHit();
 };

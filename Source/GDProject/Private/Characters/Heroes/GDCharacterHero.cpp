@@ -107,18 +107,26 @@ void AGDCharacterHero::InitAbilityActorInfo()
 	ASC = PS->GetAbilitySystemComponent();
 	AS = PS->GetGDASBase();
 	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
-
+	OnAscRegistered.Broadcast(ASC);
+	
 	// 初始化HUD
 	if (APlayerController* PC = Cast<APlayerController>(GetController())) {
 		if (AGDHUD* HUD = Cast<AGDHUD>(PC->GetHUD())) {
 			HUD->InitOverlay(PC, PS, ASC, AS);
 		}
 	}
+
+	
 }
 
 int32 AGDCharacterHero::GetPlayerLevel_Implementation() const
 {
 	return GetPlayerState<AGDPlayerState>()->GetPlayerLevel();
+}
+
+FOnASCRegistered AGDCharacterHero::GetOnASCRegisteredDelegate()
+{
+	return Super::GetOnASCRegisteredDelegate();
 }
 
 int32 AGDCharacterHero::GetXP_Implementation()

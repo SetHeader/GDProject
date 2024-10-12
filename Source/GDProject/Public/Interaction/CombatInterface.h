@@ -8,6 +8,10 @@
 
 #include "CombatInterface.generated.h"
 
+class UAbilitySystemComponent;
+
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnASCRegistered, UAbilitySystemComponent*)
+
 enum class ECharacterClass : uint8;
 
 USTRUCT(BlueprintType)
@@ -73,4 +77,6 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	ECharacterClass GetCharacterClass();
+
+	virtual FOnASCRegistered GetOnASCRegisteredDelegate();
 };

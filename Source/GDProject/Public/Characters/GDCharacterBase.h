@@ -70,7 +70,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Combat")
 	ECharacterClass CharacterClass = ECharacterClass::Warrior;
 
-	/* Minions */
+	// 燃烧debuff时的特效
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UDebuffNiagaraComponent> BurnDebuffComponent;
+
+	FOnASCRegistered OnAscRegistered;
+	
+	/* 随从数量 */
 	int32 MinionCount = 0;
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDCharacterBase")
@@ -124,6 +130,7 @@ public:
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() const override;
 	virtual int32 GetMinionCount_Implementation() const override;
 	virtual ECharacterClass GetCharacterClass_Implementation() override;
+	virtual FOnASCRegistered GetOnASCRegisteredDelegate() override;
 	/** End Combat Interface */
 	
 	UFUNCTION(NetMulticast, Reliable)

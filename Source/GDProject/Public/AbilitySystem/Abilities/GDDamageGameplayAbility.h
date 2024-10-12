@@ -6,6 +6,8 @@
 #include "GDGameplayAbility.h"
 #include "GDDamageGameplayAbility.generated.h"
 
+struct FDamageEffectParams;
+
 /**
  * 带伤害的能力，支持多种不同类型的伤害
  */
@@ -14,7 +16,7 @@ class GDPROJECT_API UGDDamageGameplayAbility : public UGDGameplayAbility
 {
 	GENERATED_BODY()
 
-public:
+protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
@@ -25,6 +27,22 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	FScalableFloat Damage;
 
+	// Debuff发生的概率
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffChance = 20.f;
+	// Debuff造成的伤害
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffDamage = 5.f;
+	// Debuff触发的频率
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffFrequency = 1.f;
+	// Debuff的持续时长
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DebuffDuration = 5.f;
+
+public:
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 	virtual void CauseDamage(AActor* TargetActor);
+	
+	FDamageEffectParams MakeDamageEffectParamsFromClassDefaults(AActor* TargetActor = nullptr) const;
 };

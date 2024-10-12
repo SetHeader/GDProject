@@ -12,6 +12,7 @@ class USpringArmComponent;
 class UNiagaraComponent;
 class UInputMappingContext;
 class AGDPlayerState;
+class UDebuffNiagaraComponent;
 
 /**
 * 玩家角色，封装了增强输入功能，实现了GAS接口。

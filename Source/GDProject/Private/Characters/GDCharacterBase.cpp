@@ -8,16 +8,21 @@
 #include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
-#include "AbilitySystem/AttributeSets/GDAttributeSet.h"
+#include "AbilitySystem/Debuff/DebuffNiagaraComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Engine/SkeletalMeshSocket.h"
 #include "GDProject/GDProject.h"
 #include "Kismet/GameplayStatics.h"
 
 AGDCharacterBase::AGDCharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = false;
-
+	
+	const FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
+	
+	BurnDebuffComponent = CreateDefaultSubobject<UDebuffNiagaraComponent>("BurnDebuffComponent");
+	BurnDebuffComponent->SetupAttachment(GetRootComponent());
+	BurnDebuffComponent->DebuffTag = GameplayTags.Debuff_Burn;
+	
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
 	WeaponComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Weapon"));
@@ -132,6 +137,11 @@ int32 AGDCharacterBase::GetMinionCount_Implementation() const
 ECharacterClass AGDCharacterBase::GetCharacterClass_Implementation()
 {
 	return CharacterClass;
+}
+
+FOnASCRegistered AGDCharacterBase::GetOnASCRegisteredDelegate()
+{
+	return OnAscRegistered;
 }
 
 void AGDCharacterBase::MulticastHandleDeath_Implementation()

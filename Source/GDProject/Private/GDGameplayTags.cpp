@@ -92,14 +92,9 @@ void FGDGameplayTags::InitializeGameplayTags()
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Arcane"), FString("Damage Arcane"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Physical"), FString("Damage Physical"));
 	Damage_Fire = FGameplayTag::RequestGameplayTag(FName("Damage.Fire"));
-	Damage_Lighting = FGameplayTag::RequestGameplayTag(FName("Damage.Lighting"));
+	Damage_Lightning = FGameplayTag::RequestGameplayTag(FName("Damage.Lightning"));
 	Damage_Arcane = FGameplayTag::RequestGameplayTag(FName("Damage.Arcane"));
 	Damage_Physical = FGameplayTag::RequestGameplayTag(FName("Damage.Physical"));
-
-	DamageTypesToResistance.Add(Damage_Fire, Attribute_Resistance_Fire);
-	DamageTypesToResistance.Add(Damage_Lighting, Attribute_Resistance_Lighting);
-	DamageTypesToResistance.Add(Damage_Arcane, Attribute_Resistance_Arcane);
-	DamageTypesToResistance.Add(Damage_Physical, Attribute_Resistance_Physical);
 	
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Fire.FireBolt"), FString("Abilities_Fire_FireBolt"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.FireBolt"), FString("Cooldown_Fire_FireBolt"));
@@ -169,6 +164,31 @@ void FGDGameplayTags::InitializeGameplayTags()
 	Debuff_Stun = FGameplayTag::RequestGameplayTag(FName("Debuff.Stun"));
 	Debuff_Arcane = FGameplayTag::RequestGameplayTag(FName("Debuff.Arcane"));
 	Debuff_Physical = FGameplayTag::RequestGameplayTag(FName("Debuff.Physical"));
+
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Chance"), FString("Debuff_Chance"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Damage"), FString("Debuff_Damage"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Duration"), FString("Debuff_Duration"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Debuff.Frequency"), FString("Debuff_Frequency"));
+	Debuff_Chance = FGameplayTag::RequestGameplayTag(FName("Debuff.Chance"));
+	Debuff_Damage = FGameplayTag::RequestGameplayTag(FName("Debuff.Damage"));
+	Debuff_Duration = FGameplayTag::RequestGameplayTag(FName("Debuff.Duration"));
+	Debuff_Frequency = FGameplayTag::RequestGameplayTag(FName("Debuff.Frequency"));
+
+	/*
+	 * Map of Damage Types to Resistances
+	 */
+	DamageTypesToResistances.Add(Damage_Arcane, Attributes_Resistance_Arcane);
+	DamageTypesToResistances.Add(Damage_Lightning, Attributes_Resistance_Lightning);
+	DamageTypesToResistances.Add(Damage_Physical, Attributes_Resistance_Physical);
+	DamageTypesToResistances.Add(Damage_Fire, Attributes_Resistance_Fire);
+
+	/*
+	 * Map of Damage Types to Debuffs
+	 */
+	DamageTypesToDebuffs.Add(Damage_Arcane, Debuff_Arcane);
+	DamageTypesToDebuffs.Add(Damage_Lightning, Debuff_Stun);
+	DamageTypesToDebuffs.Add(Damage_Physical, Debuff_Physical);
+	DamageTypesToDebuffs.Add(Damage_Fire, Debuff_Burn);
 	
 	/*
 	 * 各种类型的前缀

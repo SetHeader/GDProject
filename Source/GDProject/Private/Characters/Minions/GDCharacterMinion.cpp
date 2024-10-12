@@ -41,6 +41,7 @@ void AGDCharacterMinion::BeginPlay()
 	{
 		InitializeAttributes();
 		UGDAbilitySystemLibrary::GiveStartupAbilities(this, ASC, CharacterClass);
+		OnAscRegistered.Broadcast(ASC);
 	}
 	
 	if (UGDUserWidget* AuraUserWidget = Cast<UGDUserWidget>(WidgetComponent->GetUserWidgetObject()))

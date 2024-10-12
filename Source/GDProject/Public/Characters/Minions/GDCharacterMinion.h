@@ -6,7 +6,6 @@
 #include "GameplayTagContainer.h"
 #include "ScalableFloat.h"
 #include "../GDCharacterBase.h"
-#include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Interaction/EnemyInterface.h"
 #include "GDCharacterMinion.generated.h"
 

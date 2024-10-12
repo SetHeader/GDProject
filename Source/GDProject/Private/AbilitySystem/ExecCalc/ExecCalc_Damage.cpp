@@ -11,7 +11,6 @@
 #include "Interaction/CombatInterface.h"
 
 
-
 /**
  * 原始类型，不会暴露给蓝图，不用生成ue反射代码，就不需要用'F'开头 
  */
@@ -42,37 +41,6 @@ struct GDDamageStatics
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, LightingResistance, Target, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, ArcaneResistance, Target, false)
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UGDAttributeSet, PhysicalResistance, Target, false)
-		
-		// 不能在构造函数中初始化映射，因为构造函数中的FGDGameplayTags也没初始化，Tag全是None。
-		if (FGDGameplayTags::Get().IsInitialized())
-		{
-			Initialize();
-		}
-		else
-		{
-			InitializeHandle = FGDGameplayTags::Get().OnInitedDelegate.AddRaw(this, &GDDamageStatics::Initialize);
-		}
-	}
-
-private:
-	bool bInitialized = false;
-	FDelegateHandle InitializeHandle;
-
-public:
-	void Initialize()
-	{
-		FGDGameplayTags::Get().OnInitedDelegate.Remove(InitializeHandle);
-		const FGDGameplayTags& Tags = FGDGameplayTags::Get();
-		TagToDef.Add(Tags.Attribute_Secondary_Armor, ArmorDef);
-		TagToDef.Add(Tags.Attribute_Secondary_ArmorPenetration, ArmorPenetrationDef);
-		TagToDef.Add(Tags.Attribute_Secondary_BlockChange, BlockChangeDef);
-		TagToDef.Add(Tags.Attribute_Secondary_CriticalHitChange, CriticalHitChangeDef);
-		TagToDef.Add(Tags.Attribute_Secondary_CriticalHitDamage, CriticalHitDamageDef);
-		TagToDef.Add(Tags.Attribute_Secondary_CriticalHitResistance, CriticalHitResistanceDef);
-		TagToDef.Add(Tags.Attribute_Resistance_Fire, FireResistanceDef);
-		TagToDef.Add(Tags.Attribute_Resistance_Lighting, LightingResistanceDef);
-		TagToDef.Add(Tags.Attribute_Resistance_Arcane, ArcaneResistanceDef);
-		TagToDef.Add(Tags.Attribute_Resistance_Physical, PhysicalResistanceDef);
 	}
 };
 
@@ -103,6 +71,22 @@ UExecCalc_Damage::UExecCalc_Damage()
 void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
 	FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const
 {
+	// 定义属性标签和属性的映射
+	TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition> TagsToCaptureDefs;
+	const FGDGameplayTags& Tags = FGDGameplayTags::Get();
+		
+	TagsToCaptureDefs.Add(Tags.Attribute_Secondary_Armor, GDDamageStatics().ArmorDef);
+	TagsToCaptureDefs.Add(Tags.Attribute_Secondary_BlockChange, GDDamageStatics().BlockChangeDef);
+	TagsToCaptureDefs.Add(Tags.Attribute_Secondary_ArmorPenetration, GDDamageStatics().ArmorPenetrationDef);
+	TagsToCaptureDefs.Add(Tags.Attribute_Secondary_CriticalHitChange, GDDamageStatics().CriticalHitChangeDef);
+	TagsToCaptureDefs.Add(Tags.Attribute_Secondary_CriticalHitResistance, GDDamageStatics().CriticalHitResistanceDef);
+	TagsToCaptureDefs.Add(Tags.Attribute_Secondary_CriticalHitDamage, GDDamageStatics().CriticalHitDamageDef);
+
+	TagsToCaptureDefs.Add(Tags.Attributes_Resistance_Arcane, GDDamageStatics().ArcaneResistanceDef);
+	TagsToCaptureDefs.Add(Tags.Attributes_Resistance_Fire, GDDamageStatics().FireResistanceDef);
+	TagsToCaptureDefs.Add(Tags.Attributes_Resistance_Lightning, GDDamageStatics().LightingResistanceDef);
+	TagsToCaptureDefs.Add(Tags.Attributes_Resistance_Physical, GDDamageStatics().PhysicalResistanceDef);
+	
 	const UAbilitySystemComponent* SourceASC = ExecutionParams.GetSourceAbilitySystemComponent();
 	const UAbilitySystemComponent* TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
 
@@ -134,10 +118,13 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const float SourceCriticalHitDamage = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitDamageDef);
 	const float TargetCriticalHitResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, DamageStatic().CriticalHitResistanceDef);
 	
+	// 应用Debuff
+	DetermineDebuff(ExecutionParams, EffectSpec, EvaluationParameters, TagsToCaptureDefs);
+
 	// 获取伤害
 	float Damage = 0.f;
 	// 计算伤害与伤害抵抗
-	for (const auto& DamageType : FGDGameplayTags::Get().DamageTypesToResistance)
+	for (const auto& DamageType : FGDGameplayTags::Get().DamageTypesToResistances)
 	{
 		const FGameplayTag& DamageTypeTag = DamageType.Key;
 		const FGameplayTag& ResistanceTypeTag = DamageType.Value;
@@ -225,4 +212,44 @@ float UExecCalc_Damage::GetCoeficientInCurve(FName RealCurveName, float Time) co
 	
 	UE_LOG(LogTemp, Error, TEXT("UExecCalc_Damage:\t Can't found CurveTable or RealCurve. In %s"), *RealCurveName.ToString());
 	return 0.f;
+}
+
+void UExecCalc_Damage::DetermineDebuff(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
+	const FGameplayEffectSpec& Spec, FAggregatorEvaluateParameters EvaluationParameters,
+	const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& InTagsToDefs) const
+{
+	const FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
+
+	for (TTuple<FGameplayTag, FGameplayTag> Pair : GameplayTags.DamageTypesToDebuffs)
+	{
+		const FGameplayTag& DamageType = Pair.Key;
+		const FGameplayTag& DebuffType = Pair.Value;
+		const float TypeDamage = Spec.GetSetByCallerMagnitude(DamageType, false, -1.f);
+		if (TypeDamage > -.5f) // .5 padding for floating point [im]precision
+		{
+			// Determine if there was a successful debuff
+			const float SourceDebuffChance = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Chance, false, -1.f);
+
+			float TargetDebuffResistance = 0.f;
+			const FGameplayTag& ResistanceTag = GameplayTags.DamageTypesToResistances[DamageType];
+			ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(InTagsToDefs[ResistanceTag], EvaluationParameters, TargetDebuffResistance);
+			TargetDebuffResistance = FMath::Max<float>(TargetDebuffResistance, 0.f);
+			const float EffectiveDebuffChance = SourceDebuffChance * ( 100 - TargetDebuffResistance ) / 100.f;
+			const bool bDebuff = FMath::RandRange(1, 100) < EffectiveDebuffChance;
+			if (bDebuff)
+			{
+				FGameplayEffectContextHandle ContextHandle = Spec.GetEffectContext();
+				
+				const float DebuffDamage = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Damage, false, -1.f);
+				const float DebuffDuration = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Duration, false, -1.f);
+				const float DebuffFrequency = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Frequency, false, -1.f);
+				
+				UGDAbilitySystemLibrary::SetDamageType(ContextHandle, DamageType);
+				UGDAbilitySystemLibrary::SetIsSuccessfulDebuff(ContextHandle, true);
+				UGDAbilitySystemLibrary::SetDebuffDamage(ContextHandle, DebuffDamage);
+				UGDAbilitySystemLibrary::SetDebuffDuration(ContextHandle, DebuffDuration);
+				UGDAbilitySystemLibrary::SetDebuffFrequency(ContextHandle, DebuffFrequency);
+			}
+		}
+	}
 }

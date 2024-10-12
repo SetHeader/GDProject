@@ -13,7 +13,9 @@
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
 #include "Player/GDPlayerController.h"
+#include "AbilitySystem/GDAbilityTypes.h"
 
+struct FGDGameplayEffectContext;
 
 UGDAttributeSet::UGDAttributeSet()
 {
@@ -74,81 +76,11 @@ void UGDAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallback
 		SetMana(FMath::Clamp(GetMana(), 0, GetMaxMana()));
 	}
 	else if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute()) {
-		const float LocalIncomingDamage = GetIncomingDamage();
-		SetIncomingDamage(0.f);
-		if (LocalIncomingDamage > 0.f)
-		{
-			const float NewHealth = GetHealth() - LocalIncomingDamage;
-			SetHealth(FMath::Clamp(NewHealth, 0, GetMaxHealth()));
-			const bool bFatal = NewHealth <= 0.f;
-			// 触发角色死亡
-			if (bFatal)
-			{
-				if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor))
-				{
-					CombatInterface->Die();
-				}
-				SendXPEvent(Props);
-			} else
-			{
-				// 触发受击反应
-				FGameplayTagContainer TagContainer;
-				TagContainer.AddTag(FGDGameplayTags::Get().Effects_HitReact);
-				Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
-			}
-
-			// 显示浮动伤害
-			if (Props.SourceCharacter != Props.TargetCharacter)
-			{
-				AGDPlayerController* PC = Cast<AGDPlayerController>(Props.SourceController);
-				if (PC)
-				{
-					const bool bBlockedHit = UGDAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
-					const bool bCriticalHit = UGDAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
-					PC->Client_ShowDamageNumber(LocalIncomingDamage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
-					return;
-				}
-				PC = Cast<AGDPlayerController>(Props.TargetController);
-				if (PC)
-				{
-					const bool bBlockedHit = UGDAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
-					const bool bCriticalHit = UGDAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
-					PC->Client_ShowDamageNumber(LocalIncomingDamage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
-				}
-			}
-		}
+		HandleIncomingDamage(Props);
 	}
 	else if (Data.EvaluatedData.Attribute == GetIncomingXPAttribute())
 	{
-		const float LocalIncomingXP = GetIncomingXP();
-		SetIncomingXP(0.f);
-
-		// 增加经验，并检查升级
-		if (Props.SourceCharacter->Implements<UPlayerInterface>() && Props.SourceCharacter->Implements<UCombatInterface>())
-		{
-			const int32 CurrentXP = IPlayerInterface::Execute_GetXP(Props.SourceCharacter);
-			const int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
-			
-			const int32 NewXP = CurrentXP + LocalIncomingXP;
-			const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(Props.SourceCharacter, NewXP);
-
-			// 升级
-			if (NewLevel > CurrentLevel)
-			{
-				int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, NewLevel);
-				int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, NewLevel);
-				IPlayerInterface::Execute_AddToPlayerLevel(Props.SourceCharacter, NewLevel - CurrentLevel);
-				IPlayerInterface::Execute_AddToAttributePoints(Props.SourceCharacter, AttributePointsReward);
-				IPlayerInterface::Execute_AddToSpellPoints(Props.SourceCharacter, SpellPointsReward);
-
-				// 回满血和魔力
-				bTopOffHealth = true;
-				bTopOffMana = true;
-				
-				IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
-			}
-			IPlayerInterface::Execute_AddToXP(Props.SourceCharacter, LocalIncomingXP);
-		}
+		HandleIncomingXP(Props);
 	}
 }
 
@@ -343,5 +275,134 @@ void UGDAttributeSet::SendXPEvent(const FEffectProperties& Props)
 			Props.SourceCharacter,
 			FGDGameplayTags::Get().Attribute_Meta_IncomingXP,
 			EventData);
+	}
+}
+void UGDAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Damage, bool bBlockedHit, bool bCriticalHit) const
+{
+	if (Props.SourceCharacter != Props.TargetCharacter)
+	{
+		if(AGDPlayerController* PC = Cast<AGDPlayerController>(Props.SourceCharacter->Controller))
+		{
+			PC->Client_ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
+			return;
+		}
+		if(AGDPlayerController* PC = Cast<AGDPlayerController>(Props.TargetCharacter->Controller))
+		{
+			PC->Client_ShowDamageNumber(Damage, Props.TargetCharacter, bBlockedHit, bCriticalHit);
+		}
+	}
+}
+
+void UGDAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
+{
+	const float LocalIncomingDamage = GetIncomingDamage();
+	SetIncomingDamage(0.f);
+	if (LocalIncomingDamage > 0.f)
+	{
+		const float NewHealth = GetHealth() - LocalIncomingDamage;
+		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
+
+		const bool bFatal = NewHealth <= 0.f
+		// 致命伤就触发角色死亡
+		if (bFatal)
+		{
+			ICombatInterface* CombatInterface = Cast<ICombatInterface>(Props.TargetAvatarActor);
+			if (CombatInterface)
+			{
+				CombatInterface->Die();
+			}
+			// 给攻击者增加经验
+			SendXPEvent(Props);
+		}
+		// 非致命伤就触发受击反应
+		else
+		{
+			FGameplayTagContainer TagContainer;
+			TagContainer.AddTag(FGDGameplayTags::Get().Effects_HitReact);
+			Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+		}
+		
+		const bool bBlock = UGDAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
+		const bool bCriticalHit = UGDAbilitySystemLibrary::IsCriticalHit(Props.EffectContextHandle);
+		// 显示伤害文本
+		ShowFloatingText(Props, LocalIncomingDamage, bBlock, bCriticalHit);
+		// 应用Debuff
+		if (UGDAbilitySystemLibrary::IsSuccessfulDebuff(Props.EffectContextHandle))
+		{
+			Debuff(Props);
+		}
+	}
+}
+
+void UGDAttributeSet::HandleIncomingXP(const FEffectProperties& Props)
+{
+	const float LocalIncomingXP = GetIncomingXP();
+	SetIncomingXP(0.f);
+
+	if (Props.SourceCharacter->Implements<UPlayerInterface>() && Props.SourceCharacter->Implements<UCombatInterface>())
+	{
+		const int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
+		const int32 CurrentXP = IPlayerInterface::Execute_GetXP(Props.SourceCharacter);
+
+		const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(Props.SourceCharacter, CurrentXP + LocalIncomingXP);
+		const int32 NumLevelUps = NewLevel - CurrentLevel;
+		if (NumLevelUps > 0)
+		{
+			const int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, CurrentLevel);
+			const int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, CurrentLevel);
+				
+			IPlayerInterface::Execute_AddToPlayerLevel(Props.SourceCharacter, NumLevelUps);
+			IPlayerInterface::Execute_AddToAttributePoints(Props.SourceCharacter, AttributePointsReward);
+			IPlayerInterface::Execute_AddToSpellPoints(Props.SourceCharacter, SpellPointsReward);
+	
+			bTopOffHealth = true;
+			bTopOffMana = true;
+				
+			IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
+		}
+			
+		IPlayerInterface::Execute_AddToXP(Props.SourceCharacter, LocalIncomingXP);
+	}
+}
+
+void UGDAttributeSet::Debuff(const FEffectProperties& Props)
+{
+	const FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
+	FGameplayEffectContextHandle EffectContext = Props.SourceASC->MakeEffectContext();
+	EffectContext.AddSourceObject(Props.SourceAvatarActor);
+
+	const FGameplayTag DamageType = UGDAbilitySystemLibrary::GetDamageType(Props.EffectContextHandle);
+	const float DebuffDamage = UGDAbilitySystemLibrary::GetDebuffDamage(Props.EffectContextHandle);
+	const float DebuffDuration = UGDAbilitySystemLibrary::GetDebuffDuration(Props.EffectContextHandle);
+	const float DebuffFrequency = UGDAbilitySystemLibrary::GetDebuffFrequency(Props.EffectContextHandle);
+
+	// 动态创建一个效果Effect
+	FString DebuffName = FString::Printf(TEXT("DynamicDebuff_%s"), *DamageType.ToString());
+	UGameplayEffect* Effect = NewObject<UGameplayEffect>(GetTransientPackage(), FName(DebuffName));
+
+	Effect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
+	Effect->Period = DebuffFrequency;
+	Effect->DurationMagnitude = FScalableFloat(DebuffDuration);
+
+	Effect->InheritableOwnedTagsContainer.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
+
+	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
+	Effect->StackLimitCount = 1;
+
+	const int32 Index = Effect->Modifiers.Num();
+	Effect->Modifiers.Add(FGameplayModifierInfo());
+	FGameplayModifierInfo& ModifierInfo = Effect->Modifiers[Index];
+
+	ModifierInfo.ModifierMagnitude = FScalableFloat(DebuffDamage);
+	ModifierInfo.ModifierOp = EGameplayModOp::Additive;
+	ModifierInfo.Attribute = UGDAttributeSet::GetIncomingDamageAttribute();
+	
+	if (FGameplayEffectSpec* MutableSpec = new FGameplayEffectSpec(Effect, EffectContext, 1.f))
+	{
+		FGDGameplayEffectContext* AuraContext = static_cast<FGDGameplayEffectContext*>(MutableSpec->GetContext().Get());
+		TSharedPtr<FGameplayTag> DebuffDamageType = MakeShareable(new FGameplayTag(DamageType));
+		AuraContext->SetDamageType(DebuffDamageType);
+
+		Props.TargetASC->ApplyGameplayEffectSpecToSelf(*MutableSpec);
 	}
 }

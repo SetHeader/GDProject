@@ -1,6 +1,8 @@
 ﻿
 #include "AbilitySystem/GDAbilityTypes.h"
 
+#include "Serialization/BufferArchive.h"
+
 
 UScriptStruct* FGDGameplayEffectContext::GetScriptStruct() const
 {
@@ -33,10 +35,30 @@ bool FGDGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool
 		{
 			RepBits |= 1 << 1;
 		}
+		if (bIsSuccessfulDebuff)
+		{
+			RepBits |= 1 << 2;
+		}
+		if (DebuffDamage > 0.f)
+		{
+			RepBits |= 1 << 3;
+		}
+		if (DebuffDuration > 0.f)
+		{
+			RepBits |= 1 << 4;
+		}
+		if (DebuffFrequency > 0.f)
+		{
+			RepBits |= 1 << 5;
+		}
+		if (DamageType.IsValid())
+		{
+			RepBits |= 1 << 6;
+		}
 	}
 	 
 	// 如果是Saving就会存储RepBits，如果是Loading就会读取到RepBits。
-	Ar.SerializeBits(&RepBits, 2);
+	Ar.SerializeBits(&RepBits, 7);
 
 	if (Ar.IsLoading())
 	{
@@ -49,6 +71,32 @@ bool FGDGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool
 		{
 			SetIsCriticalHit(true);
 		}
+		if (RepBits & (1 << 2))
+		{
+			Ar << bIsSuccessfulDebuff;
+		}
+		if (RepBits & (1 << 3))
+		{
+			Ar << DebuffDamage;
+		}
+		if (RepBits & (1 << 4))
+		{
+			Ar << DebuffDuration;
+		}
+		if (RepBits & (1 << 5))
+		{
+			Ar << DebuffFrequency;
+		}
+		if (RepBits & (1 << 6))
+		{
+			if (!DamageType.IsValid())
+			{
+				DamageType = TSharedPtr<FGameplayTag>(new FGameplayTag());
+			}
+			
+			DamageType->NetSerialize(Ar, Map, bOutSuccess);
+		}
+		AddInstigator(Instigator.Get(), EffectCauser.Get()); // Just to initialize InstigatorAbilitySystemComponent
 	}
 	
 	bOutSuccess = true;

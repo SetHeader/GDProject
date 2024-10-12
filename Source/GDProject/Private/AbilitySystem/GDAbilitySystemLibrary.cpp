@@ -3,8 +3,10 @@
 
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 
+#include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "GDGameModeBase.h"
+#include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Characters/Minions/GDCharacterMinion.h"
@@ -288,4 +290,68 @@ UAbilityInfo* UGDAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldContex
 	}
 
 	return GDGameMode->AbilityInfo;
+}
+
+FGameplayEffectContextHandle UGDAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectParams& DamageEffectParams)
+{
+	const FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
+	const AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
+	
+	FGameplayEffectContextHandle EffectContexthandle = DamageEffectParams.SourceAbilitySystemComponent->MakeEffectContext();
+	EffectContexthandle.AddSourceObject(SourceAvatarActor);
+	const FGameplayEffectSpecHandle SpecHandle = DamageEffectParams.SourceAbilitySystemComponent->MakeOutgoingSpec(DamageEffectParams.DamageGameplayEffectClass, DamageEffectParams.AbilityLevel, EffectContexthandle);
+
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, DamageEffectParams.DamageType, DamageEffectParams.BaseDamage);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Debuff_Chance, DamageEffectParams.DebuffChance);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Debuff_Damage, DamageEffectParams.DebuffDamage);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Debuff_Duration, DamageEffectParams.DebuffDuration);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, GameplayTags.Debuff_Frequency, DamageEffectParams.DebuffFrequency);
+	
+	DamageEffectParams.TargetAbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data);
+	return EffectContexthandle;
+}
+
+bool UGDAbilitySystemLibrary::IsSuccessfulDebuff(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->IsSuccessfulDebuff();
+	}
+	return false;
+}
+
+float UGDAbilitySystemLibrary::GetDebuffDamage(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->GetDebuffDamage();
+	}
+	return 0.f;
+}
+
+float UGDAbilitySystemLibrary::GetDebuffDuration(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->GetDebuffDuration();
+	}
+	return 0.f;
+}
+
+float UGDAbilitySystemLibrary::GetDebuffFrequency(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->GetDebuffFrequency();
+	}
+	return 0.f;
+}
+
+FGameplayTag UGDAbilitySystemLibrary::GetDamageType(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	{
+		return *GDEffectContext->GetDamageType();
+	}
+	return FGameplayTag();
 }

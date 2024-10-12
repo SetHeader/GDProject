@@ -15,6 +15,10 @@ struct FGDGameplayTags
 {
 	GENERATED_BODY()
 public:
+	// 存放所有类型的伤害标签，方便遍历
+	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistances;
+	TMap<FGameplayTag, FGameplayTag> DamageTypesToDebuffs;
+	
 	/** 各种类型的前缀 */
 	FGameplayTag Attribute_Primary;
 	FGameplayTag Abilities;
@@ -60,7 +64,7 @@ public:
 
 	/** 伤害类型 */
 	FGameplayTag Damage_Fire;
-	FGameplayTag Damage_Lighting;
+	FGameplayTag Damage_Lightning;
 	FGameplayTag Damage_Arcane;
 	FGameplayTag Damage_Physical;
 	
@@ -99,11 +103,11 @@ public:
 	FGameplayTag Debuff_Arcane;
 	FGameplayTag Debuff_Physical;
 
+	FGameplayTag Debuff_Chance;
+	FGameplayTag Debuff_Damage;
+	FGameplayTag Debuff_Duration;
+	FGameplayTag Debuff_Frequency;
 	
-	
-	
-	// 存放所有类型的伤害标签，方便遍历
-	TMap<FGameplayTag, FGameplayTag> DamageTypesToResistance;
 	
 	/** 其它 */
 	FGameplayTag Effects_HitReact;

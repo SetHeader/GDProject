@@ -46,16 +46,7 @@ void UGDProjectileSpellAbility::SpawnProjectile(const FVector Destination, const
 		Cast<APawn>(GetOwningActorFromActorInfo()),
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
-	UAbilitySystemComponent* SourceASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetAvatarActorFromActorInfo());
-	FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(DamageEffectClass, GetAbilityLevel(), SourceASC->MakeEffectContext());
-
-	// 设置伤害到SpecHandle里面。能够在 GE蓝图编辑器中的 SetByCaller 中通过Damage标签访问
-	for (auto& Pair : DamageTypes)
-	{
-		const float ScaledDamage = Pair.Value.GetValueAtLevel(10);
-		UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, Pair.Key, ScaledDamage);
-	}
-	Projectile->DamageEffectHandle = SpecHandle;
+	Projectile->DamageEffectParams = MakeDamageEffectParamsFromClassDefaults();
 	
 	Projectile->FinishSpawning(SpawnTransform);
 }

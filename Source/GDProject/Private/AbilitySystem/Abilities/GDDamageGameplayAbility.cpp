@@ -5,6 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/GDAbilityTypes.h"
 
 void UGDDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 {
@@ -23,4 +24,21 @@ void UGDDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 	{
 		UE_LOG(LogTemp, Error, TEXT("GDDamageGameplayAbility\t TargetActor Is Not a ASC. [%s]"), *TargetActor->GetName());
 	}
+}
+
+FDamageEffectParams UGDDamageGameplayAbility::MakeDamageEffectParamsFromClassDefaults(AActor* TargetActor) const
+{
+	FDamageEffectParams Params;
+	Params.WorldContextObject = GetAvatarActorFromActorInfo();
+	Params.DamageGameplayEffectClass = DamageEffectClass;
+	Params.SourceAbilitySystemComponent = GetAbilitySystemComponentFromActorInfo();
+	Params.TargetAbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
+	Params.BaseDamage = Damage.GetValueAtLevel(GetAbilityLevel());
+	Params.AbilityLevel = GetAbilityLevel();
+	Params.DamageType = DamageType;
+	Params.DebuffChance = DebuffChance;
+	Params.DebuffDamage = DebuffDamage;
+	Params.DebuffDuration = DebuffDuration;
+	Params.DebuffFrequency = DebuffFrequency;
+	return Params;
 }

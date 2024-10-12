@@ -21,4 +21,10 @@ public:
 	float CaptureAttributeValue(const FGameplayEffectCustomExecutionParameters& ExecutionParams, const FAggregatorEvaluateParameters& EvaluateParameters, const FGameplayEffectAttributeCaptureDefinition& AttrDef) const;
 
 	float GetCoeficientInCurve(FName RealCurveName, float Time) const;
+
+	void DetermineDebuff(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
+						 const FGameplayEffectSpec& Spec,
+						 FAggregatorEvaluateParameters EvaluationParameters,
+						 const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& InTagsToDefs) const;
+
 };
