@@ -6,6 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "GDGameModeBase.generated.h"
 
+class UMVVM_LoadSlot;
+class ULoadScreenSaveGame;
 class UCharacterClassInfo;
 class UAbilityInfo;
 /**
@@ -25,4 +27,34 @@ public:
 	// 配置主角的所有技能定义
 	UPROPERTY(EditDefaultsOnly, Category="GDGameModeBase")
 	TObjectPtr<UAbilityInfo> AbilityInfo;
+	
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ULoadScreenSaveGame> LoadScreenSaveGameClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	FString DefaultMapName;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSoftObjectPtr<UWorld> DefaultMap;
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<FString, TSoftObjectPtr<UWorld>> Maps;
+	
+	UPROPERTY(EditDefaultsOnly)
+	FName DefaultPlayerStartTag;
+	
+	ULoadScreenSaveGame* GetSaveSlotData(const FString& SlotName, int32 SlotIndex) const;
+	
+	void SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex);
+	
+	static void DeleteSlot(const FString& SlotName, int32 SlotIndex);
+
+	// 进入存档中的地图
+	void TravelToMap(UMVVM_LoadSlot* Slot);
+	
+	// 选择玩家出生点
+	virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
+	
+protected:
+	virtual void BeginPlay() override;
 };

@@ -88,7 +88,7 @@ void FGDGameplayTags::InitializeGameplayTags()
 	 * 伤害
 	 */
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Fire"), FString("Damage Fire"));
-	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Lighting"), FString("Damage Lighting"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Lightning"), FString("Damage Lightning"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Arcane"), FString("Damage Arcane"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Damage.Physical"), FString("Damage Physical"));
 	Damage_Fire = FGameplayTag::RequestGameplayTag(FName("Damage.Fire"));

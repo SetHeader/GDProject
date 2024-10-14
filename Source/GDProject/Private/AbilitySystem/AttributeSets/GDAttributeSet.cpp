@@ -302,7 +302,7 @@ void UGDAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
 		const float NewHealth = GetHealth() - LocalIncomingDamage;
 		SetHealth(FMath::Clamp(NewHealth, 0.f, GetMaxHealth()));
 
-		const bool bFatal = NewHealth <= 0.f
+		const bool bFatal = NewHealth <= 0.f;
 		// 致命伤就触发角色死亡
 		if (bFatal)
 		{

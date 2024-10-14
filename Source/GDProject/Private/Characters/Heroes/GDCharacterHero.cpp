@@ -124,11 +124,6 @@ int32 AGDCharacterHero::GetPlayerLevel_Implementation() const
 	return GetPlayerState<AGDPlayerState>()->GetPlayerLevel();
 }
 
-FOnASCRegistered AGDCharacterHero::GetOnASCRegisteredDelegate()
-{
-	return Super::GetOnASCRegisteredDelegate();
-}
-
 int32 AGDCharacterHero::GetXP_Implementation()
 {
 	return GetPlayerState<AGDPlayerState>()->GetXP();

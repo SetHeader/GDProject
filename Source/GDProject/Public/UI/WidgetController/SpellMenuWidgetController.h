@@ -15,7 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FAbilityInfoChangedSignature, FGDAbi
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class GDPROJECT_API USpellMenuWidgetController : public UGDWidgetController
 {
 	GENERATED_BODY()

@@ -313,7 +313,7 @@ FGameplayEffectContextHandle UGDAbilitySystemLibrary::ApplyDamageEffect(const FD
 
 bool UGDAbilitySystemLibrary::IsSuccessfulDebuff(const FGameplayEffectContextHandle& EffectContextHandle)
 {
-	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	if (const FGDGameplayEffectContext* GDEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return GDEffectContext->IsSuccessfulDebuff();
 	}
@@ -322,7 +322,7 @@ bool UGDAbilitySystemLibrary::IsSuccessfulDebuff(const FGameplayEffectContextHan
 
 float UGDAbilitySystemLibrary::GetDebuffDamage(const FGameplayEffectContextHandle& EffectContextHandle)
 {
-	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	if (const FGDGameplayEffectContext* GDEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return GDEffectContext->GetDebuffDamage();
 	}
@@ -331,7 +331,7 @@ float UGDAbilitySystemLibrary::GetDebuffDamage(const FGameplayEffectContextHandl
 
 float UGDAbilitySystemLibrary::GetDebuffDuration(const FGameplayEffectContextHandle& EffectContextHandle)
 {
-	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	if (const FGDGameplayEffectContext* GDEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return GDEffectContext->GetDebuffDuration();
 	}
@@ -340,7 +340,7 @@ float UGDAbilitySystemLibrary::GetDebuffDuration(const FGameplayEffectContextHan
 
 float UGDAbilitySystemLibrary::GetDebuffFrequency(const FGameplayEffectContextHandle& EffectContextHandle)
 {
-	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	if (const FGDGameplayEffectContext* GDEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return GDEffectContext->GetDebuffFrequency();
 	}
@@ -349,9 +349,52 @@ float UGDAbilitySystemLibrary::GetDebuffFrequency(const FGameplayEffectContextHa
 
 FGameplayTag UGDAbilitySystemLibrary::GetDamageType(const FGameplayEffectContextHandle& EffectContextHandle)
 {
-	if (const FGDGameplayEffectContext* GDEffectContext = Cast<FGDGameplayEffectContext>(EffectContextHandle.Get()))
+	if (const FGDGameplayEffectContext* GDEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return *GDEffectContext->GetDamageType();
 	}
 	return FGameplayTag();
+}
+
+void UGDAbilitySystemLibrary::SetIsSuccessfulDebuff(FGameplayEffectContextHandle& EffectContextHandle,
+	bool bInSuccessfulDebuff)
+{
+	if (FGDGameplayEffectContext* GDEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->SetIsSuccessfulDebuff(bInSuccessfulDebuff);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetDebuffDamage(FGameplayEffectContextHandle& EffectContextHandle, float InDamage)
+{
+	if (FGDGameplayEffectContext* GDEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->SetDebuffDamage(InDamage);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetDebuffDuration(FGameplayEffectContextHandle& EffectContextHandle, float InDuration)
+{
+	if (FGDGameplayEffectContext* GDEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->SetDebuffDuration(InDuration);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetDebuffFrequency(FGameplayEffectContextHandle& EffectContextHandle, float InFrequency)
+{
+	if (FGDGameplayEffectContext* GDEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return GDEffectContext->SetDebuffFrequency(InFrequency);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetDamageType(FGameplayEffectContextHandle& EffectContextHandle,
+	const FGameplayTag& InDamageType)
+{
+	if (FGDGameplayEffectContext* GDEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		const TSharedPtr<FGameplayTag> DamageType = MakeShared<FGameplayTag>(InDamageType);
+		return GDEffectContext->SetDamageType(DamageType);
+	}
 }

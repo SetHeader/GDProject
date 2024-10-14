@@ -16,6 +16,7 @@ class UAbilitySystemComponent;
 class UGDAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
+class UDebuffNiagaraComponent;
 
 /**
 * 角色基类，提供 GAS 接口

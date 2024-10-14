@@ -78,5 +78,5 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	ECharacterClass GetCharacterClass();
 
-	virtual FOnASCRegistered GetOnASCRegisteredDelegate();
+	virtual FOnASCRegistered GetOnASCRegisteredDelegate() = 0;
 };
