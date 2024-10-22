@@ -39,7 +39,7 @@ void AGDCharacterMinion::BeginPlay()
 	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
 	if (HasAuthority())
 	{
-		InitializeAttributes();
+		InitializeDefaultAttributes();
 		UGDAbilitySystemLibrary::GiveStartupAbilities(this, ASC, CharacterClass);
 		OnAscRegistered.Broadcast(ASC);
 	}
@@ -140,7 +140,7 @@ void AGDCharacterMinion::Die()
 	Super::Die();
 }
 
-void AGDCharacterMinion::InitializeAttributes() const
+void AGDCharacterMinion::InitializeDefaultAttributes() const
 {
 	UGDAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, ASC);
 }

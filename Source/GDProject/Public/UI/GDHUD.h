@@ -42,7 +42,7 @@ private:
 	TObjectPtr<UGDAttributeMenuWidgetController> AttributeMenuWidgetController;
 
 	UPROPERTY(EditAnywhere, Category = "GDHUD")
-	TSubclassOf<UGDAttributeMenuWidgetController> SpellMenuWidgetControllerClass;
+	TSubclassOf<USpellMenuWidgetController> SpellMenuWidgetControllerClass;
 
 	UPROPERTY()
 	TObjectPtr<USpellMenuWidgetController> SpellMenuWidgetController;

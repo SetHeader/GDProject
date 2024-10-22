@@ -67,10 +67,13 @@ public:
 	virtual void AddToAttributePoints_Implementation(int32 InPoints) override;
 	virtual void AddToSpellPoints_Implementation(int32 InPoints) override;
 	virtual void LevelUp_Implementation() override;
+	virtual void SaveProgress_Implementation(const FName& CheckpointTag) override;
 	/** End Player Interface */
 
 	UFUNCTION(Reliable, NetMulticast)
 	void Multicast_LevelUpParticles() const;
+	
+	void LoadProgress();
 protected:
 	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

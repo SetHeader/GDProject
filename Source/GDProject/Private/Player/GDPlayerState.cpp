@@ -38,7 +38,7 @@ void AGDPlayerState::SetLevel(int32 InLevel)
 		return;
 	}
 	Level = InLevel;
-	OnLevelChangedDelegate.Broadcast(Level);
+	OnLevelChangedDelegate.Broadcast(Level, false);
 }
 
 void AGDPlayerState::AddToLevel(int32 InLevel)
@@ -49,7 +49,7 @@ void AGDPlayerState::AddToLevel(int32 InLevel)
 		return;
 	}
 	Level += InLevel;
-	OnLevelChangedDelegate.Broadcast(Level);
+	OnLevelChangedDelegate.Broadcast(Level, true);
 }
 
 int32 AGDPlayerState::GetAttributePoints() const
@@ -166,7 +166,7 @@ void AGDPlayerState::AddToXP(int32 InXP)
 
 void AGDPlayerState::OnRep_Level(const int32 OldLevel)
 {
-	OnLevelChangedDelegate.Broadcast(Level);
+	OnLevelChangedDelegate.Broadcast(Level, true);
 }
 
 void AGDPlayerState::OnRep_XP(const int32 OldXP)

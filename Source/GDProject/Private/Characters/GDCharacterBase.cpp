@@ -162,7 +162,7 @@ void AGDCharacterBase::MulticastHandleDeath_Implementation()
 	bIsDead = true;
 }
 
-void AGDCharacterBase::InitializeAttributes() const
+void AGDCharacterBase::InitializeDefaultAttributes() const
 {
 	check(ASC);
 	check(DefaultPrimaryAttributes);

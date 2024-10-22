@@ -138,5 +138,6 @@ public:
 	virtual void MulticastHandleDeath();
 
 protected:
-	virtual void InitializeAttributes() const;
+	// 初始化默认属性
+	virtual void InitializeDefaultAttributes() const;
 };

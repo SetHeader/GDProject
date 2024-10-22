@@ -36,7 +36,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly)
 	TSoftObjectPtr<UWorld> DefaultMap;
-
+	// 地图名字和直接的地图是分开的，可以通过地图名来查找地图
+	// 地图名 -> 地图。
 	UPROPERTY(EditDefaultsOnly)
 	TMap<FString, TSoftObjectPtr<UWorld>> Maps;
 	
@@ -48,7 +49,15 @@ public:
 	void SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex);
 	
 	static void DeleteSlot(const FString& SlotName, int32 SlotIndex);
+	// 查找当前存档的数据
+	ULoadScreenSaveGame* RetrieveInGameSaveData() const;
+	// 保存数据到当前存档
+	void SaveInGameProgressData(ULoadScreenSaveGame* SaveObject);
 
+	// 保存世界的状态
+	void SaveWorldState(UWorld* World) const;
+	void LoadWorldState(UWorld* World) const;
+	
 	// 进入存档中的地图
 	void TravelToMap(UMVVM_LoadSlot* Slot);
 	

@@ -9,6 +9,7 @@
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Abilities/GDGameplayAbility.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "Game/LoadScreenSaveGame.h"
 #include "GDProject/GDLogChannels.h"
 #include "Interaction/PlayerInterface.h"
 #include "Player/GDPlayerState.h"
@@ -18,6 +19,51 @@ void UGDAbilitySystemComponent::OnAbilityActorInfoSet()
 {
 	// 在服务端和客户端都会绑定，但只会在服务端回调。但回调方法ClientEffectApplied是个rpc方法，会在客户端执行。
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UGDAbilitySystemComponent::ClientEffectApplied);
+}
+
+void UGDAbilitySystemComponent::AddCharacterAbilitiesFromSaveData(ULoadScreenSaveGame* SaveData)
+{
+	FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
+	for (const FSavedAbility& SavedAbility : SaveData->SavedAbilities)
+	{
+		// 只有解锁且可用才能授予能力
+		if (SavedAbility.AbilityStatus != GameplayTags.Abilities_Status_Unlocked && SavedAbility.AbilityStatus != GameplayTags.Abilities_Status_Equipped)
+		{
+			return;
+		}
+		// 能力等级检查
+		if (SavedAbility.AbilityLevel <= 0)
+		{
+			return;
+		}
+		// 能力检查
+		if (!SavedAbility.GameplayAbility)
+		{
+			return;
+		}
+		
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(SavedAbility.GameplayAbility, SavedAbility.AbilityLevel);
+		AbilitySpec.DynamicAbilityTags.AddTag(SavedAbility.AbilityStatus);
+		AbilitySpec.DynamicAbilityTags.AddTag(SavedAbility.AbilitySlot);
+		if (UGDGameplayAbility* GDAbility = Cast<UGDGameplayAbility>(AbilitySpec.Ability))
+		{
+			GDAbility->SetupInputTag = SavedAbility.AbilitySlot;
+			AbilitySpec.DynamicAbilityTags.AddTag(SavedAbility.AbilitySlot);
+		}
+		
+		// 主动能力就授予，被动能力就激活一次。
+		if (SavedAbility.AbilityType == GameplayTags.Abilities_Type_Offensive)
+		{
+			GiveAbility(AbilitySpec);
+		}
+		else if (SavedAbility.AbilityType == GameplayTags.Abilities_Type_Passive)
+		{
+			GiveAbilityAndActivateOnce(AbilitySpec);
+			
+		}
+	}
+	bStartupAbilitiesGiven = true;
+	AbilitiesGivenDelegate.Broadcast(this);
 }
 
 void UGDAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupAbilities)
@@ -40,6 +86,7 @@ void UGDAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubcl
 	for (const TSubclassOf<UGameplayAbility>& AbilityClass : SetupPassiveAbilities)
 	{
 		FGameplayAbilitySpec Ability = FGameplayAbilitySpec(AbilityClass, 1);
+		Ability.DynamicAbilityTags.AddTag(FGDGameplayTags::Get().Abilities_Status_Equipped);
 		GiveAbilityAndActivateOnce(Ability);
 	}
 }
@@ -154,7 +201,7 @@ void UGDAbilitySystemComponent::ForEachAbility(const FForEachAbility& Delegate)
 	}
 }
 
-FGameplayTag UGDAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec) const
+FGameplayTag UGDAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
 {
 	if (UGameplayAbility* Ability = AbilitySpec.Ability)
 	{
@@ -171,10 +218,24 @@ FGameplayTag UGDAbilitySystemComponent::GetAbilityTagFromSpec(const FGameplayAbi
 	return FGameplayTag();
 }
 
-FGameplayTag UGDAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec) const
+FGameplayTag UGDAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbilitySpec& AbilitySpec)
 {
 	// 输入标签是加到DynamicAbilityTags中的，所以遍历这个就行
 	const FGameplayTag& InputTagPrefix = FGameplayTag::RequestGameplayTag("InputTag");
+	for (const FGameplayTag& Tag : AbilitySpec.DynamicAbilityTags)
+	{
+		if (Tag.MatchesTag(InputTagPrefix))
+		{
+			return Tag;
+		}
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag UGDAbilitySystemComponent::GetStatusFromSpec(const FGameplayAbilitySpec& AbilitySpec)
+{
+	// 状态标签是加到DynamicAbilityTags中的，所以遍历这个就行
+	const FGameplayTag& InputTagPrefix = FGameplayTag::RequestGameplayTag("Abilities.Status");
 	for (const FGameplayTag& Tag : AbilitySpec.DynamicAbilityTags)
 	{
 		if (Tag.MatchesTag(InputTagPrefix))
@@ -197,6 +258,66 @@ FGameplayAbilitySpec* UGDAbilitySystemComponent::GetSpecFromAbilityTag(const FGa
 	}
 
 	return nullptr;
+}
+
+FGameplayTag UGDAbilitySystemComponent::GetStatusFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		return GetStatusFromSpec(*Spec);
+	}
+	return FGameplayTag();
+}
+
+FGameplayTag UGDAbilitySystemComponent::GetSlotFromAbilityTag(const FGameplayTag& AbilityTag)
+{
+	if (const FGameplayAbilitySpec* Spec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		return GetInputTagFromSpec(*Spec);
+	}
+	return FGameplayTag();
+}
+
+void UGDAbilitySystemComponent::AssignSlotToAbility(FGameplayAbilitySpec& Spec, const FGameplayTag& Slot)
+{
+	ClearSlot(&Spec);
+	Spec.DynamicAbilityTags.AddTag(Slot);
+}
+
+void UGDAbilitySystemComponent::ClearSlot(FGameplayAbilitySpec* Spec)
+{
+	const FGameplayTag Slot = GetInputTagFromSpec(*Spec);
+	Spec->DynamicAbilityTags.RemoveTag(Slot);
+}
+
+void UGDAbilitySystemComponent::ClearAbilitiesOfSlot(const FGameplayTag& Slot)
+{
+	FScopedAbilityListLock ActiveScopeLock(*this);
+	for (FGameplayAbilitySpec& Spec : GetActivatableAbilities())
+	{
+		if (AbilityHasSlot(&Spec, Slot))
+		{
+			ClearSlot(&Spec);
+		}
+	}
+}
+
+bool UGDAbilitySystemComponent::AbilityHasSlot(FGameplayAbilitySpec* Spec, const FGameplayTag& Slot)
+{
+	for (FGameplayTag Tag : Spec->DynamicAbilityTags)
+	{
+		if (Tag.MatchesTagExact(Slot))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void UGDAbilitySystemComponent::MulticastActivatePassiveEffect_Implementation(const FGameplayTag& AbilityTag,
+	bool bActivate)
+{
+	ActivatePassiveEffect.Broadcast(AbilityTag, bActivate);
 }
 
 void UGDAbilitySystemComponent::UpgradeAttributePoint(const FGameplayTag& Tag)

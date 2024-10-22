@@ -7,14 +7,17 @@
 #include "GameplayEffectTypes.h"
 #include "InputMappingContext.h"
 #include "AbilitySystemComponent.h"
+#include "Game/GDGameModeBase.h"
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "UI/GDHUD.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
 #include "Camera/CameraComponent.h"
+#include "Game/LoadScreenSaveGame.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Niagara\Public\NiagaraComponent.h"
 
 AGDCharacterHero::AGDCharacterHero()
@@ -49,9 +52,12 @@ void AGDCharacterHero::PossessedBy(AController* NewController)
 	Super::PossessedBy(NewController);
 	// 在服务端初始化
 	InitAbilityActorInfo();
-	InitializeAttributes();
+	LoadProgress();
 
-	AddCharacterAbilities();
+	if (AGDGameModeBase* AuraGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(this)))
+	{
+		AuraGameMode->LoadWorldState(GetWorld());
+	}
 }
 
 void AGDCharacterHero::OnRep_PlayerState()
@@ -82,6 +88,41 @@ void AGDCharacterHero::RemoveIMC(UInputMappingContext* IMC)
 
 		if (EnhancedInputSubsystem) {
 			EnhancedInputSubsystem->RemoveMappingContext(IMC);
+		}
+	}
+}
+
+void AGDCharacterHero::LoadProgress()
+{
+	AGDGameModeBase* GameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(this));
+	if (GameMode)
+	{
+		ULoadScreenSaveGame* SaveData = GameMode->RetrieveInGameSaveData();
+		if (!SaveData) return;
+
+		// 第一次加载就使用默认属性
+		if (SaveData->bFirstTimeLoadIn)
+		{
+			InitializeDefaultAttributes();
+			AddCharacterAbilities();
+		}
+		// 后续加载需要用存档的数据
+		else
+		{
+			if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC))
+			{
+				GDASC->AddCharacterAbilitiesFromSaveData(SaveData);
+			}
+			
+			if (AGDPlayerState* PS = Cast<AGDPlayerState>(GetPlayerState()))
+			{
+				PS->SetLevel(SaveData->PlayerLevel);
+				PS->SetXP(SaveData->XP);
+				PS->SetAttributePoints(SaveData->AttributePoints);
+				PS->SetSpellPoints(SaveData->SpellPoints);
+			}
+
+			UGDAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(this, ASC, SaveData);
 		}
 	}
 }
@@ -204,6 +245,31 @@ void AGDCharacterHero::AddToSpellPoints_Implementation(int32 InPoints)
 void AGDCharacterHero::LevelUp_Implementation()
 {
 	Multicast_LevelUpParticles();
+}
+
+void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
+{
+	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (GameModeBase)
+	{
+		ULoadScreenSaveGame* SaveData = GameModeBase->RetrieveInGameSaveData();
+		AGDPlayerState* PS = Cast<AGDPlayerState>(GetPlayerState());
+		if (SaveData && PS)
+		{
+			SaveData->PlayerStartTag = CheckpointTag;
+			SaveData->PlayerLevel = PS->GetPlayerLevel();
+			SaveData->XP = PS->GetXP();
+			SaveData->SpellPoints = PS->GetSpellPoints();
+			SaveData->AttributePoints = PS->GetAttributePoints();
+			
+			SaveData->Strength = UGDAttributeSet::GetStrengthAttribute().GetNumericValue(AS);
+			SaveData->Intelligence = UGDAttributeSet::GetIntelligenceAttribute().GetNumericValue(AS);
+			SaveData->Resilience = UGDAttributeSet::GetResilienceAttribute().GetNumericValue(AS);
+			SaveData->Vigor = UGDAttributeSet::GetVigorAttribute().GetNumericValue(AS);
+			
+			GameModeBase->SaveInGameProgressData(SaveData);
+		}
+	}
 }
 
 void AGDCharacterHero::Multicast_LevelUpParticles_Implementation() const

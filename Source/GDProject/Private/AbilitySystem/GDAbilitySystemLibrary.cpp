@@ -5,16 +5,18 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GDGameModeBase.h"
+#include "Game/GDGameModeBase.h"
 #include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Characters/Minions/GDCharacterMinion.h"
+#include "Game/LoadScreenSaveGame.h"
 #include "GDProject/GDLogChannels.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
 #include "UI/WidgetController/SpellMenuWidgetController.h"
+#include "GameplayAbilities\Public\GameplayEffectTypes.h"
 
 UGDOverlayWidgetController* UGDAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
 {
@@ -82,6 +84,34 @@ void UGDAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldCo
 	ASC->ApplyGameplayEffectSpecToSelf(*SecondaryEffectSpecHandle.Data);
 	ASC->ApplyGameplayEffectSpecToSelf(*VitalEffectSpecHandle.Data);
 	
+}
+
+void UGDAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject,
+	UAbilitySystemComponent* ASC, ULoadScreenSaveGame* SaveGame)
+{
+	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (!CharacterClassInfo) return;
+
+	const FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
+
+	const AActor* SourceAvatarActor = ASC->GetAvatarActor();
+
+	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
+	
+	EffectContextHandle.AddSourceObject(ASC->GetAvatarActor());
+
+	FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(CharacterClassInfo->PrimaryAttributes_SetByCaller, 1.f, EffectContextHandle);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle, GameplayTags.Attribute_Primary_Strength, SaveGame->Strength);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle, GameplayTags.Attribute_Primary_Resilience, SaveGame->Resilience);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle, GameplayTags.Attribute_Primary_Intelligence, SaveGame->Intelligence);
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(EffectSpecHandle, GameplayTags.Attribute_Primary_Vigor, SaveGame->Vigor);
+	
+	FGameplayEffectSpecHandle SecondaryEffectSpecHandle = ASC->MakeOutgoingSpec(CharacterClassInfo->SecondaryAttributes_Infinite, 1.f, EffectContextHandle);
+	FGameplayEffectSpecHandle VitalEffectSpecHandle = ASC->MakeOutgoingSpec(CharacterClassInfo->VitalAttributes, 1.f, EffectContextHandle);
+	
+	ASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data);
+	ASC->ApplyGameplayEffectSpecToSelf(*SecondaryEffectSpecHandle.Data);
+	ASC->ApplyGameplayEffectSpecToSelf(*VitalEffectSpecHandle.Data);
 }
 
 void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass)

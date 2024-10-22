@@ -129,9 +129,9 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 		const FGameplayTag& DamageTypeTag = DamageType.Key;
 		const FGameplayTag& ResistanceTypeTag = DamageType.Value;
 
-		checkf(DamageStatic().TagToDef.Contains(ResistanceTypeTag), TEXT("ExecCalc_Damage\t TagToDef doesn't contain Tag: [%s]"), *ResistanceTypeTag.ToString());
+		checkf(TagsToCaptureDefs.Contains(ResistanceTypeTag), TEXT("ExecCalc_Damage\t TagToDef doesn't contain Tag: [%s]"), *ResistanceTypeTag.ToString());
 
-		const FGameplayEffectAttributeCaptureDefinition ResistanceTypeDef = DamageStatic().TagToDef[ResistanceTypeTag];
+		const FGameplayEffectAttributeCaptureDefinition ResistanceTypeDef = TagsToCaptureDefs[ResistanceTypeTag];
 		
 		const float DamageTypeValue = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag);
 		float TargetResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, ResistanceTypeDef);

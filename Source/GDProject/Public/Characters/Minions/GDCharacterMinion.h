@@ -83,6 +83,6 @@ public:
 	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
 protected:
-	virtual void InitializeAttributes() const override;
+	virtual void InitializeDefaultAttributes() const override;
 
 };

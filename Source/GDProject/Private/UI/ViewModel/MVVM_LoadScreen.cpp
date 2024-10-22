@@ -3,7 +3,7 @@
 
 #include "UI/ViewModel/MVVM_LoadScreen.h"
 
-#include "GDGameModeBase.h"
+#include "Game/GDGameModeBase.h"
 #include "Game/GDGameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/ViewModel/MVVM_LoadSlot.h"
@@ -30,13 +30,25 @@ UMVVM_LoadSlot* UMVVM_LoadScreen::GetLoadSlotViewModelByIndex(int32 Index) const
 	return LoadSlots.FindChecked(Index);
 }
 
+void UMVVM_LoadScreen::NewGameButtonPressed(int32 Slot)
+{
+	LoadSlots[Slot]->SetWidgetSwitcherIndex.Broadcast(1);
+}
+
 void UMVVM_LoadScreen::NewSlotButtonPressed(int32 Slot, const FString& EnteredName)
 {
 	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	// 多人模式中没有GameModeBase
+	if (!IsValid(GameModeBase))
+	{
+		GEngine->AddOnScreenDebugMessage(1, 15.f, FColor::Magenta, FString("Please switch to Single Player"));
+		return;
+	}
+
 	LoadSlots[Slot]->SetMapName(GameModeBase->DefaultMapName);
 	LoadSlots[Slot]->SetPlayerName(EnteredName);
 	LoadSlots[Slot]->SlotStatus = Taken;
-	
+	LoadSlots[Slot]->PlayerStartTag = GameModeBase->DefaultPlayerStartTag;
 	GameModeBase->SaveSlotData(LoadSlots[Slot], Slot);
 	
 	LoadSlots[Slot]->InitializeSlot();
@@ -45,11 +57,6 @@ void UMVVM_LoadScreen::NewSlotButtonPressed(int32 Slot, const FString& EnteredNa
 	GameInstance->LoadSlotIndex = Slot;
 	GameInstance->LoadSlotName = LoadSlots[Slot]->LoadSlotName;
 	GameInstance->PlayerStartTag = GameModeBase->DefaultPlayerStartTag;
-}
-
-void UMVVM_LoadScreen::NewGameButtonPressed(int32 Slot)
-{
-	LoadSlots[Slot]->SetWidgetSwitcherIndex.Broadcast(1);
 }
 
 void UMVVM_LoadScreen::SelectSlotButtonPressed(int32 Slot)
@@ -74,6 +81,7 @@ void UMVVM_LoadScreen::DeleteButtonPressed()
 	if (SelectedSlot)
 	{
 		AGDGameModeBase::DeleteSlot(SelectedSlot->LoadSlotName, SelectedSlot->SlotIndex);
+		SelectedSlot->SlotStatus = Vacant;
 		SelectedSlot->InitializeSlot();
 		SelectedSlot->EnableSelectSlotButton.Broadcast(true);
 	}
@@ -82,6 +90,21 @@ void UMVVM_LoadScreen::DeleteButtonPressed()
 void UMVVM_LoadScreen::PlayButtonPressed()
 {
 	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	UGDGameInstance* GameInst = Cast<UGDGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+	
+	// 多人模式中没有GameModeBase
+	if (!IsValid(GameModeBase))
+	{
+		GEngine->AddOnScreenDebugMessage(1, 15.f, FColor::Magenta, FString("Please switch to Single Player"));
+		return;
+	}
+	
+	GameInst->PlayerStartTag = SelectedSlot->PlayerStartTag;
+	GameInst->LoadSlotName = SelectedSlot->LoadSlotName;
+	GameInst->LoadSlotIndex = SelectedSlot->SlotIndex;
+	
+	GameModeBase->DefaultPlayerStartTag = GameInst->PlayerStartTag;
+	
 	if (IsValid(SelectedSlot)) {
 		GameModeBase->TravelToMap(SelectedSlot);
 	}

@@ -4,8 +4,9 @@
 
 void UMVVM_LoadSlot::InitializeSlot()
 {
+	// 存档状态就对应了不同的存档界面。0 -> 空闲界面， 1 -> 新建存档，输入存档名界面， 2 -> 选择存档界面
 	const int32 WidgetSwitcherIndex = SlotStatus.GetValue();
-	// TODO 有疑惑，感觉是要通知存档状态，而不是通知存档下标
+	
 	SetWidgetSwitcherIndex.Broadcast(WidgetSwitcherIndex);
 }
 

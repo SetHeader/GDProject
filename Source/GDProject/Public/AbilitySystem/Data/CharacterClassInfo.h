@@ -49,9 +49,18 @@ public:
 	// 为每个类型的敌人进行配置
 	UPROPERTY(EditDefaultsOnly, Category="Character Class Defaults")
 	TMap<ECharacterClass, FCharacterClassDefaultInfo> CharacterClassInformation;
+	
+	// 主属性，读取存档的时候会设置
+	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
+	TSubclassOf<UGameplayEffect> PrimaryAttributes_SetByCaller;
+	
 	// 主角的配置
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> SecondaryAttributes;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
+	TSubclassOf<UGameplayEffect> SecondaryAttributes_Infinite;
+	
 	// 主角的配置
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> VitalAttributes;

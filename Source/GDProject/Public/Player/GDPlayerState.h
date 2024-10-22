@@ -14,6 +14,7 @@ struct FGDASBase;
 struct FGameplayTag;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FStatChangedSignature, const int32 /* NewStat */);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnLevelChanged, int32 /*StatValue*/, bool /*bLevelUp*/)
 
 /**
  * 玩家状态类，储存了玩家信息，提供了GAS系统支持
@@ -33,7 +34,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "GDCharacterBase")
 	TObjectPtr<ULevelUpInfo> LevelUpInfo;
 
-	FStatChangedSignature OnLevelChangedDelegate;
+	FOnLevelChanged OnLevelChangedDelegate;
 	FStatChangedSignature OnXPChangedDelegate;
 	FStatChangedSignature OnAttributePointsChangedDelegate;
 	FStatChangedSignature OnSpellPointsChangedDelegate;

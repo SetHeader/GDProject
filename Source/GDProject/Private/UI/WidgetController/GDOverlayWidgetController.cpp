@@ -19,9 +19,9 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 
 	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
 	GDPS->OnXPChangedDelegate.AddUObject(this, &UGDOverlayWidgetController::OnXPChanged);
-	GDPS->OnLevelChangedDelegate.AddLambda([this](const int32 NewLevel)
+	GDPS->OnLevelChangedDelegate.AddLambda([this](const int32 NewLevel, bool bLevelUp)
 	{
-		OnPlayerLevelChangedDelegate.Broadcast(NewLevel);
+		OnPlayerLevelChangedDelegate.Broadcast(NewLevel, bLevelUp);
 	});
 	GDPS->OnAttributePointsChangedDelegate.AddLambda([this](const int32 NewPoints)
 	{
