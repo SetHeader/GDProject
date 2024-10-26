@@ -115,13 +115,15 @@ void UMVVM_LoadScreen::LoadData()
 	AGameModeBase* GMB = UGameplayStatics::GetGameMode(this);
 	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(GMB);
 	if (!GameModeBase) return;
-	
+
+	// 把SaveGame存档数据转移到对应UMVVM_LoadSlot插槽中。
 	for (TTuple<int, UMVVM_LoadSlot*> LoadSlot : LoadSlots)
 	{
 		ULoadScreenSaveGame* SaveObject = GameModeBase->GetSaveSlotData(LoadSlot.Value->LoadSlotName, LoadSlot.Key);
 		
 		const FString PlayerName = LoadSlot.Value->GetPlayerName();
 
+		LoadSlot.Value->PlayerStartTag = SaveObject->PlayerStartTag;
 		LoadSlot.Value->SlotStatus = SaveObject->SaveSlotStatus;
 		LoadSlot.Value->SetPlayerName(SaveObject->PlayerName);
 		LoadSlot.Value->SetMapName(SaveObject->MapName);

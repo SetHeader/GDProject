@@ -45,16 +45,18 @@ public:
 	FName DefaultPlayerStartTag;
 	
 	ULoadScreenSaveGame* GetSaveSlotData(const FString& SlotName, int32 SlotIndex) const;
-	
+
+	// 保存数据到指定存档
 	void SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex);
-	
+	// 删除指定存档
 	static void DeleteSlot(const FString& SlotName, int32 SlotIndex);
+	
 	// 查找当前存档的数据
 	ULoadScreenSaveGame* RetrieveInGameSaveData() const;
 	// 保存数据到当前存档
 	void SaveInGameProgressData(ULoadScreenSaveGame* SaveObject);
 
-	// 保存世界的状态
+	// 保存世界的状态到当前存档
 	void SaveWorldState(UWorld* World) const;
 	void LoadWorldState(UWorld* World) const;
 	

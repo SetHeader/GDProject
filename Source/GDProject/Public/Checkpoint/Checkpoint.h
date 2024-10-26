@@ -14,9 +14,10 @@ class GDPROJECT_API ACheckpoint : public APlayerStart, public ISaveInterface
 {
 	GENERATED_BODY()
 
+private:
+	UMaterialInstanceDynamic* DynamicMaterialInst;
+
 public:
-	ACheckpoint(const FObjectInitializer& ObjectInitializer);
-	
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UStaticMeshComponent> CheckpointMesh;
 
@@ -26,17 +27,23 @@ public:
 	UPROPERTY(BlueprintReadOnly, SaveGame)
 	bool bReached = false;
 	
+	ACheckpoint(const FObjectInitializer& ObjectInitializer);
 protected:
+	
 	UFUNCTION()
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	virtual void BeginPlay() override;
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void CheckpointReached(UMaterialInstanceDynamic* DynamicMaterialInstance);
-
+	// 发光。即靠近存档点时发光
 	void HandleGlowEffects();
+	
+	// 蓝图实现，具体发光效果的实现逻辑
+	UFUNCTION(BlueprintImplementableEvent)
+	void Glow(UMaterialInstanceDynamic* DynamicMaterialInstance);
 
+	UFUNCTION(BlueprintCallable)
+	void FinishHandleGlowEffects();
 public:
 	/** Start SaveInterface */
 	virtual void LoadActor_Implementation() override;

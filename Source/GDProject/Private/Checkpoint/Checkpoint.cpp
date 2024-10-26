@@ -48,10 +48,19 @@ void ACheckpoint::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 
 void ACheckpoint::HandleGlowEffects()
 {
-	Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	UMaterialInstanceDynamic* DynamicMaterialInst = UMaterialInstanceDynamic::Create(CheckpointMesh->GetMaterial(0), this);
-	CheckpointMesh->SetMaterial(0, DynamicMaterialInst);
-	CheckpointReached(DynamicMaterialInst);
+	if (!DynamicMaterialInst)
+	{
+		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		DynamicMaterialInst = UMaterialInstanceDynamic::Create(CheckpointMesh->GetMaterial(0), this);
+		CheckpointMesh->SetMaterial(0, DynamicMaterialInst);
+	}
+	
+	Glow(DynamicMaterialInst);
+}
+
+void ACheckpoint::FinishHandleGlowEffects()
+{
+	Sphere->SetCollisionEnabled(ECollisionEnabled::Type::QueryOnly);
 }
 
 void ACheckpoint::LoadActor_Implementation()
