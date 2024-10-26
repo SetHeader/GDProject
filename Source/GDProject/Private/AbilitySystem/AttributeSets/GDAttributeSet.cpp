@@ -295,6 +295,12 @@ void UGDAttributeSet::ShowFloatingText(const FEffectProperties& Props, float Dam
 
 void UGDAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
 {
+	// 已经死亡就不处理伤害
+	if (ICombatInterface::Execute_IsDead(Props.TargetAvatarActor))
+	{
+		return;
+	}
+	
 	const float LocalIncomingDamage = GetIncomingDamage();
 	SetIncomingDamage(0.f);
 	if (LocalIncomingDamage > 0.f)
@@ -338,12 +344,12 @@ void UGDAttributeSet::HandleIncomingXP(const FEffectProperties& Props)
 {
 	const float LocalIncomingXP = GetIncomingXP();
 	SetIncomingXP(0.f);
-
+	
 	if (Props.SourceCharacter->Implements<UPlayerInterface>() && Props.SourceCharacter->Implements<UCombatInterface>())
 	{
 		const int32 CurrentLevel = ICombatInterface::Execute_GetPlayerLevel(Props.SourceCharacter);
 		const int32 CurrentXP = IPlayerInterface::Execute_GetXP(Props.SourceCharacter);
-
+		
 		const int32 NewLevel = IPlayerInterface::Execute_FindLevelForXP(Props.SourceCharacter, CurrentXP + LocalIncomingXP);
 		const int32 NumLevelUps = NewLevel - CurrentLevel;
 		if (NumLevelUps > 0)
@@ -357,10 +363,10 @@ void UGDAttributeSet::HandleIncomingXP(const FEffectProperties& Props)
 	
 			bTopOffHealth = true;
 			bTopOffMana = true;
-				
+			
 			IPlayerInterface::Execute_LevelUp(Props.SourceCharacter);
 		}
-			
+		
 		IPlayerInterface::Execute_AddToXP(Props.SourceCharacter, LocalIncomingXP);
 	}
 }

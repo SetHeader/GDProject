@@ -249,6 +249,19 @@ void UGDAbilitySystemLibrary::GetLivePlayersWithInRadius(const UObject* WorldCon
 	
 }
 
+FGameplayTagContainer UGDAbilitySystemLibrary::FindInputTagFromAbilitySpec(const FGameplayAbilitySpec* AbilitySpec)
+{
+	FGameplayTag InputTagPrefix = FGameplayTag::RequestGameplayTag("InputTag");
+	return  AbilitySpec->DynamicAbilityTags.Filter(FGameplayTagContainer(InputTagPrefix));
+}
+
+void UGDAbilitySystemLibrary::ResetInputTagFromAbilitySpec(FGameplayAbilitySpec* AbilitySpec,
+	const FGameplayTag& NewInputTag)
+{
+	AbilitySpec->DynamicAbilityTags.RemoveTags(FindInputTagFromAbilitySpec(AbilitySpec));
+	AbilitySpec->DynamicAbilityTags.AddTag(NewInputTag);
+}
+
 bool UGDAbilitySystemLibrary::IsNotFriend(const AActor* FirstActor, const AActor* SecondActor)
 {
 	if (IsValid(FirstActor) && IsValid(SecondActor))

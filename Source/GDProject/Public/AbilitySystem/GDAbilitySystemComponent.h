@@ -48,10 +48,10 @@ public:
 	// 从存档中添加角色能力
 	void AddCharacterAbilitiesFromSaveData(ULoadScreenSaveGame* SaveData);
 	
-	// 添加角色能力
-	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupAbilities);
-	
-	void AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupPassiveAbilities);
+	// 添加初始能力
+	void AddSetupAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupAbilities);
+	// 添加初始被动能力
+	void AddSetupPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupPassiveAbilities);
 	
 	void OnRep_ActivateAbilities() override;
 

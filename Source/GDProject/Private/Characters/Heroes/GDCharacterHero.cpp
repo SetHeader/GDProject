@@ -7,11 +7,14 @@
 #include "GameplayEffectTypes.h"
 #include "InputMappingContext.h"
 #include "AbilitySystemComponent.h"
+#include "GDGameplayTags.h"
 #include "Game/GDGameModeBase.h"
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "UI/GDHUD.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
+#include "AbilitySystem/Abilities/GDGameplayAbility.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
 #include "Camera/CameraComponent.h"
 #include "Game/LoadScreenSaveGame.h"
@@ -104,13 +107,17 @@ void AGDCharacterHero::LoadProgress()
 		if (SaveData->bFirstTimeLoadIn)
 		{
 			InitializeDefaultAttributes();
-			AddCharacterAbilities();
+			AddSetupAbilities();
+			AddSetupPassiveAbilities();
+			InitAbilityInfos();
 		}
 		// 后续加载需要用存档的数据
 		else
 		{
 			if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC))
 			{
+				// 初始被动能力不在技能树中，没有AbilityTag，不会存到存档里。
+				AddSetupPassiveAbilities();
 				GDASC->AddCharacterAbilitiesFromSaveData(SaveData);
 			}
 			
@@ -224,11 +231,12 @@ int32 AGDCharacterHero::GetSpellPoints_Implementation()
 
 void AGDCharacterHero::AddToPlayerLevel_Implementation(int32 InLevel)
 {
-	CastChecked<AGDPlayerState>(GetPlayerState())->AddToLevel(InLevel);
+	AGDPlayerState* PS = CastChecked<AGDPlayerState>(GetPlayerState());
+	PS->AddToLevel(InLevel);
 	// 更新技能树
 	if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(GetAbilitySystemComponent()))
 	{
-		GDASC->UpdateAbilityStatus(GetPlayerLevel());
+		GDASC->UpdateAbilityStatus(PS->GetPlayerLevel());
 	}
 }
 
@@ -266,6 +274,31 @@ void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
 			SaveData->Intelligence = UGDAttributeSet::GetIntelligenceAttribute().GetNumericValue(AS);
 			SaveData->Resilience = UGDAttributeSet::GetResilienceAttribute().GetNumericValue(AS);
 			SaveData->Vigor = UGDAttributeSet::GetVigorAttribute().GetNumericValue(AS);
+			SaveData->bFirstTimeLoadIn = false;
+
+			UAbilityInfo* AbilityInfos = UGDAbilitySystemLibrary::GetAbilityInfo(this);
+			UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC);
+			SaveData->SavedAbilities.Empty();
+
+			FScopedAbilityListLock Lock(*GDASC);
+			for (const FGameplayAbilitySpec& AbilitySpec : GDASC->GetActivatableAbilities())
+			{
+				FSavedAbility SavedAbility;
+				SavedAbility.AbilityLevel = AbilitySpec.Level;
+				
+				FGameplayTag AbilityTag = GDASC->GetAbilityTagFromSpec(AbilitySpec);
+				if (!AbilityTag.IsValid())
+				{
+					continue;
+				}
+				FGDAbilityInfo AbilityInfo = AbilityInfos->FindAbilityInfoForTag(AbilityTag);
+				SavedAbility.GameplayAbility = AbilityInfo.Ability;
+				SavedAbility.AbilitySlot = AbilityInfo.InputTag;
+				SavedAbility.AbilityStatus = AbilityInfo.StatusTag;
+				SavedAbility.AbilityTag = AbilityInfo.AbilityTag;
+				SavedAbility.AbilityType = AbilityInfo.AbilityType;
+				SaveData->SavedAbilities.Add(SavedAbility);
+			}
 			
 			GameModeBase->SaveInGameProgressData(SaveData);
 		}
@@ -281,5 +314,37 @@ void AGDCharacterHero::Multicast_LevelUpParticles_Implementation() const
 		const FRotator ToCameraRotation = (CameraLocation - NiagaraLocation).Rotation();
 		LevelUpNiagraComponent->SetWorldRotation(ToCameraRotation);
 		LevelUpNiagraComponent->Activate(true);
+	}
+}
+
+void AGDCharacterHero::InitAbilityInfos()
+{
+	UAbilityInfo* AbilityInfos = UGDAbilitySystemLibrary::GetAbilityInfo(this);
+	UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC);
+	AGDPlayerState* PS = GetPlayerState<AGDPlayerState>();
+	for (FGDAbilityInfo& AbilityInfo : AbilityInfos->AbilityInfos)
+	{
+		// 对初始技能 设置InputTag、StatusTag
+		if (FGameplayAbilitySpec* AbilitySpec = GDASC->GetSpecFromAbilityTag(AbilityInfo.AbilityTag))
+		{
+			AbilityInfo.InputTag = UGDAbilitySystemLibrary::FindInputTagFromAbilitySpec(AbilitySpec).First();
+			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Equipped;
+			continue;
+		}
+		
+		// 设置Status，只对无效的状态进行初始化
+		if (AbilityInfo.StatusTag.IsValid())
+		{
+			return;
+		}
+		
+		if (PS->GetPlayerLevel() >= AbilityInfo.LevelRequirement)
+		{
+			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
+		}
+		else
+		{
+			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Locked;
+		}
 	}
 }

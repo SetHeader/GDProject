@@ -119,7 +119,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterBase")
 	virtual UGDAttributeSet* GetGDASBase() const { return AS; };
 
-	void AddCharacterAbilities();
+	// 添加初始能力
+	void AddSetupAbilities();
+	// 添加初始被动能力
+	void AddSetupPassiveAbilities();
 
 	/** Combat Interface */
 	FVector GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag);

@@ -79,4 +79,7 @@ protected:
 
 	// Server & Client 初始化gas系统
 	void InitAbilityActorInfo();
+
+	// 初始化技能信息
+	void InitAbilityInfos();
 };

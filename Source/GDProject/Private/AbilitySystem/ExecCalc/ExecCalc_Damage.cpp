@@ -142,10 +142,10 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	}
 	
 	// 获取伤害计算中的各种系数
-	const float ArmorPenetrationCoeff = GetCoeficientInCurve(FName("ArmorPenetration"), SourceCombatLevel);
-	const float EffectiveArmorCoeff = GetCoeficientInCurve(FName("EffectiveArmor"), TargetCombatLevel);
+	const float ArmorPenetrationCoeff = GetCoeficientInCurve(SourceAvatar, FName("ArmorPenetration"), SourceCombatLevel);
+	const float EffectiveArmorCoeff = GetCoeficientInCurve(SourceAvatar, FName("EffectiveArmor"), TargetCombatLevel);
 	// 暴击伤害抵抗系数，范围 0-1，该系统越小，造成的暴击伤害越低
-	const float CriticalHitResistanceCoeff = GetCoeficientInCurve(FName("CriticalHitResistance"), TargetCombatLevel);
+	const float CriticalHitResistanceCoeff = GetCoeficientInCurve(SourceAvatar, FName("CriticalHitResistance"), TargetCombatLevel);
 	
 	// 获取 Target的BlockChange，决定是否要格挡成功
 	// 格挡成功要将伤害减半
@@ -198,9 +198,9 @@ float UExecCalc_Damage::CaptureAttributeValue(
 	return FMath::Max(0.f, Value);
 }
 
-float UExecCalc_Damage::GetCoeficientInCurve(FName RealCurveName, float Time) const
+float UExecCalc_Damage::GetCoeficientInCurve(const UObject* WorldContextObject, FName RealCurveName, float Time) const
 {
-	const UCurveTable* CurveTable = UGDAbilitySystemLibrary::GetDamageCoefficientsCurveTable(GetWorld());
+	const UCurveTable* CurveTable = UGDAbilitySystemLibrary::GetDamageCoefficientsCurveTable(WorldContextObject);
 	if (CurveTable)
 	{
 		const FRealCurve* RealCurve = CurveTable->FindCurve(RealCurveName, FString());

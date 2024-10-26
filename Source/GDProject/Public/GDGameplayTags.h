@@ -70,14 +70,19 @@ public:
 	
 	/** 能力相关 */
 	FGameplayTag Abilities_None;
-	
 	FGameplayTag Abilities_Attack;
 	FGameplayTag Abilities_Summon;
 	
 	FGameplayTag Abilities_Fire_FireBolt;
 	FGameplayTag Abilities_Lightning_Electrocute;
+	FGameplayTag Abilities_Fire_FireBlast;
+	FGameplayTag Abilities_Arcane_ArcaneShards;
 	
 	FGameplayTag Cooldown_Fire_FireBolt;
+	FGameplayTag Cooldown_Lightning_Electrocute;
+	FGameplayTag Cooldown_Fire_FireBlast;
+	FGameplayTag Cooldown_Arcane_ArcaneShards;
+	
 	// 未解锁
 	FGameplayTag Abilities_Status_Locked;
 	// 解锁，但不可用

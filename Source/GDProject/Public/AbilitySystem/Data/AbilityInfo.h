@@ -25,10 +25,14 @@ struct FGDAbilityInfo
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	FGameplayTag CooldownTag = FGameplayTag();
+	
 	// 技能状态，是否解锁、是否可用、是否已装备
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UPROPERTY(BlueprintReadOnly)
 	FGameplayTag StatusTag = FGameplayTag();
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	FGameplayTag AbilityType = FGameplayTag();
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TObjectPtr<const UTexture2D> Icon = nullptr;
 	
@@ -37,7 +41,7 @@ struct FGDAbilityInfo
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int32 LevelRequirement = 0;
-	// 对应的能力类型
+	// 对应的能力类
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TSubclassOf<UGameplayAbility> Ability;
 };
@@ -55,4 +59,6 @@ public:
 	TArray<FGDAbilityInfo> AbilityInfos;
 
 	FGDAbilityInfo FindAbilityInfoForTag(const FGameplayTag& Tag, bool bLogNotFound = false) const;
+
+	FGDAbilityInfo* FindAbilityInfoPtrForTag(const FGameplayTag& Tag, bool bLogNotFound = false);
 };

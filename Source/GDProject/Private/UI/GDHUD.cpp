@@ -2,6 +2,8 @@
 
 
 #include "UI/GDHUD.h"
+
+#include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "UI/Widget/GDUserWidget.h"
 #include "UI/WidgetController/GDAttributeMenuWidgetController.h"
 #include "UI/WidgetController/GDOverlayWidgetController.h"
@@ -42,6 +44,7 @@ void AGDHUD::InitOverlay(APlayerController* PlayerController, APlayerState* Play
 	
 	SpellMenuWidgetController = NewObject<USpellMenuWidgetController>(this, SpellMenuWidgetControllerClass);
 	SpellMenuWidgetController->SetParams(PlayerController, PlayerState, AbilitySystemComponent, AttributeSet);
+	SpellMenuWidgetController->SetAbilityInfo(UGDAbilitySystemLibrary::GetAbilityInfo(this));
 	SpellMenuWidgetController->BroadcastInitialValues();
 	
 	OverlayWidget->AddToViewport();

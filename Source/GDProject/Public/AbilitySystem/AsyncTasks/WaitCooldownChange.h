@@ -25,15 +25,18 @@ class GDPROJECT_API UWaitCooldownChange : public UBlueprintAsyncActionBase
 	GENERATED_BODY()
 
 public:
+	// 输出引脚
 	UPROPERTY(BlueprintAssignable)
 	FCooldownChangedSignature CooldownStart;
-
+	// 输出引脚
 	UPROPERTY(BlueprintAssignable)
 	FCooldownChangedSignature CooldownEnd;
 
+	// 静态工厂方法，会创建蓝图节点
 	UFUNCTION(BlueprintCallable, meta = (BlueprintInternalUseOnly = "true"))
 	static UWaitCooldownChange* WaitForCooldownChange(UAbilitySystemComponent* AbilitySystemComponent, const FGameplayTag& CooldownTag);
 
+	// 结束等待任务
 	UFUNCTION(BlueprintCallable)
 	void EndTask();
 protected:

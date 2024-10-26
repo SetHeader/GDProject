@@ -77,13 +77,16 @@ void FGDGameplayTags::InitializeGameplayTags()
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.2"), FString("Input Tag For 2 Key"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.3"), FString("Input Tag For 3 Key"));
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.4"), FString("Input Tag For 4 Key"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Passive.1"), FString("Input Tag For Passive 1"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("InputTag.Passive.2"), FString("Input Tag For Passive 2"));
 	InputTag_LMB = FGameplayTag::RequestGameplayTag(FName("InputTag.LMB"));
 	InputTag_RMB = FGameplayTag::RequestGameplayTag(FName("InputTag.RMB"));
 	InputTag_1 = FGameplayTag::RequestGameplayTag(FName("InputTag.1"));
 	InputTag_2 = FGameplayTag::RequestGameplayTag(FName("InputTag.2"));
 	InputTag_3 = FGameplayTag::RequestGameplayTag(FName("InputTag.3"));
 	InputTag_4 = FGameplayTag::RequestGameplayTag(FName("InputTag.4"));
-
+	InputTag_Passive_1 = FGameplayTag::RequestGameplayTag(FName("InputTag.Passive.1"));
+	InputTag_Passive_2 = FGameplayTag::RequestGameplayTag(FName("InputTag.Passive.2"));
 	/*
 	 * 伤害
 	 */
@@ -95,11 +98,40 @@ void FGDGameplayTags::InitializeGameplayTags()
 	Damage_Lightning = FGameplayTag::RequestGameplayTag(FName("Damage.Lightning"));
 	Damage_Arcane = FGameplayTag::RequestGameplayTag(FName("Damage.Arcane"));
 	Damage_Physical = FGameplayTag::RequestGameplayTag(FName("Damage.Physical"));
-	
+
+	/*
+	 * 能力类型
+	 */
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Type.Offensive"), FString("Abilities Type Offensive"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Type.Passive"), FString("Abilities Type Passive"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Type.None"), FString("Abilities Type None"));
+	Abilities_Type_Offensive = FGameplayTag::RequestGameplayTag(FName("Abilities.Type.Offensive"));
+	Abilities_Type_Passive = FGameplayTag::RequestGameplayTag(FName("Abilities.Type.Passive"));
+	Abilities_Type_None = FGameplayTag::RequestGameplayTag(FName("Abilities.Type.None"));
+
+	/*
+	 * 能力
+	 */
 	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Fire.FireBolt"), FString("Abilities_Fire_FireBolt"));
-	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.FireBolt"), FString("Cooldown_Fire_FireBolt"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Lightning.Electrocute"), FString("Abilities_Lightning_Electrocute"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Fire.FireBlast"), FString("Abilities_Fire_FireBlast"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Abilities.Arcane.ArcaneShards"), FString("Abilities_Arcane_ArcaneShards"));
 	Abilities_Fire_FireBolt = FGameplayTag::RequestGameplayTag(FName("Abilities.Fire.FireBolt"));
+	Abilities_Lightning_Electrocute = FGameplayTag::RequestGameplayTag(FName("Abilities.Lightning.Electrocute"));
+	Abilities_Fire_FireBlast = FGameplayTag::RequestGameplayTag(FName("Abilities.Fire.FireBlast"));
+	Abilities_Arcane_ArcaneShards = FGameplayTag::RequestGameplayTag(FName("Abilities.Arcane.ArcaneShards"));
+
+	/*
+	 * 能力冷却
+	 */
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.FireBolt"), FString("Cooldown_Fire_FireBolt"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Lightning.Electrocute"), FString("Cooldown_Lightning_Electrocute"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Fire.FireBlast"), FString("Cooldown_Fire_FireBlast"));
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Cooldown.Arcane.ArcaneShards"), FString("Cooldown_Arcane_ArcaneShards"));
 	Cooldown_Fire_FireBolt = FGameplayTag::RequestGameplayTag(FName("Cooldown.Fire.FireBolt"));
+	Cooldown_Lightning_Electrocute = FGameplayTag::RequestGameplayTag(FName("Cooldown.Lightning.Electrocute"));
+	Cooldown_Fire_FireBlast = FGameplayTag::RequestGameplayTag(FName("Cooldown.Fire.FireBlast"));
+	Cooldown_Arcane_ArcaneShards = FGameplayTag::RequestGameplayTag(FName("Cooldown.Arcane.ArcaneShards"));
 	
 	/*
 	 * 击中反应

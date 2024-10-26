@@ -54,10 +54,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
 	TSubclassOf<UGameplayEffect> PrimaryAttributes_SetByCaller;
 	
-	// 主角的配置
+	// 敌人的配置，效果用了 Instant
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TSubclassOf<UGameplayEffect> SecondaryAttributes;
-	
+	// 主角的配置，效果用了 Infinite
 	UPROPERTY(EditDefaultsOnly, Category = "Common Class Defaults")
 	TSubclassOf<UGameplayEffect> SecondaryAttributes_Infinite;
 	

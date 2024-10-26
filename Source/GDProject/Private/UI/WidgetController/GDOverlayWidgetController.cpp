@@ -62,14 +62,20 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 		{
 			GDASC->AbilitiesGivenDelegate.AddUObject(this, &UGDOverlayWidgetController::OnInitializeStartupAbilities);
 		}
-	}
 
+		GDASC->OnAbilityStatusChangedDelegate.AddLambda([this](const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 AbilityLevel)
+		{
+			BroadcastAbilityInfos();
+		});
+	}
 }
 
 void UGDOverlayWidgetController::BroadcastInitialValues() const
 {
 	UGDAttributeSet* GDAS = CastChecked<UGDAttributeSet>(AttributeSet);
-
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+	
+	OnPlayerLevelChangedDelegate.Broadcast(GDPS->GetPlayerLevel(), false);
 	OnHealthChanged.Broadcast(GDAS->GetHealth());
 	OnMaxHealthChanged.Broadcast(GDAS->GetMaxHealth());
 	OnManaChanged.Broadcast(GDAS->GetMana());
@@ -85,6 +91,12 @@ void UGDOverlayWidgetController::OnInitializeStartupAbilities(UGDAbilitySystemCo
 		return;
 	}
 
+	BroadcastAbilityInfos();
+}
+
+void UGDOverlayWidgetController::BroadcastAbilityInfos() const
+{
+	UGDAbilitySystemComponent* ASC = GetGDASC();
 	FForEachAbility BroadcastDelegate;
 	BroadcastDelegate.BindLambda([ASC, this](const FGameplayAbilitySpec& AbilitySpec)
 	{

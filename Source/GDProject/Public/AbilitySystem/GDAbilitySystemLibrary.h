@@ -9,6 +9,7 @@
 #include "UI/WidgetController/GDOverlayWidgetController.h"
 #include "GDAbilitySystemLibrary.generated.h"
 
+struct FGameplayAbilitySpec;
 struct FGameplayEffectContextHandle;
 /**
  * 
@@ -19,6 +20,9 @@ class GDPROJECT_API UGDAbilitySystemLibrary : public UBlueprintFunctionLibrary
 	GENERATED_BODY()
 
 public:
+	/*
+	 *	UI
+	 */
 	UFUNCTION(BlueprintPure, Category="GDAbilitySystemLibrary|WidgetController")
 	static UGDOverlayWidgetController* GetOverlayWidgetController(const UObject* WorldContextObject);
 
@@ -27,7 +31,10 @@ public:
 
 	UFUNCTION(BlueprintPure, Category="GDAbilitySystemLibrary|WidgetController")
 	static USpellMenuWidgetController* GetSpellMenuWidgetController(const UObject* WorldContextObject);
-	
+
+	/*
+	 * 属性与能力
+	 */
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|CharacterClassDefault")
 	static void InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
 	
@@ -55,6 +62,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|GameplayEffects")
 	static void GetLivePlayersWithInRadius(const UObject* WorldContextObject, TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius, const FVector& SphereOrigin);
 
+	static FGameplayTagContainer FindInputTagFromAbilitySpec(const FGameplayAbilitySpec* AbilitySpec);
+
+	static void ResetInputTagFromAbilitySpec(FGameplayAbilitySpec* AbilitySpec, const FGameplayTag& NewInputTag);
+	
+	/*
+	 * character
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="GDAbilitySystemLibrary|GameplayEffects")
 	static bool IsNotFriend(const AActor* FirstActor, const AActor* SecondActor);
 
@@ -73,7 +87,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="GDAbilitySystemLibrary|Character")
 	static UAbilityInfo* GetAbilityInfo(const UObject* WorldContextObject);
 
-	// 简单的应用效果方法
+	/* 
+	 * Effect
+	 */
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|DamageEffect")
 	static FGameplayEffectContextHandle ApplyDamageEffect(const FDamageEffectParams& DamageEffectParams);
 
@@ -91,7 +107,6 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "AuraAbilitySystemLibrary|GameplayEffects")
 	static FGameplayTag GetDamageType(const FGameplayEffectContextHandle& EffectContextHandle);
-
 		
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayEffects")
 	static void SetIsSuccessfulDebuff(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bInSuccessfulDebuff);

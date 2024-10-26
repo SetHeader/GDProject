@@ -13,6 +13,7 @@ class UGDWidgetController;
 class UGDOverlayWidgetController;
 class UGDAttributeMenuWidgetController;
 class USpellMenuWidgetController;
+class SMyWidget;
 /**
  * 
  */

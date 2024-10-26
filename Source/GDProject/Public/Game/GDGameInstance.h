@@ -26,4 +26,6 @@ public:
 	// 当前加载的存档槽下标
 	UPROPERTY()
 	int32 LoadSlotIndex = 0;
+
+	
 };

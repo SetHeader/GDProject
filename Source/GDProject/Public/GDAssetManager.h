@@ -21,6 +21,6 @@ private:
 public:
 	static UGDAssetManager& Get();
 
-	void StartInitialLoading() override;
+	virtual void StartInitialLoading() override;
 
 };

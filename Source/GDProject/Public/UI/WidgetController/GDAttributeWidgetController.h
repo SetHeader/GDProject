@@ -24,9 +24,9 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnAttributeInfoChangedSignature OnAttributeChanged;
 
-	void BroadcastInitialValues() const override;
+	virtual void BroadcastInitialValues() const override;
 
-	void BindCallbacksToDependencies() const override;
+	virtual void BindCallbacksToDependencies() const override;
 
 	void BroadcastAttributeChanged(const FOnAttributeChangeData& ChangedData, FGameplayTag AttributeTag) const ;
 };

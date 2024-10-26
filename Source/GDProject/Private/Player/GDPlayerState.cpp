@@ -72,10 +72,8 @@ void AGDPlayerState::SetAttributePoints(int32 InPoints)
 
 void AGDPlayerState::AddToAttributePoints(int32 InPoints)
 {
-	if (FCheckTool::CheckAndAdd(AttributePoints, InPoints))
-	{
-		OnAttributePointsChangedDelegate.Broadcast(AttributePoints);
-	}
+	AttributePoints += InPoints;
+	OnAttributePointsChangedDelegate.Broadcast(AttributePoints);
 }
 
 void AGDPlayerState::SetSpellPoints(int32 InPoints)
@@ -88,10 +86,8 @@ void AGDPlayerState::SetSpellPoints(int32 InPoints)
 
 void AGDPlayerState::AddToSpellPoints(int32 InPoints)
 {
-	if (FCheckTool::CheckAndAdd(SpellPoints, InPoints))
-	{
-		OnSpellPointsChangedDelegate.Broadcast(SpellPoints);
-	}
+	SpellPoints += InPoints;
+	OnSpellPointsChangedDelegate.Broadcast(SpellPoints);
 }
 
 float AGDPlayerState::GetHealth() const

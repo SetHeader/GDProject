@@ -7,12 +7,16 @@
 
 void UGDAttributeMenuWidgetController::BroadcastInitialValues() const
 {
+	Super::BroadcastInitialValues();
+	
 	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
 	OnAttributePointsChangedDelegate.Broadcast(GDPS->GetAttributePoints());
 }
 
 void UGDAttributeMenuWidgetController::BindCallbacksToDependencies() const
 {
+	Super::BindCallbacksToDependencies();
+	
 	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
 
 	GDPS->OnAttributePointsChangedDelegate.AddLambda([this](const int32 Points)

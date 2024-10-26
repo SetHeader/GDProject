@@ -6,10 +6,19 @@
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "Player/GDPlayerState.h"
 
 void USpellMenuWidgetController::BroadcastInitialValues() const
 {
 	Super::BroadcastInitialValues();
+
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+	OnSpellPointsChangedDelegate.Broadcast(GDPS->GetSpellPoints());
+
+	for (const FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
+	{
+		OnAbilityInfoChangedDelegate.Broadcast(Info);
+	} 
 }
 
 void USpellMenuWidgetController::BindCallbacksToDependencies() const
@@ -20,12 +29,28 @@ void USpellMenuWidgetController::BindCallbacksToDependencies() const
 		{
 			if (AbilityInfo)
 			{
-				FGDAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
-				Info.StatusTag = StatusTag;
+				const FGDAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
 				OnAbilityInfoChangedDelegate.Broadcast(Info);
 			}
 		});
 	}
+
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+	GDPS->OnSpellPointsChangedDelegate.AddLambda([&](const int32 SpellPoints)
+	{
+		OnSpellPointsChangedDelegate.Broadcast(SpellPoints);
+	});
+}
+
+void USpellMenuWidgetController::SelectAbility(FGameplayTag AbilityTag)
+{
+	if (AbilityTag == SelectedAbilityTag)
+	{
+		return;
+	}
+
+	SelectedAbilityTag = AbilityTag;
+	OnAbilitySelected.Broadcast(SelectedAbilityTag);
 }
 
 FGDAbilityInfo USpellMenuWidgetController::FindAbilityInfoForTag(const FGameplayTag& AbilityTag) const

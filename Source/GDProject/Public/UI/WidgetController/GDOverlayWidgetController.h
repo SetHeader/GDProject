@@ -82,6 +82,8 @@ public:
 	void BroadcastInitialValues() const override;
 	// 在客户端处理
 	void OnInitializeStartupAbilities(UGDAbilitySystemComponent* ASC) const;
+	// 广播所有的能力
+	void BroadcastAbilityInfos() const;
 
 	void HealthChanged(const FOnAttributeChangeData& ChangedData) const;
 	void MaxHealthChanged(const FOnAttributeChangeData& ChangedData) const;

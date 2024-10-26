@@ -29,27 +29,23 @@ void UGDAbilitySystemComponent::AddCharacterAbilitiesFromSaveData(ULoadScreenSav
 		// 只有解锁且可用才能授予能力
 		if (SavedAbility.AbilityStatus != GameplayTags.Abilities_Status_Unlocked && SavedAbility.AbilityStatus != GameplayTags.Abilities_Status_Equipped)
 		{
-			return;
+			continue;
 		}
 		// 能力等级检查
 		if (SavedAbility.AbilityLevel <= 0)
 		{
-			return;
+			continue;
 		}
 		// 能力检查
 		if (!SavedAbility.GameplayAbility)
 		{
-			return;
+			continue;
 		}
 		
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(SavedAbility.GameplayAbility, SavedAbility.AbilityLevel);
 		AbilitySpec.DynamicAbilityTags.AddTag(SavedAbility.AbilityStatus);
+		AbilitySpec.DynamicAbilityTags.AddTag(SavedAbility.AbilityType);
 		AbilitySpec.DynamicAbilityTags.AddTag(SavedAbility.AbilitySlot);
-		if (UGDGameplayAbility* GDAbility = Cast<UGDGameplayAbility>(AbilitySpec.Ability))
-		{
-			GDAbility->SetupInputTag = SavedAbility.AbilitySlot;
-			AbilitySpec.DynamicAbilityTags.AddTag(SavedAbility.AbilitySlot);
-		}
 		
 		// 主动能力就授予，被动能力就激活一次。
 		if (SavedAbility.AbilityType == GameplayTags.Abilities_Type_Offensive)
@@ -66,7 +62,7 @@ void UGDAbilitySystemComponent::AddCharacterAbilitiesFromSaveData(ULoadScreenSav
 	AbilitiesGivenDelegate.Broadcast(this);
 }
 
-void UGDAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupAbilities)
+void UGDAbilitySystemComponent::AddSetupAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupAbilities)
 {
 	for (const TSubclassOf<UGameplayAbility>& AbilityClass : SetupAbilities)
 	{
@@ -81,7 +77,7 @@ void UGDAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf<U
 	AbilitiesGivenDelegate.Broadcast(this);
 }
 
-void UGDAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupPassiveAbilities)
+void UGDAbilitySystemComponent::AddSetupPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupPassiveAbilities)
 {
 	for (const TSubclassOf<UGameplayAbility>& AbilityClass : SetupPassiveAbilities)
 	{
@@ -331,7 +327,7 @@ void UGDAbilitySystemComponent::UpgradeAttributePoint(const FGameplayTag& Tag)
 void UGDAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
 {
 	UAbilityInfo* AbilityInfo = UGDAbilitySystemLibrary::GetAbilityInfo(this);
-	for (const FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
+	for (FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
 	{
 		if (!Info.AbilityTag.IsValid())
 		{
@@ -341,17 +337,12 @@ void UGDAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
 		{
 			continue;
 		}
-		// 如果该能力还没被给予，就给予能力
-		if (!GetSpecFromAbilityTag(Info.AbilityTag))
+		// 解锁能力资格
+		if (Info.StatusTag == FGDGameplayTags::Get().Abilities_Status_Locked)
 		{
-			FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Info.Ability, 1);
-			AbilitySpec.DynamicAbilityTags.AddTag(FGDGameplayTags::Get().Abilities_Status_Eligible);
-			GiveAbility(AbilitySpec);
-			// 立即强制复制能力到客户端，而不是等到下次更新时机
-			MarkAbilitySpecDirty(AbilitySpec);
-			ClientUpdateAbilityStatus(Info.AbilityTag, FGDGameplayTags::Get().Abilities_Status_Eligible, AbilitySpec.Level);
+			Info.StatusTag = FGDGameplayTags::Get().Abilities_Status_Eligible;
+			ClientUpdateAbilityStatus(Info.AbilityTag, Info.StatusTag, 1);
 		}
-		
 	}
 }
 
@@ -381,29 +372,32 @@ void UGDAbilitySystemComponent::ServerUpgradeAbility_Implementation(FGameplayTag
 {
 	if (UAbilityInfo* AbilityInfo = UGDAbilitySystemLibrary::GetAbilityInfo(GetOwner()))
 	{
-		FGDAbilityInfo Info = AbilityInfo->FindAbilityInfoForTag(AbilityTag);
+		FGDAbilityInfo* Info = AbilityInfo->FindAbilityInfoPtrForTag(AbilityTag);
 		AGDPlayerState* GDPlayerState = CastChecked<AGDPlayerState>(GetOwner());
 		
-		if (GDPlayerState->GetPlayerLevel() >= Info.LevelRequirement && GDPlayerState->GetSpellPoints() > 0)
+		if (GDPlayerState->GetPlayerLevel() >= Info->LevelRequirement && GDPlayerState->GetSpellPoints() > 0)
 		{
-			FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
-			
-			// 升级能力
-			if (AbilitySpec)
+			// 解锁能力
+			if (Info->StatusTag == FGDGameplayTags::Get().Abilities_Status_Eligible)
 			{
+				GDPlayerState->AddToSpellPoints(-1);
+				Info->StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
+				GiveAbility(FGameplayAbilitySpec(Info->Ability, 1));
+				ClientUpdateAbilityStatus(AbilityTag, Info->StatusTag, 1);
+			}
+			// 升级能力
+			else
+			{
+				FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+				if (!AbilitySpec) return;
+				
 				int32 AbilityLevel = AbilitySpec->Ability->GetAbilityLevel() + 1;
 				if (AbilityLevel < 9)
 				{
 					GDPlayerState->AddToSpellPoints(-1);
 					ClearAbility(AbilitySpec->Handle);
-					GiveAbility(FGameplayAbilitySpec(Info.Ability, AbilityLevel));
+					GiveAbility(FGameplayAbilitySpec(Info->Ability, AbilityLevel));
 				}
-			}
-			// 解锁能力
-			else
-			{
-				GiveAbility(FGameplayAbilitySpec(Info.Ability, 1));
-				ClientUpdateAbilityStatus(AbilityTag, FGDGameplayTags::Get().Abilities_Status_Unlocked, 1);
 			}
 		}
 	}
@@ -412,13 +406,17 @@ void UGDAbilitySystemComponent::ServerUpgradeAbility_Implementation(FGameplayTag
 void UGDAbilitySystemComponent::ServerEquipAbility_Implementation(FGameplayTag AbilityTag, FGameplayTag InputTag)
 {
 	FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
-	UGDGameplayAbility* GDAbility = Cast<UGDGameplayAbility>(AbilitySpec->Ability);
-	if (GDAbility)
+	
+	if (!AbilitySpec) return;
+	
+	// 移除已有的输入标签，再添加新的输入标签
+	UGDAbilitySystemLibrary::ResetInputTagFromAbilitySpec(AbilitySpec, InputTag);
+
+	// 更新 InputTag
+	UGDAbilitySystemLibrary::GetAbilityInfo(this)->FindAbilityInfoPtrForTag(AbilityTag)->InputTag = InputTag;
+	
+	if (UGDGameplayAbility* GDAbility = Cast<UGDGameplayAbility>(AbilitySpec->Ability))
 	{
-		if (GDAbility->SetupInputTag != InputTag)
-		{
-			GDAbility->SetupInputTag = InputTag;
-			ClientUpdateAbilityStatus(AbilityTag, FGDGameplayTags::Get().Abilities_Status_Equipped, GDAbility->GetAbilityLevel());
-		}
+		ClientUpdateAbilityStatus(AbilityTag, FGDGameplayTags::Get().Abilities_Status_Equipped, GDAbility->GetAbilityLevel());
 	}
 }

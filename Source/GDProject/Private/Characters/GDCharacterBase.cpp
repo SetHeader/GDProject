@@ -64,15 +64,25 @@ void AGDCharacterBase::PossessedBy(AController* NewController)
 	}
 }
 
-void AGDCharacterBase::AddCharacterAbilities()
+void AGDCharacterBase::AddSetupAbilities()
 {
 	if (!HasAuthority())
 	{
 		return;
 	}
 
-	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterAbilities(SetupAbilities);
-	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddCharacterPassiveAbilities(SetupPassiveAbilities);
+	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddSetupAbilities(SetupAbilities);
+	
+}
+
+void AGDCharacterBase::AddSetupPassiveAbilities()
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+	
+	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddSetupPassiveAbilities(SetupPassiveAbilities);
 }
 
 FVector AGDCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag)
