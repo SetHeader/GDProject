@@ -28,6 +28,8 @@ AGDCharacterMinion::AGDCharacterMinion()
 
 	WidgetComponent = CreateDefaultSubobject<UWidgetComponent>("WidgetComponent");
 	WidgetComponent->SetupAttachment(GetRootComponent());
+
+	BaseWalkSpeed = 250.f;
 }
 
 void AGDCharacterMinion::BeginPlay()
@@ -36,7 +38,10 @@ void AGDCharacterMinion::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	
 	ASC->InitAbilityActorInfo(this, this);
+	OnAbilitySystemComponentAvaliable();
+	
 	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
+
 	if (HasAuthority())
 	{
 		InitializeDefaultAttributes();
@@ -51,9 +56,6 @@ void AGDCharacterMinion::BeginPlay()
 		BindCallbacksToDependencies();
 		BroadcastInitialValues();
 	}
-
-	ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved)
-		.AddUObject(this, &AGDCharacterMinion::HitReactTagChanged);
 }
 
 void AGDCharacterMinion::PossessedBy(AController* NewController)
@@ -143,6 +145,16 @@ void AGDCharacterMinion::Die()
 void AGDCharacterMinion::InitializeDefaultAttributes() const
 {
 	UGDAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, ASC);
+}
+
+void AGDCharacterMinion::OnGameplayTagChanged(const FGameplayTag Tag, int32 Count)
+{
+	Super::OnGameplayTagChanged(Tag, Count);
+	
+	if (Tag == FGDGameplayTags::Get().Effects_HitReact && GDAIController)
+	{
+		GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	}
 }
 
 AActor* AGDCharacterMinion::GetCombatTarget_Implementation() const

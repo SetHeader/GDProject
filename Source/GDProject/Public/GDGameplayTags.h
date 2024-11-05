@@ -127,6 +127,12 @@ public:
 	FGameplayTag Montage_Attack_2;
 	FGameplayTag Montage_Attack_3;
 	FGameplayTag Montage_Attack_4;
+
+	/** 阻塞标签 */
+	FGameplayTag Player_Block_InputPressed;
+	FGameplayTag Player_Block_InputHeld;
+	FGameplayTag Player_Block_InputReleased;
+	FGameplayTag Player_Block_CursorTrace;
 	
 private:
 	bool bInitialized = false;
@@ -139,4 +145,7 @@ public:
 	void InitializeGameplayTags();
 
 	bool IsInitialized() const { return  bInitialized; }
+
+private:
+	FORCEINLINE void InitTagVariable(FGameplayTag& CurrentTag, FName TagName, FString Description);
 };

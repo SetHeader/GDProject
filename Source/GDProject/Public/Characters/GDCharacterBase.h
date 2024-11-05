@@ -43,6 +43,10 @@ public:
 	TObjectPtr<UAbilitySystemComponent> ASC;
 	UPROPERTY()
 	TObjectPtr<UGDAttributeSet> AS;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float BaseWalkSpeed = 600.f;
+	
 	// 武器尖端插槽名
 	UPROPERTY(EditDefaultsOnly, Category="Combat")
 	FName WeaponTipSocketName;
@@ -74,11 +78,30 @@ public:
 	// 燃烧debuff时的特效
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UDebuffNiagaraComponent> BurnDebuffComponent;
-
+	// 眩晕debuff时的特效
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UDebuffNiagaraComponent> StunDebuffComponent;
+	
 	FOnASCRegistered OnAscRegistered;
 	
 	/* 随从数量 */
 	int32 MinionCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	bool bIsBurning = false;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	bool bHitReacting = false;
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	bool bIsStunned = false;
+	// 是否可以移动
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	bool bCanMove = true;
+	// 是否可以攻击
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	bool bCanAttack = true;
+
 protected:
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "GDCharacterBase")
 	TSubclassOf<UGameplayEffect> DefaultPrimaryAttributes;
@@ -94,6 +117,8 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
 	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
 
+	FOnDeathSignature OnDeathDelegate;
+	
 	bool bIsDead = false;
 	
 	void Dissolve();
@@ -111,6 +136,7 @@ protected:
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartWeaponDissolveTimeline(UMaterialInstanceDynamic* MaterialInstanceDynamic);
+	
 public:
 	virtual void PossessedBy(AController* NewController) override;
 
@@ -119,6 +145,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterBase")
 	virtual UGDAttributeSet* GetGDASBase() const { return AS; };
 
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+	
 	// 添加初始能力
 	void AddSetupAbilities();
 	// 添加初始被动能力
@@ -129,18 +157,38 @@ public:
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
 	virtual void Die() override;
 	bool IsDead_Implementation() const override;
+	virtual FOnDeathSignature& GetOnDeathDelegate() override;
 	AActor* GetAvatar_Implementation() override;
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() const override;
 	virtual int32 GetMinionCount_Implementation() const override;
 	virtual ECharacterClass GetCharacterClass_Implementation() override;
-	virtual FOnASCRegistered GetOnASCRegisteredDelegate() override;
+	virtual FOnASCRegistered& GetOnASCRegisteredDelegate() override;
+	USkeletalMeshComponent* GetWeapon_Implementation();
 	/** End Combat Interface */
+	
+	virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+
+	UFUNCTION()
+	virtual void OnRep_IsStunned();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
 
 protected:
+	/**
+	 * 当ASC组件可用时回调，需要子类实现
+	 */
+	UFUNCTION()
+	virtual void OnAbilitySystemComponentAvaliable();
+
+	/**
+	 * 统一处理标签变化的方法
+	 * @param Tag 标签
+	 * @param Count 标签数量
+	 */
+	virtual void OnGameplayTagChanged(const FGameplayTag Tag, int32 Count);
+	
 	// 初始化默认属性
 	virtual void InitializeDefaultAttributes() const;
 };

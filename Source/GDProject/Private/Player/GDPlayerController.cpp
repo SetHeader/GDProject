@@ -84,6 +84,11 @@ void AGDPlayerController::SetupInputComponent()
 
 void AGDPlayerController::OnAbilityInputPressed(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FGDGameplayTags::Get().Player_Block_InputPressed))
+	{
+		return;
+	}
+	
 	// 判断是否要触发行走
 	if (FGDGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
 	{
@@ -106,6 +111,11 @@ void AGDPlayerController::OnAbilityInputPressed(FGameplayTag InputTag)
 
 void AGDPlayerController::OnAbilityInputReleased(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FGDGameplayTags::Get().Player_Block_InputReleased))
+	{
+		return;
+	}
+	
 	// 配置导航行走
 	if (FGDGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
 	{
@@ -150,6 +160,11 @@ void AGDPlayerController::OnAbilityInputReleased(FGameplayTag InputTag)
 
 void AGDPlayerController::OnAbilityInputHeld(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FGDGameplayTags::Get().Player_Block_InputHeld))
+	{
+		return;
+	}
+	
 	// 直线行走
 	if (FGDGameplayTags::Get().InputTag_LMB.MatchesTagExact(InputTag))
 	{
@@ -174,6 +189,15 @@ void AGDPlayerController::OnAbilityInputHeld(FGameplayTag InputTag)
 
 void AGDPlayerController::CursorTrace()
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FGDGameplayTags::Get().Player_Block_CursorTrace))
+	{
+		if (ThisActor) ThisActor->UnHighlightActor();
+		if (LastActor) LastActor->UnHighlightActor();
+		ThisActor = nullptr;
+		LastActor = nullptr;
+		return;
+	}
+	
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
 	if (!CursorHit.bBlockingHit) {
 		return;

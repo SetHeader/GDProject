@@ -9,7 +9,7 @@
 #include "Actor/GDProjectile.h"
 #include "Characters/GDCharacterBase.h"
 
-void UGDProjectileSpellAbility::SpawnProjectile(const FVector Destination, const FGameplayTag& SocketTag, const float Pitch, const bool bOverridePitch)
+void UGDProjectileSpellAbility::SpawnProjectile(const FVector Destination, const FGameplayTag& SocketTag, const float Pitch, const bool bOverridePitch, AActor* HomingTarget)
 {
 	if (!GetAvatarActorFromActorInfo()->HasAuthority())
 	{

@@ -105,7 +105,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	}
 
 	const FGameplayEffectSpec& EffectSpec = ExecutionParams.GetOwningSpec();
-
+	
 	FAggregatorEvaluateParameters EvaluationParameters;
 	EvaluationParameters.SourceTags = EffectSpec.CapturedSourceTags.GetAggregatedTags();
 	EvaluationParameters.TargetTags = EffectSpec.CapturedTargetTags.GetAggregatedTags();
@@ -122,7 +122,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	DetermineDebuff(ExecutionParams, EffectSpec, EvaluationParameters, TagsToCaptureDefs);
 
 	// 获取伤害
-	float Damage = 0.f;
+	float Damage = 0.f;  
 	// 计算伤害与伤害抵抗
 	for (const auto& DamageType : FGDGameplayTags::Get().DamageTypesToResistances)
 	{
@@ -133,7 +133,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 		const FGameplayEffectAttributeCaptureDefinition ResistanceTypeDef = TagsToCaptureDefs[ResistanceTypeTag];
 		
-		const float DamageTypeValue = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag);
+		const float DamageTypeValue = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag, false);
 		float TargetResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, ResistanceTypeDef);
 		
 		TargetResistance = FMath::Clamp(TargetResistance, 0.f, 100.f);
@@ -224,23 +224,25 @@ void UExecCalc_Damage::DetermineDebuff(const FGameplayEffectCustomExecutionParam
 	{
 		const FGameplayTag& DamageType = Pair.Key;
 		const FGameplayTag& DebuffType = Pair.Value;
-		const float TypeDamage = Spec.GetSetByCallerMagnitude(DamageType, false, -1.f);
-		if (TypeDamage > -.5f) // .5 padding for floating point [im]precision
+		const float TypeDamage = Spec.GetSetByCallerMagnitude(DamageType, false, 0.f);
+		if (TypeDamage > 0.f)
 		{
-			// Determine if there was a successful debuff
+			// 判断是否是成功的debuff
 			const float SourceDebuffChance = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Chance, false, -1.f);
 
+			// 目标Debuff抗性
 			float TargetDebuffResistance = 0.f;
 			const FGameplayTag& ResistanceTag = GameplayTags.DamageTypesToResistances[DamageType];
 			ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(InTagsToDefs[ResistanceTag], EvaluationParameters, TargetDebuffResistance);
 			TargetDebuffResistance = FMath::Max<float>(TargetDebuffResistance, 0.f);
+			// 最终的Debuff生效概率
 			const float EffectiveDebuffChance = SourceDebuffChance * ( 100 - TargetDebuffResistance ) / 100.f;
 			const bool bDebuff = FMath::RandRange(1, 100) < EffectiveDebuffChance;
 			if (bDebuff)
 			{
 				FGameplayEffectContextHandle ContextHandle = Spec.GetEffectContext();
 				
-				const float DebuffDamage = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Damage, false, -1.f);
+				const float DebuffDamage = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Damage, false, 0.f);
 				const float DebuffDuration = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Duration, false, -1.f);
 				const float DebuffFrequency = Spec.GetSetByCallerMagnitude(GameplayTags.Debuff_Frequency, false, -1.f);
 				

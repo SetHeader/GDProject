@@ -42,3 +42,8 @@ FDamageEffectParams UGDDamageGameplayAbility::MakeDamageEffectParamsFromClassDef
 	Params.DebuffFrequency = DebuffFrequency;
 	return Params;
 }
+
+float UGDDamageGameplayAbility::GetDamageAtLevel() const
+{
+	return Damage.GetValueAtLevel(GetAbilityLevel());
+}

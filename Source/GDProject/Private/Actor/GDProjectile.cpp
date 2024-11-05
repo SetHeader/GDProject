@@ -46,7 +46,11 @@ void AGDProjectile::OnHit()
 {
 	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
 	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
-	if (AudioComponent) AudioComponent->Stop();
+	if (AudioComponent)
+	{
+		AudioComponent->Stop();
+		AudioComponent->DestroyComponent();
+	}
 	bHit = true;
 }
 
@@ -73,6 +77,16 @@ void AGDProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 	{
 		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 		{
+			const bool bKnockback = FMath::RandRange(1, 100) < DamageEffectParams.KnockbackChance;
+			if (bKnockback)
+			{
+				FRotator Rotation = GetActorRotation();
+				Rotation.Pitch = 45.f;
+				
+				const FVector KnockbackDirection = Rotation.Vector();
+				const FVector KnockbackForce = KnockbackDirection * DamageEffectParams.KnockbackForceMagnitude;
+				DamageEffectParams.KnockbackForce = KnockbackForce;
+			}
 			DamageEffectParams.TargetAbilitySystemComponent = TargetASC;
 			UGDAbilitySystemLibrary::ApplyDamageEffect(DamageEffectParams);
 		}

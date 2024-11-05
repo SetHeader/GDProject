@@ -25,7 +25,7 @@ bool FGDGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool
 {
 	FGameplayEffectContext::NetSerialize(Ar, Map, bOutSuccess);
 	
-	uint8 RepBits = 0;
+	uint16 RepBits = 0;
 	if (Ar.IsSaving()) {
 		if (IsBlockedHit())
 		{
@@ -55,10 +55,14 @@ bool FGDGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool
 		{
 			RepBits |= 1 << 6;
 		}
+		if (!KnockbackForce.IsZero())
+		{
+			RepBits |= 1 << 7;
+		}
 	}
 	 
 	// 如果是Saving就会存储RepBits，如果是Loading就会读取到RepBits。
-	Ar.SerializeBits(&RepBits, 7);
+	Ar.SerializeBits(&RepBits, 8);
 
 	if (Ar.IsLoading())
 	{
@@ -95,6 +99,10 @@ bool FGDGameplayEffectContext::NetSerialize(FArchive& Ar, UPackageMap* Map, bool
 			}
 			
 			DamageType->NetSerialize(Ar, Map, bOutSuccess);
+		}
+		if (RepBits & (1 << 7))
+		{
+			KnockbackForce.NetSerialize(Ar, Map, bOutSuccess);
 		}
 		AddInstigator(Instigator.Get(), EffectCauser.Get()); // Just to initialize InstigatorAbilitySystemComponent
 	}

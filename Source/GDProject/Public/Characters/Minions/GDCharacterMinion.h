@@ -35,12 +35,6 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "GDCharacterEnemy")
 	TObjectPtr<UWidgetComponent> WidgetComponent;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Combat")
-	bool bHitReacting = false;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
-	float BaseWalkSpeed = 250.f;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Combat")
 	float LifeSpan = 5.f;
 	
@@ -84,5 +78,7 @@ public:
 
 protected:
 	virtual void InitializeDefaultAttributes() const override;
+
+	virtual void OnGameplayTagChanged(const FGameplayTag Tag, int32 Count) override;
 
 };

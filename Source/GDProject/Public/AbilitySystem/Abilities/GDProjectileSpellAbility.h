@@ -26,6 +26,6 @@ protected:
 	 * @param Rotation 发射方向
 	 */
 	UFUNCTION(BlueprintCallable, Category = "CastSpellAbility")
-	virtual void SpawnProjectile(const FVector Destination, const FGameplayTag& SocketTag, const float Pitch = 0, const bool bOverridePitch = false);
+	virtual void SpawnProjectile(const FVector Destination, const FGameplayTag& SocketTag, const float Pitch = 0, const bool bOverridePitch = false, AActor* HomingTarget = nullptr);
 
 };

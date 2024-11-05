@@ -17,7 +17,7 @@ class GDPROJECT_API UGDDamageGameplayAbility : public UGDGameplayAbility
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
 	TSubclassOf<UGameplayEffect> DamageEffectClass;
 
 	// 不同类型的伤害值
@@ -43,6 +43,10 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 	virtual void CauseDamage(AActor* TargetActor);
-	
+
+	UFUNCTION(BlueprintPure)
 	FDamageEffectParams MakeDamageEffectParamsFromClassDefaults(AActor* TargetActor = nullptr) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+	float GetDamageAtLevel() const;
 };

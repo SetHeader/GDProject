@@ -40,6 +40,10 @@ public:
 
 	TObjectPtr<UAudioComponent> AudioComponent;
 
+	// 跟踪指定位置
+	UPROPERTY()
+	TObjectPtr<USceneComponent> HomingTargetSceneComponent;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
 	float LifeSpan = 15.f;
 private:

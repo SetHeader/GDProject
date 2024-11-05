@@ -156,6 +156,8 @@ void AGDCharacterHero::InitAbilityActorInfo()
 	AS = PS->GetGDASBase();
 	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
 	OnAscRegistered.Broadcast(ASC);
+
+	ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterHero::StunTagChanged);
 	
 	// 初始化HUD
 	if (APlayerController* PC = Cast<APlayerController>(GetController())) {
@@ -305,6 +307,27 @@ void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
 	}
 }
 
+void AGDCharacterHero::OnRep_IsStunned()
+{
+	if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(GetAbilitySystemComponent()))
+	{
+		FGameplayTagContainer BlockedTags;
+		BlockedTags.AddTag(FGDGameplayTags::Get().Player_Block_CursorTrace);
+		BlockedTags.AddTag(FGDGameplayTags::Get().Player_Block_InputHeld);
+		BlockedTags.AddTag(FGDGameplayTags::Get().Player_Block_InputPressed);
+		BlockedTags.AddTag(FGDGameplayTags::Get().Player_Block_InputReleased);
+
+		if (bIsStunned)
+		{
+			GDASC->AddLooseGameplayTags(BlockedTags);
+		}
+		else
+		{
+			GDASC->RemoveLooseGameplayTags(BlockedTags);
+		}
+	}
+}
+
 void AGDCharacterHero::Multicast_LevelUpParticles_Implementation() const
 {
 	if (IsValid(LevelUpNiagraComponent))
@@ -340,7 +363,7 @@ void AGDCharacterHero::InitAbilityInfos()
 		
 		if (PS->GetPlayerLevel() >= AbilityInfo.LevelRequirement)
 		{
-			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
+			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Eligible;
 		}
 		else
 		{

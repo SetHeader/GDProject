@@ -70,6 +70,8 @@ public:
 	virtual void SaveProgress_Implementation(const FName& CheckpointTag) override;
 	/** End Player Interface */
 
+	virtual void OnRep_IsStunned() override;
+	
 	UFUNCTION(Reliable, NetMulticast)
 	void Multicast_LevelUpParticles() const;
 	

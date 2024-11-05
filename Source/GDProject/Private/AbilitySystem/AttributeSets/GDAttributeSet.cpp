@@ -14,6 +14,7 @@
 #include "Interaction/PlayerInterface.h"
 #include "Player/GDPlayerController.h"
 #include "AbilitySystem/GDAbilityTypes.h"
+#include "GameplayEffectComponents\TargetTagsGameplayEffectComponent.h"
 
 struct FGDGameplayEffectContext;
 
@@ -326,6 +327,12 @@ void UGDAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
 			FGameplayTagContainer TagContainer;
 			TagContainer.AddTag(FGDGameplayTags::Get().Effects_HitReact);
 			Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+
+			const FVector& KnockbackForce = UGDAbilitySystemLibrary::GetKnockbackForce(Props.EffectContextHandle);
+			if (!KnockbackForce.IsNearlyZero(1.f))
+			{
+				Props.TargetCharacter->LaunchCharacter(KnockbackForce, true, true);
+			}
 		}
 		
 		const bool bBlock = UGDAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
@@ -389,9 +396,15 @@ void UGDAttributeSet::Debuff(const FEffectProperties& Props)
 	Effect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
 	Effect->Period = DebuffFrequency;
 	Effect->DurationMagnitude = FScalableFloat(DebuffDuration);
-
-	Effect->InheritableOwnedTagsContainer.AddTag(GameplayTags.DamageTypesToDebuffs[DamageType]);
-
+	
+	FGameplayTag DebuffTag = GameplayTags.DamageTypesToDebuffs[DamageType];
+	
+	FInheritedTagContainer TagContainerMods;
+	TagContainerMods.Added.AddTag(DebuffTag);
+	
+	UTargetTagsGameplayEffectComponent& Comp = Effect->AddComponent<UTargetTagsGameplayEffectComponent>();
+	Comp.SetAndApplyTargetTagChanges(TagContainerMods);
+	
 	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
 	Effect->StackLimitCount = 1;
 

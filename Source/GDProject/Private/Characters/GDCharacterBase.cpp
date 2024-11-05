@@ -10,8 +10,10 @@
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Debuff/DebuffNiagaraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GDProject/GDProject.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 AGDCharacterBase::AGDCharacterBase()
 {
@@ -22,6 +24,10 @@ AGDCharacterBase::AGDCharacterBase()
 	BurnDebuffComponent = CreateDefaultSubobject<UDebuffNiagaraComponent>("BurnDebuffComponent");
 	BurnDebuffComponent->SetupAttachment(GetRootComponent());
 	BurnDebuffComponent->DebuffTag = GameplayTags.Debuff_Burn;
+
+	StunDebuffComponent = CreateDefaultSubobject<UDebuffNiagaraComponent>("StunDebuffComponent");
+	StunDebuffComponent->SetupAttachment(GetRootComponent());
+	StunDebuffComponent->DebuffTag = GameplayTags.Debuff_Stun;
 	
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	
@@ -62,6 +68,13 @@ void AGDCharacterBase::PossessedBy(AController* NewController)
 	if (!ASC) {
 		return;
 	}
+}
+
+void AGDCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	
+	DOREPLIFETIME(AGDCharacterBase, bIsStunned)
 }
 
 void AGDCharacterBase::AddSetupAbilities()
@@ -124,6 +137,11 @@ bool AGDCharacterBase::IsDead_Implementation() const
 	return bIsDead;
 }
 
+FOnDeathSignature& AGDCharacterBase::GetOnDeathDelegate()
+{
+	return OnDeathDelegate;
+}
+
 AActor* AGDCharacterBase::GetAvatar_Implementation()
 {
 	return this;
@@ -149,9 +167,53 @@ ECharacterClass AGDCharacterBase::GetCharacterClass_Implementation()
 	return CharacterClass;
 }
 
-FOnASCRegistered AGDCharacterBase::GetOnASCRegisteredDelegate()
+FOnASCRegistered& AGDCharacterBase::GetOnASCRegisteredDelegate()
 {
 	return OnAscRegistered;
+}
+
+USkeletalMeshComponent* AGDCharacterBase::GetWeapon_Implementation()
+{
+	return WeaponComponent.Get();
+}
+
+void AGDCharacterBase::OnAbilitySystemComponentAvaliable()
+{
+	check(ASC);
+	if (HasAuthority())
+	{
+		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnGameplayTagChanged);
+		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Burn, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnGameplayTagChanged);
+		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnGameplayTagChanged);
+	}
+}
+
+void AGDCharacterBase::OnGameplayTagChanged(const FGameplayTag Tag, int32 Count)
+{
+	FGDGameplayTags GameplayTags = FGDGameplayTags::Get();
+	if (Tag == GameplayTags.Effects_HitReact)
+	{
+		bHitReacting = Count > 0;
+		int32 CountStun = ASC->GetTagCount(GameplayTags.Debuff_Stun);
+		GetCharacterMovement()->MaxWalkSpeed = Count + CountStun ? 0.f : BaseWalkSpeed;
+	}
+	else if (Tag == GameplayTags.Debuff_Stun)
+	{
+		bIsStunned = Count > 0;
+		int32 CountHitReact = ASC->GetTagCount(GameplayTags.Debuff_Stun);
+		GetCharacterMovement()->MaxWalkSpeed = Count + CountHitReact ? 0.f : BaseWalkSpeed;
+	}
+}
+
+void AGDCharacterBase::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	bIsStunned = NewCount > 0;
+	GetCharacterMovement()->MaxWalkSpeed = bIsStunned ? 0.f : BaseWalkSpeed;
+}
+
+void AGDCharacterBase::OnRep_IsStunned()
+{
+	
 }
 
 void AGDCharacterBase::MulticastHandleDeath_Implementation()
@@ -170,6 +232,9 @@ void AGDCharacterBase::MulticastHandleDeath_Implementation()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Dissolve();
 	bIsDead = true;
+	BurnDebuffComponent->Deactivate();
+	StunDebuffComponent->Deactivate();
+	OnDeathDelegate.Broadcast(this);
 }
 
 void AGDCharacterBase::InitializeDefaultAttributes() const

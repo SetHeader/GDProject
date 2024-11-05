@@ -10,6 +10,12 @@ FGDGameplayTags& FGDGameplayTags::Get()
 	return Instance;
 }
 
+void FGDGameplayTags::InitTagVariable(FGameplayTag& CurrentTag, FName TagName, FString Description)
+{
+	UGameplayTagsManager::Get().AddNativeGameplayTag(TagName, Description);
+	CurrentTag = FGameplayTag::RequestGameplayTag(TagName);
+}
+
 void FGDGameplayTags::InitializeGameplayTags()
 {
 	/*
@@ -206,6 +212,11 @@ void FGDGameplayTags::InitializeGameplayTags()
 	Debuff_Duration = FGameplayTag::RequestGameplayTag(FName("Debuff.Duration"));
 	Debuff_Frequency = FGameplayTag::RequestGameplayTag(FName("Debuff.Frequency"));
 
+	InitTagVariable(Player_Block_InputPressed, "Player.Block.InputPressed", "Player_Block_InputPressed");
+	InitTagVariable(Player_Block_InputHeld, "Player.Block.InputHeld", "Player_Block_InputHeld");
+	InitTagVariable(Player_Block_InputReleased, "Player.Block.InputReleased", "Player_Block_InputReleased");
+	InitTagVariable(Player_Block_CursorTrace, "Player.Block.CursorTrace", "Player_Block_CursorTrace");
+
 	/*
 	 * Map of Damage Types to Resistances
 	 */
@@ -232,4 +243,5 @@ void FGDGameplayTags::InitializeGameplayTags()
 	 * 广播初始化完毕
 	 */
 	OnInitedDelegate.Broadcast();
+	UGameplayTagsManager::Get().AddNativeGameplayTag(FName("Player.Block.CursorTrace"), FString("Player_Block_CursorTrace"));
 }

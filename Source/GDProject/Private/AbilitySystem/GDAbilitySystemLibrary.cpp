@@ -17,6 +17,7 @@
 #include "UI/GDHUD.h"
 #include "UI/WidgetController/SpellMenuWidgetController.h"
 #include "GameplayAbilities\Public\GameplayEffectTypes.h"
+#include "LevelInstance/LevelInstanceTypes.h"
 
 UGDOverlayWidgetController* UGDAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
 {
@@ -246,7 +247,41 @@ void UGDAbilitySystemLibrary::GetLivePlayersWithInRadius(const UObject* WorldCon
 			}
 		}
 	}
+}
+
+void UGDAbilitySystemLibrary::GetClosestTargets(int32 MaxTarget, const TArray<AActor*>& Actors,
+	TArray<AActor*>& OutClosestTargets, const FVector& Origin)
+{
+	if (MaxTarget >= Actors.Num())
+	{
+		for (AActor* Actor : Actors)
+		{
+			OutClosestTargets.Add(Actor);
+		}
+		return;
+	}
+
+	TArray<AActor*> TempActors(Actors);
 	
+	for (int i = 0; i < MaxTarget; ++i)
+	{
+		int32 MinActorIdx = 0;
+		float MinDist = FLT_MAX;
+		
+		for (int j = 0; j < TempActors.Num(); ++j)
+		{
+			AActor* Actor = TempActors[j];
+			float Dist = FVector::Distance(Origin, Actor->GetActorLocation());
+			if (Dist < MinDist)
+			{
+				MinDist = Dist;
+				MinActorIdx = j;
+			}
+		}
+		
+		OutClosestTargets.Add(TempActors[MinActorIdx]);
+		TempActors.RemoveAt(MinActorIdx);
+	}
 }
 
 FGameplayTagContainer UGDAbilitySystemLibrary::FindInputTagFromAbilitySpec(const FGameplayAbilitySpec* AbilitySpec)
@@ -337,6 +372,12 @@ UAbilityInfo* UGDAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldContex
 
 FGameplayEffectContextHandle UGDAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectParams& DamageEffectParams)
 {
+	if (!IsValid(DamageEffectParams.TargetAbilitySystemComponent))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UGDAbilitySystemLibrary::ApplyDamageEffect: TargetAbilitySystemComponent is invalid"))
+		return FGameplayEffectContextHandle();
+	}
+	
 	const FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
 	const AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
 	
@@ -399,8 +440,17 @@ FGameplayTag UGDAbilitySystemLibrary::GetDamageType(const FGameplayEffectContext
 	return FGameplayTag();
 }
 
+FVector UGDAbilitySystemLibrary::GetKnockbackForce(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* AuraEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->GetKnockbackForce();
+	}
+	return FVector::ZeroVector;
+}
+
 void UGDAbilitySystemLibrary::SetIsSuccessfulDebuff(FGameplayEffectContextHandle& EffectContextHandle,
-	bool bInSuccessfulDebuff)
+                                                    bool bInSuccessfulDebuff)
 {
 	if (FGDGameplayEffectContext* GDEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
@@ -439,5 +489,14 @@ void UGDAbilitySystemLibrary::SetDamageType(FGameplayEffectContextHandle& Effect
 	{
 		const TSharedPtr<FGameplayTag> DamageType = MakeShared<FGameplayTag>(InDamageType);
 		return GDEffectContext->SetDamageType(DamageType);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetKnockbackForce(FGameplayEffectContextHandle& EffectContextHandle,
+	const FVector& InForce)
+{
+	if (FGDGameplayEffectContext* AuraEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->SetKnockbackForce(InForce);
 	}
 }

@@ -10,9 +10,7 @@
 UDebuffNiagaraComponent::UDebuffNiagaraComponent()
 {
 	PrimaryComponentTick.bCanEverTick = false;
-
 }
-
 
 void UDebuffNiagaraComponent::BeginPlay()
 {

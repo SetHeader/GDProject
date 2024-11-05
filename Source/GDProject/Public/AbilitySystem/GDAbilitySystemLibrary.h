@@ -58,10 +58,18 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|GameplayEffects")
 	static void SetIsCriticalHit(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bValue);
-
+	// 查找指定点周围的敌人
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|GameplayEffects")
 	static void GetLivePlayersWithInRadius(const UObject* WorldContextObject, TArray<AActor*>& OutOverlappingActors, const TArray<AActor*>& ActorsToIgnore, float Radius, const FVector& SphereOrigin);
-
+	/**
+	 * 从Actors中找到最接近原点的目标集
+	 * @param MaxTarget 目标数量
+	 * @param Actors 要
+	 * @param OutClosestTargets 
+	 * @param Origin 
+	 */
+	static void GetClosestTargets(int32 MaxTarget, const TArray<AActor*>& Actors, TArray<AActor*>& OutClosestTargets, const FVector& Origin);
+	
 	static FGameplayTagContainer FindInputTagFromAbilitySpec(const FGameplayAbilitySpec* AbilitySpec);
 
 	static void ResetInputTagFromAbilitySpec(FGameplayAbilitySpec* AbilitySpec, const FGameplayTag& NewInputTag);
@@ -107,6 +115,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "AuraAbilitySystemLibrary|GameplayEffects")
 	static FGameplayTag GetDamageType(const FGameplayEffectContextHandle& EffectContextHandle);
+	
+	UFUNCTION(BlueprintPure, Category = "AuraAbilitySystemLibrary|GameplayEffects")
+	static FVector GetKnockbackForce(const FGameplayEffectContextHandle& EffectContextHandle);
 		
 	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayEffects")
 	static void SetIsSuccessfulDebuff(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, bool bInSuccessfulDebuff);
@@ -121,5 +132,8 @@ public:
 	static void SetDebuffFrequency(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, float InFrequency);
 
 	static void SetDamageType(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, const FGameplayTag& InDamageType);
+	
+	UFUNCTION(BlueprintCallable, Category = "AuraAbilitySystemLibrary|GameplayEffects")
+	static void SetKnockbackForce(UPARAM(ref) FGameplayEffectContextHandle& EffectContextHandle, const FVector& InForce);
 	
 };
