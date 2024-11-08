@@ -21,7 +21,7 @@ void UPassiveNiagaraComponent::BeginPlay()
 
 	if (UGDAbilitySystemComponent* AuraASC = Cast<UGDAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner())))
 	{
-		AuraASC->ActivatePassiveEffect.AddUObject(this, &UPassiveNiagaraComponent::OnPassiveActivate);
+		AuraASC->OnPassiveEffectActivated.AddUObject(this, &UPassiveNiagaraComponent::OnPassiveActivate);
 		ActivateIfEquipped(AuraASC);
 	}
 	else if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(GetOwner()))
@@ -30,7 +30,7 @@ void UPassiveNiagaraComponent::BeginPlay()
 		{
 			if (UGDAbilitySystemComponent* AuraASC = Cast<UGDAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetOwner())))
 			{
-				AuraASC->ActivatePassiveEffect.AddUObject(this, &UPassiveNiagaraComponent::OnPassiveActivate);
+				AuraASC->OnPassiveEffectActivated.AddUObject(this, &UPassiveNiagaraComponent::OnPassiveActivate);
 				ActivateIfEquipped(AuraASC);
 			}
 		});

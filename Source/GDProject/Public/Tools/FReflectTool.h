@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "Net/RepLayout.h"
 
 struct FReflectTool
 {

@@ -87,6 +87,7 @@ void AGDProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 				const FVector KnockbackForce = KnockbackDirection * DamageEffectParams.KnockbackForceMagnitude;
 				DamageEffectParams.KnockbackForce = KnockbackForce;
 			}
+			
 			DamageEffectParams.TargetAbilitySystemComponent = TargetASC;
 			UGDAbilitySystemLibrary::ApplyDamageEffect(DamageEffectParams);
 		}

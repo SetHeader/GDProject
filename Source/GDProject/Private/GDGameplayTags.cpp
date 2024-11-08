@@ -217,6 +217,9 @@ void FGDGameplayTags::InitializeGameplayTags()
 	InitTagVariable(Player_Block_InputReleased, "Player.Block.InputReleased", "Player_Block_InputReleased");
 	InitTagVariable(Player_Block_CursorTrace, "Player.Block.CursorTrace", "Player_Block_CursorTrace");
 
+	InitTagVariable(Abilities_Passive_HaloOfProtection, "Abilities.Passive.HaloOfProtection", "Abilities_Passive_HaloOfProtection");
+	InitTagVariable(Abilities_Passive_LifeSiphon, "Abilities.Passive.LifeSiphon", "Abilities_Passive_LifeSiphon");
+	InitTagVariable(Abilities_Passive_ManaSiphon, "Abilities.Passive.ManaSiphon", "Abilities_Passive_ManaSiphon");
 	/*
 	 * Map of Damage Types to Resistances
 	 */

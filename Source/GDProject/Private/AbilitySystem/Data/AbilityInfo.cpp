@@ -3,8 +3,21 @@
 
 #include "AbilitySystem/Data/AbilityInfo.h"
 
+#include "GameplayAbilitySpec.h"
 #include "GDGameplayTags.h"
-#include "GDProject/GDLogChannels.h"
+#include "GDProject/GDLog.h"
+
+FGameplayAbilitySpec FGDAbilityInfo::CreateAbilitySpec(int32 AbilityLevel) const
+{
+	FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Ability, AbilityLevel);
+	AbilitySpec.DynamicAbilityTags.AddTag(StatusTag);
+	AbilitySpec.DynamicAbilityTags.AddTag(AbilityType);
+	if (InputTag.IsValid())
+	{
+		AbilitySpec.DynamicAbilityTags.AddTag(InputTag);
+	}
+	return AbilitySpec;
+}
 
 FGDAbilityInfo UAbilityInfo::FindAbilityInfoForTag(const FGameplayTag& Tag, bool bLogNotFound) const
 {

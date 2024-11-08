@@ -7,9 +7,7 @@
 #include "BeamSpellAbility.generated.h"
 
 class UNiagaraSystem;
-/**
- * 
- */
+
 UCLASS()
 class GDPROJECT_API UBeamSpellAbility : public UGDDamageGameplayAbility
 {
@@ -39,9 +37,6 @@ public:
 	void StoreOwnerVariables();
 	
 	UFUNCTION(BlueprintCallable)
-	void SpawnElectricBeam(UNiagaraSystem* NiagaraSystem);
-
-	UFUNCTION(BlueprintCallable)
 	void TraceFirstTarget(const FVector& BeamTargetLocation);
 
 	UFUNCTION(BlueprintCallable)
@@ -52,4 +47,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void AdditionalTargetDied(AActor* DeadActor);
+
+	virtual FString GetDescription(int32 InLevel) override;
+	virtual FString GetNextLevelDescription(int32 InLevel) override;
 };

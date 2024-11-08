@@ -3,7 +3,6 @@
 
 #include "UI/WidgetController/GDWidgetController.h"
 #include "AbilitySystemComponent.h"
-#include "AttributeSet.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 
 UGDAbilitySystemComponent* UGDWidgetController::GetGDASC() const

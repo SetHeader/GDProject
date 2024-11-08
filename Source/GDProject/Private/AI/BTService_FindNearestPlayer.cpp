@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "BehaviorTree/BTFunctionLibrary.h"
+#include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 
 void UBTService_FindNearestPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -29,7 +30,7 @@ void UBTService_FindNearestPlayer::TickNode(UBehaviorTreeComponent& OwnerComp, u
 	
 	for (AActor* Actor : Actors)
 	{
-		if (!IsValid(Actor))
+		if (!IsValid(Actor) || ICombatInterface::Execute_IsDead(Actor))
 		{
 			continue;
 		}

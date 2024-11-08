@@ -59,6 +59,17 @@ public:
 	// 装备能力
 	UFUNCTION(BlueprintCallable)
 	void EquipAbility(FGameplayTag AbilityTag, FGameplayTag InputTag) const;
-	
+
+	// 获取当前等级的说明
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	virtual FString GetDescription(FGameplayTag AbilityTag);
+	/**
+	 * 获取下一级的说明
+	 * @param InLevel 当前级，获取到的时InLevel + 1 级的说明
+	 */
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	virtual FString GetNextLevelDescription(FGameplayTag AbilityTag);
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	virtual FString GetLockedDescription(FGameplayTag AbilityTag);
 };
  

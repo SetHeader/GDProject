@@ -6,10 +6,10 @@
 #include "GameplayEffectTypes.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "GameplayTagContainer.h"
-#include "AbilitySystem/Abilities/GDGameplayAbility.h"
+#include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
-#include "GDProject/GDLogChannels.h"
+#include "GDProject/GDLog.h"
 #include "Player/GDPlayerState.h"
 
 void UGDOverlayWidgetController::BindCallbacksToDependencies() const
@@ -60,7 +60,7 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 		}
 		else
 		{
-			GDASC->AbilitiesGivenDelegate.AddUObject(this, &UGDOverlayWidgetController::OnInitializeStartupAbilities);
+			GDASC->OnAbilitiesGiven.AddUObject(this, &UGDOverlayWidgetController::OnInitializeStartupAbilities);
 		}
 
 		GDASC->OnAbilityStatusChangedDelegate.AddLambda([this](const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag, int32 AbilityLevel)
@@ -82,6 +82,8 @@ void UGDOverlayWidgetController::BroadcastInitialValues() const
 	OnMaxManaChanged.Broadcast(GDAS->GetMaxMana());
 	OnStaminaChanged.Broadcast(GDAS->GetStamina());
 	OnMaxStaminChanged.Broadcast(GDAS->GetMaxStamina());
+
+	BroadcastAbilityInfos();
 }
 
 void UGDOverlayWidgetController::OnInitializeStartupAbilities(UGDAbilitySystemComponent* ASC) const
@@ -96,23 +98,10 @@ void UGDOverlayWidgetController::OnInitializeStartupAbilities(UGDAbilitySystemCo
 
 void UGDOverlayWidgetController::BroadcastAbilityInfos() const
 {
-	UGDAbilitySystemComponent* ASC = GetGDASC();
-	FForEachAbility BroadcastDelegate;
-	BroadcastDelegate.BindLambda([ASC, this](const FGameplayAbilitySpec& AbilitySpec)
+	for (const FGDAbilityInfo& Info : AbilityInfoAsset->AbilityInfos)
 	{
-		const FGameplayTag AbilityTag = ASC->GetAbilityTagFromSpec(AbilitySpec);
-		const FGameplayTag InputTag = ASC->GetInputTagFromSpec(AbilitySpec);
-		if (AbilityTag.IsValid() && InputTag.IsValid())
-		{
-			FGDAbilityInfo AbilityInfo = AbilityInfoAsset->FindAbilityInfoForTag(AbilityTag, true);
-			if (AbilityInfo.AbilityTag.IsValid())
-			{
-				AbilityInfo.InputTag = InputTag;
-				OnAbilityInfoDelegate.Broadcast(AbilityInfo);
-			}
-		}
-	});
-	ASC->ForEachAbility(BroadcastDelegate);
+		OnAbilityInfoDelegate.Broadcast(Info);
+	}
 }
 
 

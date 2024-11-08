@@ -318,8 +318,10 @@ void UGDAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
 			{
 				CombatInterface->Die();
 			}
-			// 给攻击者增加经验
-			SendXPEvent(Props);
+			if (Props.SourceCharacter->Implements<UPlayerInterface>()) {
+				// 给攻击者增加经验
+				SendXPEvent(Props);
+			}
 		}
 		// 非致命伤就触发受击反应
 		else
@@ -396,6 +398,19 @@ void UGDAttributeSet::Debuff(const FEffectProperties& Props)
 	Effect->DurationPolicy = EGameplayEffectDurationType::HasDuration;
 	Effect->Period = DebuffFrequency;
 	Effect->DurationMagnitude = FScalableFloat(DebuffDuration);
+	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
+	Effect->StackLimitCount = 1;
+	Effect->StackDurationRefreshPolicy = EGameplayEffectStackingDurationPolicy::RefreshOnSuccessfulApplication;
+	Effect->StackPeriodResetPolicy = EGameplayEffectStackingPeriodPolicy::ResetOnSuccessfulApplication;
+	Effect->StackExpirationPolicy = EGameplayEffectStackingExpirationPolicy::ClearEntireStack;
+
+	FGameplayModifierInfo ModifierInfo;
+	
+	ModifierInfo.ModifierMagnitude = FScalableFloat(DebuffDamage);
+	ModifierInfo.ModifierOp = EGameplayModOp::Additive;
+	ModifierInfo.Attribute = UGDAttributeSet::GetIncomingDamageAttribute();
+	
+	Effect->Modifiers.Add(ModifierInfo);
 	
 	FGameplayTag DebuffTag = GameplayTags.DamageTypesToDebuffs[DamageType];
 	
@@ -404,17 +419,6 @@ void UGDAttributeSet::Debuff(const FEffectProperties& Props)
 	
 	UTargetTagsGameplayEffectComponent& Comp = Effect->AddComponent<UTargetTagsGameplayEffectComponent>();
 	Comp.SetAndApplyTargetTagChanges(TagContainerMods);
-	
-	Effect->StackingType = EGameplayEffectStackingType::AggregateBySource;
-	Effect->StackLimitCount = 1;
-
-	const int32 Index = Effect->Modifiers.Num();
-	Effect->Modifiers.Add(FGameplayModifierInfo());
-	FGameplayModifierInfo& ModifierInfo = Effect->Modifiers[Index];
-
-	ModifierInfo.ModifierMagnitude = FScalableFloat(DebuffDamage);
-	ModifierInfo.ModifierOp = EGameplayModOp::Additive;
-	ModifierInfo.Attribute = UGDAttributeSet::GetIncomingDamageAttribute();
 	
 	if (FGameplayEffectSpec* MutableSpec = new FGameplayEffectSpec(Effect, EffectContext, 1.f))
 	{

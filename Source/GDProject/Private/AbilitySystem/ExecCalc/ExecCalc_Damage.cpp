@@ -9,6 +9,7 @@
 #include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "Interaction/CombatInterface.h"
+#include "Kismet/GameplayStatics.h"
 
 
 /**
@@ -90,8 +91,8 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	const UAbilitySystemComponent* SourceASC = ExecutionParams.GetSourceAbilitySystemComponent();
 	const UAbilitySystemComponent* TargetASC = ExecutionParams.GetTargetAbilitySystemComponent();
 
-	const AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
-	const AActor* TargetAvatar = TargetASC ? SourceASC->GetAvatarActor() : nullptr;
+	AActor* SourceAvatar = SourceASC ? SourceASC->GetAvatarActor() : nullptr;
+	AActor* TargetAvatar = TargetASC ? SourceASC->GetAvatarActor() : nullptr;
 
 	int SourceCombatLevel = 1;
 	if (SourceAvatar->Implements<UCombatInterface>())
@@ -105,6 +106,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	}
 
 	const FGameplayEffectSpec& EffectSpec = ExecutionParams.GetOwningSpec();
+	FGameplayEffectContextHandle EffectContextHandle = EffectSpec.GetContext();
 	
 	FAggregatorEvaluateParameters EvaluationParameters;
 	EvaluationParameters.SourceTags = EffectSpec.CapturedSourceTags.GetAggregatedTags();
@@ -120,9 +122,10 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	
 	// 应用Debuff
 	DetermineDebuff(ExecutionParams, EffectSpec, EvaluationParameters, TagsToCaptureDefs);
-
+	
 	// 获取伤害
-	float Damage = 0.f;  
+	float Damage = 0.f;
+	
 	// 计算伤害与伤害抵抗
 	for (const auto& DamageType : FGDGameplayTags::Get().DamageTypesToResistances)
 	{
@@ -133,11 +136,46 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 		const FGameplayEffectAttributeCaptureDefinition ResistanceTypeDef = TagsToCaptureDefs[ResistanceTypeTag];
 		
-		const float DamageTypeValue = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag, false);
+		float DamageTypeValue = EffectSpec.GetSetByCallerMagnitude(DamageTypeTag, false);
+		
+		if (DamageTypeValue <= 0.f)
+		{
+			continue;
+		}
+		
 		float TargetResistance = CaptureAttributeValue(ExecutionParams, EvaluationParameters, ResistanceTypeDef);
 		
 		TargetResistance = FMath::Clamp(TargetResistance, 0.f, 100.f);
-		
+
+		if (UGDAbilitySystemLibrary::IsRadialDamage(EffectContextHandle))
+		{
+			if (ICombatInterface* CombatInterface = Cast<ICombatInterface>(TargetAvatar))
+			{
+				CombatInterface->GetOnDamageDelegate().AddLambda([&DamageTypeValue](float InDamage)
+				{
+					// 如果是径向伤害的话，要覆盖掉基本伤害
+					DamageTypeValue = InDamage;
+				});
+
+				const FVector RadialDamageOrigin = UGDAbilitySystemLibrary::GetRadialDamageOrigin(EffectContextHandle);
+				const float RadialDamageInnerRadius = UGDAbilitySystemLibrary::GetRadialDamageInnerRadius(EffectContextHandle);
+				const float RadialDamageOuterRadius = UGDAbilitySystemLibrary::GetRadialDamageOuterRadius(EffectContextHandle);
+				
+				UGameplayStatics::ApplyRadialDamageWithFalloff(
+					SourceAvatar,
+					DamageTypeValue,
+					0,
+					RadialDamageOrigin,
+					RadialDamageInnerRadius,
+					RadialDamageOuterRadius,
+					1.f,
+					UDamageType::StaticClass(),
+					TArray<AActor*>(),
+					SourceAvatar,
+					nullptr);
+			}
+		}
+
 		Damage += DamageTypeValue * (100.f - TargetResistance) / 100.f;
 	}
 	
@@ -166,7 +204,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	// 有效暴击率。每6.666个暴击抵抗点数 能降低 1% 的暴击率
 	const float EffectiveCriticalHitChange = SourceCriticalHitChange - TargetCriticalHitResistance * CriticalHitResistanceCoeff;
 	// 是否暴击
-	const bool bCriticalHit = (EffectiveCriticalHitChange) <= FMath::RandRange(0, 100);
+	const bool bCriticalHit = FMath::RandRange(0, 100) <= EffectiveCriticalHitChange;
 	
 	if (bCriticalHit)
 	{
@@ -179,7 +217,6 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	Damage = FMath::Max(0.f, Damage);
 
 	// 设置一些信息到效果上下文
-	FGameplayEffectContextHandle EffectContextHandle = EffectSpec.GetContext();
 	UGDAbilitySystemLibrary::SetIsBlockedHit(EffectContextHandle, bBlock);
 	UGDAbilitySystemLibrary::SetIsCriticalHit(EffectContextHandle, bCriticalHit);
 	

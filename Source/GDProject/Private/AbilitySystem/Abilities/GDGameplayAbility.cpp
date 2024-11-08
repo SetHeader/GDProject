@@ -17,13 +17,14 @@ FString UGDGameplayAbility::GetNextLevelDescription(int32 InLevel)
 
 FString UGDGameplayAbility::GetLockedDescription()
 {
-	return FString::Printf(TEXT("<Default>Spell Locked</>"));
+	// return FString::Printf(TEXT("<Default>Spell Locked</>"));
+	return GetDescription(1);
 }
 
-float UGDGameplayAbility::GetManaCost(float InLevel) const
+int32 UGDGameplayAbility::GetManaCost(int32 InLevel) const
 {
-	UGameplayEffect* CostEffect = GetCostGameplayEffect();
-	if (CostEffect)
+	InLevel = FMath::Max(1, InLevel);
+	if (UGameplayEffect* CostEffect = GetCostGameplayEffect())
 	{
 		FGameplayAttribute ManaAttribute = UGDAttributeSet::GetManaAttribute();
 		for (const FGameplayModifierInfo& Modifier : CostEffect->Modifiers)
@@ -32,7 +33,7 @@ float UGDGameplayAbility::GetManaCost(float InLevel) const
 			{
 				float CostValue = 0;
 				Modifier.ModifierMagnitude.GetStaticMagnitudeIfPossible(InLevel, CostValue);
-				return CostValue;
+				return -CostValue;
 			}
 		} 
 	}
@@ -42,6 +43,8 @@ float UGDGameplayAbility::GetManaCost(float InLevel) const
 
 float UGDGameplayAbility::GetCooldown(float InLevel) const
 {
+	InLevel = FMath::Max(1, InLevel);
+	
 	float CooldownValue = 0;
 	
 	if (UGameplayEffect* CooldownEffect = GetCooldownGameplayEffect())

@@ -11,13 +11,12 @@
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Characters/Minions/GDCharacterMinion.h"
 #include "Game/LoadScreenSaveGame.h"
-#include "GDProject/GDLogChannels.h"
+#include "GDProject/GDLog.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
 #include "UI/WidgetController/SpellMenuWidgetController.h"
 #include "GameplayAbilities\Public\GameplayEffectTypes.h"
-#include "LevelInstance/LevelInstanceTypes.h"
 
 UGDOverlayWidgetController* UGDAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
 {
@@ -294,7 +293,26 @@ void UGDAbilitySystemLibrary::ResetInputTagFromAbilitySpec(FGameplayAbilitySpec*
 	const FGameplayTag& NewInputTag)
 {
 	AbilitySpec->DynamicAbilityTags.RemoveTags(FindInputTagFromAbilitySpec(AbilitySpec));
-	AbilitySpec->DynamicAbilityTags.AddTag(NewInputTag);
+	if (NewInputTag.IsValid())
+	{
+		AbilitySpec->DynamicAbilityTags.AddTag(NewInputTag);
+	}
+}
+
+FGameplayTagContainer UGDAbilitySystemLibrary::FindStatusTagFromAbilitySpec(const FGameplayAbilitySpec* AbilitySpec)
+{
+	FGameplayTag StatusTagPrefix = FGameplayTag::RequestGameplayTag("Abilities.Status");
+	return  AbilitySpec->DynamicAbilityTags.Filter(FGameplayTagContainer(StatusTagPrefix));
+}
+
+void UGDAbilitySystemLibrary::ResetStatusTagFromAbilitySpec(FGameplayAbilitySpec* AbilitySpec,
+                                                            const FGameplayTag& NewStatusTag)
+{
+	AbilitySpec->DynamicAbilityTags.RemoveTags(FindStatusTagFromAbilitySpec(AbilitySpec));
+	if (NewStatusTag.IsValid())
+	{
+		AbilitySpec->DynamicAbilityTags.AddTag(NewStatusTag);
+	}
 }
 
 bool UGDAbilitySystemLibrary::IsNotFriend(const AActor* FirstActor, const AActor* SecondActor)
@@ -367,7 +385,7 @@ UAbilityInfo* UGDAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldContex
 		return nullptr;
 	}
 
-	return GDGameMode->AbilityInfo;
+	return GDGameMode->GetAbilityInfo();
 }
 
 FGameplayEffectContextHandle UGDAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectParams& DamageEffectParams)
@@ -383,6 +401,10 @@ FGameplayEffectContextHandle UGDAbilitySystemLibrary::ApplyDamageEffect(const FD
 	
 	FGameplayEffectContextHandle EffectContexthandle = DamageEffectParams.SourceAbilitySystemComponent->MakeEffectContext();
 	EffectContexthandle.AddSourceObject(SourceAvatarActor);
+	
+	SetDeathImpulse(EffectContexthandle, DamageEffectParams.DeathImpulse);
+	SetKnockbackForce(EffectContexthandle, DamageEffectParams.KnockbackForce);
+	
 	const FGameplayEffectSpecHandle SpecHandle = DamageEffectParams.SourceAbilitySystemComponent->MakeOutgoingSpec(DamageEffectParams.DamageGameplayEffectClass, DamageEffectParams.AbilityLevel, EffectContexthandle);
 
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(SpecHandle, DamageEffectParams.DamageType, DamageEffectParams.BaseDamage);
@@ -440,6 +462,15 @@ FGameplayTag UGDAbilitySystemLibrary::GetDamageType(const FGameplayEffectContext
 	return FGameplayTag();
 }
 
+FVector UGDAbilitySystemLibrary::GetDeathImpulse(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* AuraEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->GetDeathImpulse();
+	}
+	return FVector::ZeroVector;
+}
+
 FVector UGDAbilitySystemLibrary::GetKnockbackForce(const FGameplayEffectContextHandle& EffectContextHandle)
 {
 	if (const FGDGameplayEffectContext* AuraEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
@@ -492,11 +523,92 @@ void UGDAbilitySystemLibrary::SetDamageType(FGameplayEffectContextHandle& Effect
 	}
 }
 
+void UGDAbilitySystemLibrary::SetDeathImpulse(FGameplayEffectContextHandle& EffectContextHandle,
+	const FVector& InImpulse)
+{
+	if (FGDGameplayEffectContext* AuraEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->SetDeathImpulse(InImpulse);
+	}
+}
+
 void UGDAbilitySystemLibrary::SetKnockbackForce(FGameplayEffectContextHandle& EffectContextHandle,
-	const FVector& InForce)
+                                                const FVector& InForce)
 {
 	if (FGDGameplayEffectContext* AuraEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
 	{
 		return AuraEffectContext->SetKnockbackForce(InForce);
+	}
+}
+
+bool UGDAbilitySystemLibrary::IsRadialDamage(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* AuraEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->IsRadialDamage();
+	}
+	return false;
+}
+
+float UGDAbilitySystemLibrary::GetRadialDamageInnerRadius(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* AuraEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->GetRadialDamageInnerRadius();
+	}
+	return 0.f;
+}
+
+float UGDAbilitySystemLibrary::GetRadialDamageOuterRadius(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* AuraEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->GetRadialDamageOuterRadius();
+	}
+	return 0.f;
+}
+
+FVector UGDAbilitySystemLibrary::GetRadialDamageOrigin(const FGameplayEffectContextHandle& EffectContextHandle)
+{
+	if (const FGDGameplayEffectContext* AuraEffectContext = static_cast<const FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		return AuraEffectContext->GetRadialDamageOrigin();
+	}
+	return FVector::ZeroVector;
+}
+
+void UGDAbilitySystemLibrary::SetIsRadialDamage(FGameplayEffectContextHandle& EffectContextHandle,
+	bool bInIsRadialDamage)
+{
+	if (FGDGameplayEffectContext* AuraEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		AuraEffectContext->SetIsRadialDamage(bInIsRadialDamage);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetRadialDamageInnerRadius(FGameplayEffectContextHandle& EffectContextHandle,
+	float InInnerRadius)
+{
+	if (FGDGameplayEffectContext* AuraEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		AuraEffectContext->SetRadialDamageInnerRadius(InInnerRadius);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetRadialDamageOuterRadius(FGameplayEffectContextHandle& EffectContextHandle,
+	float InOuterRadius)
+{
+	if (FGDGameplayEffectContext* AuraEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		AuraEffectContext->SetRadialDamageOuterRadius(InOuterRadius);
+	}
+}
+
+void UGDAbilitySystemLibrary::SetRadialDamageOrigin(FGameplayEffectContextHandle& EffectContextHandle,
+	const FVector& InOrigin)
+{
+	if (FGDGameplayEffectContext* AuraEffectContext = static_cast<FGDGameplayEffectContext*>(EffectContextHandle.Get()))
+	{
+		AuraEffectContext->SetRadialDamageOrigin(InOrigin);
 	}
 }

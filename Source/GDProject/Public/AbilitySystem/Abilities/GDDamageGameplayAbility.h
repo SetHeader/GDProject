@@ -39,14 +39,41 @@ protected:
 	// Debuff的持续时长
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	float DebuffDuration = 5.f;
+	// 死亡击飞的冲量大小
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float DeathImpulseMagnitude = 1000.f;
+	// 击退的冲量大小
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float KnockbackForceMagnitude = 1000.f;
+	// 击退的概率
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float KnockbackChance = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	bool bIsRadialDamage = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	float RadialDamageInnerRadius = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Damage")
+	float RadialDamageOuterRadius = 0.f;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Damage")
 	virtual void CauseDamage(AActor* TargetActor);
 
-	UFUNCTION(BlueprintPure)
-	FDamageEffectParams MakeDamageEffectParamsFromClassDefaults(AActor* TargetActor = nullptr) const;
+	UFUNCTION(BlueprintPure, meta=(AutoCreateRefTerm="InRadialDamageOrigin,KnockbackDirectionOverride, DeathImpulseDirectionOverride"))
+	FDamageEffectParams MakeDamageEffectParamsFromClassDefaults(AActor* TargetActor = nullptr, const FVector& InRadialDamageOrigin = FVector::ZeroVector,
+		bool bOverrideKnockbackDirection = false, const FVector& KnockbackDirectionOverride = FVector::ZeroVector,
+		bool bOverrideDeathImpulse = false, const FVector& DeathImpulseDirectionOverride = FVector::ZeroVector,
+		bool bOverridePitch = false, float PitchOverride = 0.f) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Damage")
-	float GetDamageAtLevel() const;
+	float GetDamageAtLevel(int InLevel) const;
+
+protected:
+	
+	virtual FString GetDescTemplate(int32 CurrLevel, FString Title, FString ExtraDesc);
+
+	virtual FString GetNextLevelDescTemplate(int32 CurrLevel, FString ExtraDescription);
 };

@@ -3,13 +3,11 @@
 
 #include "AbilitySystem/Abilities/BeamSpellAbility.h"
 
-#include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "GameFramework/Character.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/EnemyInterface.h"
 #include "Kismet/GameplayStatics.h"
-#include "Net/NetworkMetricsDefs.h"
 
 void UBeamSpellAbility::StoreMouseDataInfo(const FHitResult& HitResult)
 {
@@ -33,11 +31,6 @@ void UBeamSpellAbility::StoreOwnerVariables()
 	}
 }
 
-void UBeamSpellAbility::SpawnElectricBeam(UNiagaraSystem* NiagaraSystem)
-{
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetAvatarActorFromActorInfo(), NiagaraSystem, FVector());
-}
-
 void UBeamSpellAbility::TraceFirstTarget(const FVector& BeamTargetLocation)
 {
 	check(OwnerCharacter);
@@ -46,6 +39,8 @@ void UBeamSpellAbility::TraceFirstTarget(const FVector& BeamTargetLocation)
 		if (USkeletalMeshComponent* Weapon = ICombatInterface::Execute_GetWeapon(OwnerCharacter))
 		{
 			TArray<AActor*> ActorsToIgnore;
+			ActorsToIgnore.Add(OwnerCharacter);
+			
 			FHitResult HitResult;
 			const FVector SocketLocation = Weapon->GetSocketLocation("TipSocket");
 			UKismetSystemLibrary::SphereTraceSingle(
@@ -56,7 +51,7 @@ void UBeamSpellAbility::TraceFirstTarget(const FVector& BeamTargetLocation)
 				TraceTypeQuery1,
 				false,
 				ActorsToIgnore,
-				EDrawDebugTrace::ForDuration,
+				EDrawDebugTrace::None,
 				HitResult,
 				true);
 
@@ -95,8 +90,7 @@ void UBeamSpellAbility::StoreAdditionalTargets(TArray<AActor*>& OutAdditionalTar
 		850.f,
 		MouseHitActor->GetActorLocation());
 
-	// int32 NumAdditionTargets = FMath::Min(GetAbilityLevel() - 1, MaxNumShockTargets);
-	int32 NumAdditionTargets = 5;
+	int32 NumAdditionTargets = FMath::Min(GetAbilityLevel() - 1, MaxNumShockTargets);
 
 	UGDAbilitySystemLibrary::GetClosestTargets(
 		NumAdditionTargets,
@@ -115,4 +109,29 @@ void UBeamSpellAbility::StoreAdditionalTargets(TArray<AActor*>& OutAdditionalTar
 			}
 		}
 	}
+}
+
+FString UBeamSpellAbility::GetDescription(int32 InLevel)
+{
+	int32 ShockCount = FMath::Min(InLevel, MaxNumShockTargets);
+	
+	FString ExtraDesc = FString::Printf(
+		TEXT("<Default>生成一条闪电链,击中目标同时也会链接附近的至多%d个敌人，每秒造成5次</><Damage>%d</><Default>伤害，并有概率晕眩目标。</>"),
+		ShockCount,
+		static_cast<int>(GetDamageAtLevel(InLevel))
+		);
+	
+	return GetDescTemplate(InLevel, TEXT("闪电链"), ExtraDesc);
+}
+
+FString UBeamSpellAbility::GetNextLevelDescription(int32 InLevel)
+{
+	int32 NextLevel = InLevel + 1;
+	
+	int32 NextShockCount = FMath::Min(NextLevel, MaxNumShockTargets);
+	
+	FString ExtraDesc = FString::Printf(TEXT("<Default>链接附近的至多</><Special>%d</><Default>个敌人</>\n"),
+			NextShockCount);
+	
+	return GetNextLevelDescTemplate(InLevel, ExtraDesc);
 }

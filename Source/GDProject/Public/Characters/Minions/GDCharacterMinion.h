@@ -74,8 +74,6 @@ public:
 	virtual void BroadcastInitialValues() const;
 	virtual void BindCallbacksToDependencies() const;
 
-	void HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
-
 protected:
 	virtual void InitializeDefaultAttributes() const override;
 

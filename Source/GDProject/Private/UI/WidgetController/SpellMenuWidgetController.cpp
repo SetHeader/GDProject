@@ -5,6 +5,7 @@
 
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
+#include "AbilitySystem/Abilities/GDGameplayAbility.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "Player/GDPlayerState.h"
 
@@ -66,4 +67,34 @@ void USpellMenuWidgetController::UpgradeAbility(FGameplayTag AbilityTag) const
 void USpellMenuWidgetController::EquipAbility(FGameplayTag AbilityTag, FGameplayTag InputTag) const
 {
 	CastChecked<UGDAbilitySystemComponent>(AbilitySystemComponent)->ServerEquipAbility(AbilityTag, InputTag);
+}
+
+FString USpellMenuWidgetController::GetDescription(FGameplayTag AbilityTag)
+{
+	if (FGameplayAbilitySpec* AbilitySpec = CastChecked<UGDAbilitySystemComponent>(AbilitySystemComponent)->GetSpecFromAbilityTag(AbilityTag))
+	{
+		return CastChecked<UGDGameplayAbility>(AbilitySpec->Ability)->GetDescription(AbilitySpec->Level);
+	}
+
+	return TEXT("");
+}
+
+FString USpellMenuWidgetController::GetNextLevelDescription(FGameplayTag AbilityTag)
+{
+	if (FGameplayAbilitySpec* AbilitySpec = CastChecked<UGDAbilitySystemComponent>(AbilitySystemComponent)->GetSpecFromAbilityTag(AbilityTag))
+	{
+		return CastChecked<UGDGameplayAbility>(AbilitySpec->Ability)->GetNextLevelDescription(AbilitySpec->Level);
+	}
+
+	return TEXT("");
+}
+
+FString USpellMenuWidgetController::GetLockedDescription(FGameplayTag AbilityTag)
+{
+	if (FGameplayAbilitySpec* AbilitySpec = CastChecked<UGDAbilitySystemComponent>(AbilitySystemComponent)->GetSpecFromAbilityTag(AbilityTag))
+	{
+		return CastChecked<UGDGameplayAbility>(AbilitySpec->Ability)->GetLockedDescription();
+	}
+
+	return TEXT("");
 }

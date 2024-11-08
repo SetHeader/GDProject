@@ -16,6 +16,7 @@
 #include "AbilitySystem/Abilities/GDGameplayAbility.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
+#include "AbilitySystem/Passive/PassiveNiagaraComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Game/LoadScreenSaveGame.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -48,6 +49,16 @@ AGDCharacterHero::AGDCharacterHero()
 	bUseControllerRotationRoll = false;
 	
 	CharacterClass = ECharacterClass::Elementalist;
+	
+	// EffectAttachComponent = CreateDefaultSubobject<USceneComponent>("EffectAttachComponent");
+	// EffectAttachComponent->SetupAttachment(RootComponent);
+	
+	HaloOfProtectionNiagaraComponent = CreateDefaultSubobject<UPassiveNiagaraComponent>("HaloOfProtectionNiagaraComponent");
+	HaloOfProtectionNiagaraComponent->SetupAttachment(RootComponent);
+	LifeSiphonNiagaraComponent = CreateDefaultSubobject<UPassiveNiagaraComponent>("LifeSiphonNiagaraComponent");
+	LifeSiphonNiagaraComponent->SetupAttachment(RootComponent);
+	ManaSiphonNiagaraComponent = CreateDefaultSubobject<UPassiveNiagaraComponent>("ManaSiphonNiagaraComponent");
+	ManaSiphonNiagaraComponent->SetupAttachment(RootComponent);
 }
 
 void AGDCharacterHero::PossessedBy(AController* NewController)
@@ -98,7 +109,8 @@ void AGDCharacterHero::RemoveIMC(UInputMappingContext* IMC)
 void AGDCharacterHero::LoadProgress()
 {
 	AGDGameModeBase* GameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(this));
-	if (GameMode)
+	UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC);
+	if (GameMode && GDASC)
 	{
 		ULoadScreenSaveGame* SaveData = GameMode->RetrieveInGameSaveData();
 		if (!SaveData) return;
@@ -109,17 +121,15 @@ void AGDCharacterHero::LoadProgress()
 			InitializeDefaultAttributes();
 			AddSetupAbilities();
 			AddSetupPassiveAbilities();
-			InitAbilityInfos();
+			GDASC->InitAbilityInfos();
 		}
 		// 后续加载需要用存档的数据
 		else
 		{
-			if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC))
-			{
-				// 初始被动能力不在技能树中，没有AbilityTag，不会存到存档里。
-				AddSetupPassiveAbilities();
-				GDASC->AddCharacterAbilitiesFromSaveData(SaveData);
-			}
+			// 初始被动能力不在技能树中，没有AbilityTag，不会存到存档里。
+			AddSetupAbilities();
+			AddSetupPassiveAbilities();
+			GDASC->InitAbilityInfosFromSaveData(SaveData);
 			
 			if (AGDPlayerState* PS = Cast<AGDPlayerState>(GetPlayerState()))
 			{
@@ -154,10 +164,7 @@ void AGDCharacterHero::InitAbilityActorInfo()
 	PS->GetAbilitySystemComponent()->InitAbilityActorInfo(PS, this);
 	ASC = PS->GetAbilitySystemComponent();
 	AS = PS->GetGDASBase();
-	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
-	OnAscRegistered.Broadcast(ASC);
-
-	ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterHero::StunTagChanged);
+	OnAbilitySystemComponentAvailable();
 	
 	// 初始化HUD
 	if (APlayerController* PC = Cast<APlayerController>(GetController())) {
@@ -165,8 +172,6 @@ void AGDCharacterHero::InitAbilityActorInfo()
 			HUD->InitOverlay(PC, PS, ASC, AS);
 		}
 	}
-
-	
 }
 
 int32 AGDCharacterHero::GetPlayerLevel_Implementation() const
@@ -299,6 +304,7 @@ void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
 				SavedAbility.AbilityStatus = AbilityInfo.StatusTag;
 				SavedAbility.AbilityTag = AbilityInfo.AbilityTag;
 				SavedAbility.AbilityType = AbilityInfo.AbilityType;
+				SavedAbility.AbilityLevel = AbilitySpec.Ability->GetAbilityLevel();
 				SaveData->SavedAbilities.Add(SavedAbility);
 			}
 			
@@ -307,7 +313,7 @@ void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
 	}
 }
 
-void AGDCharacterHero::OnRep_IsStunned()
+void AGDCharacterHero::OnRep_IsCanAttack()
 {
 	if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(GetAbilitySystemComponent()))
 	{
@@ -317,7 +323,7 @@ void AGDCharacterHero::OnRep_IsStunned()
 		BlockedTags.AddTag(FGDGameplayTags::Get().Player_Block_InputPressed);
 		BlockedTags.AddTag(FGDGameplayTags::Get().Player_Block_InputReleased);
 
-		if (bIsStunned)
+		if (!bCanMove)
 		{
 			GDASC->AddLooseGameplayTags(BlockedTags);
 		}
@@ -337,37 +343,5 @@ void AGDCharacterHero::Multicast_LevelUpParticles_Implementation() const
 		const FRotator ToCameraRotation = (CameraLocation - NiagaraLocation).Rotation();
 		LevelUpNiagraComponent->SetWorldRotation(ToCameraRotation);
 		LevelUpNiagraComponent->Activate(true);
-	}
-}
-
-void AGDCharacterHero::InitAbilityInfos()
-{
-	UAbilityInfo* AbilityInfos = UGDAbilitySystemLibrary::GetAbilityInfo(this);
-	UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC);
-	AGDPlayerState* PS = GetPlayerState<AGDPlayerState>();
-	for (FGDAbilityInfo& AbilityInfo : AbilityInfos->AbilityInfos)
-	{
-		// 对初始技能 设置InputTag、StatusTag
-		if (FGameplayAbilitySpec* AbilitySpec = GDASC->GetSpecFromAbilityTag(AbilityInfo.AbilityTag))
-		{
-			AbilityInfo.InputTag = UGDAbilitySystemLibrary::FindInputTagFromAbilitySpec(AbilitySpec).First();
-			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Equipped;
-			continue;
-		}
-		
-		// 设置Status，只对无效的状态进行初始化
-		if (AbilityInfo.StatusTag.IsValid())
-		{
-			return;
-		}
-		
-		if (PS->GetPlayerLevel() >= AbilityInfo.LevelRequirement)
-		{
-			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Eligible;
-		}
-		else
-		{
-			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Locked;
-		}
 	}
 }

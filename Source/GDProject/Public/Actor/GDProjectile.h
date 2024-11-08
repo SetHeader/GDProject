@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameplayEffectTypes.h"
 #include "AbilitySystem/GDAbilityTypes.h"
 #include "GameFramework/Actor.h"
 #include "GDProjectile.generated.h"

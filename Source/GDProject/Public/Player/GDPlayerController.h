@@ -7,6 +7,7 @@
 #include "GameplayTagContainer.h"
 #include "GDPlayerController.generated.h"
 
+class AMagicCircle;
 class USplineComponent;
 class UGDInputConfig;
 class UGDAbilitySystemComponent;
@@ -56,6 +57,12 @@ private:
 	// 浮动伤害组件类，用于动态的在敌人上面显示伤害文本
 	UPROPERTY(EditDefaultsOnly, Category="GDPlayerController")
 	TSubclassOf<UDamageTextComponent> DamageTextComponentClass;
+
+	UPROPERTY(EditDefaultsOnly, Category="GDPlayerController")
+	TSubclassOf<AMagicCircle> MagicCircleClass;
+
+	UPROPERTY()
+	TObjectPtr<AMagicCircle> MagicCircle;
 	
 public:
 	AGDPlayerController();
@@ -71,6 +78,12 @@ public:
 
 	inline UGDAbilitySystemComponent* GetASC();
 
+	UFUNCTION(BlueprintCallable)
+	void ShowMagicCircle(UMaterialInterface* DecalMaterial = nullptr);
+	UFUNCTION(BlueprintCallable)
+	void HideMagicCircle();
+
+	void UpdateMagicCircleLocation() const;
 	/**
 	 * 动态在指定角色上显示伤害数字。
 	 * @param Damage 伤害值

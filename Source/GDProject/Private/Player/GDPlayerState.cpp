@@ -3,11 +3,9 @@
 #include "Player/GDPlayerState.h"
 #include "AbilitySystemComponent.h"
 #include <AbilitySystem/AttributeSets/GDAttributeSet.h>
-
-#include "GDGameplayTags.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "GDProject/GDLogChannels.h"
+#include "GDProject/GDLog.h"
 #include "Tools/FCheckTool.h"
 
 AGDPlayerState::AGDPlayerState()

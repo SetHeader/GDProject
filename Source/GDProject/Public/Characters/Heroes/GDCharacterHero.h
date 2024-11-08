@@ -7,6 +7,7 @@
 #include "Interaction/PlayerInterface.h"
 #include "GDCharacterHero.generated.h"
 
+class UPassiveNiagaraComponent;
 class UCameraComponent;
 class USpringArmComponent;
 class UNiagaraComponent;
@@ -34,6 +35,20 @@ public:
 	TObjectPtr<USpringArmComponent> SpringArmComponent;
 	UPROPERTY(VisibleAnywhere, Category = "GDCharacterHero")
 	TObjectPtr<UCameraComponent> CameraComponent;
+
+	// 几种被动效果的特效
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPassiveNiagaraComponent> HaloOfProtectionNiagaraComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPassiveNiagaraComponent> LifeSiphonNiagaraComponent;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UPassiveNiagaraComponent> ManaSiphonNiagaraComponent;
+
+	// 被动效果特效的附加点
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USceneComponent> EffectAttachComponent;
 public:
 	AGDCharacterHero();
 	
@@ -70,7 +85,7 @@ public:
 	virtual void SaveProgress_Implementation(const FName& CheckpointTag) override;
 	/** End Player Interface */
 
-	virtual void OnRep_IsStunned() override;
+	virtual void OnRep_IsCanAttack() override;
 	
 	UFUNCTION(Reliable, NetMulticast)
 	void Multicast_LevelUpParticles() const;
@@ -81,7 +96,4 @@ protected:
 
 	// Server & Client 初始化gas系统
 	void InitAbilityActorInfo();
-
-	// 初始化技能信息
-	void InitAbilityInfos();
 };

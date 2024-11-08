@@ -31,7 +31,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "GDCharacterBase")
 	TObjectPtr<USkeletalMeshComponent> WeaponComponent;
-
+	
 	/// @brief 初始时 拥有的能力，在初始化时会给予能力
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "GDCharacterBase")
 	TArray<TSubclassOf<UGameplayAbility>> SetupAbilities;
@@ -82,24 +82,22 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UDebuffNiagaraComponent> StunDebuffComponent;
 	
-	FOnASCRegistered OnAscRegistered;
-	
 	/* 随从数量 */
 	int32 MinionCount = 0;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsBurning = false;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Combat")
 	bool bHitReacting = false;
 
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	UPROPERTY(BlueprintReadOnly)
 	bool bIsStunned = false;
 	// 是否可以移动
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsCanMove)
 	bool bCanMove = true;
 	// 是否可以攻击
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsStunned)
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing=OnRep_IsCanAttack)
 	bool bCanAttack = true;
 
 protected:
@@ -117,7 +115,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
 	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
 
+	FOnASCRegistered OnAscRegistered;
 	FOnDeathSignature OnDeathDelegate;
+	FOnDamageSignature OnDamageDelegate;
 	
 	bool bIsDead = false;
 	
@@ -152,12 +152,15 @@ public:
 	// 添加初始被动能力
 	void AddSetupPassiveAbilities();
 
+	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	
 	/** Combat Interface */
 	FVector GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag);
 	virtual UAnimMontage* GetHitReactMontage_Implementation() override;
 	virtual void Die() override;
 	bool IsDead_Implementation() const override;
 	virtual FOnDeathSignature& GetOnDeathDelegate() override;
+	virtual FOnDamageSignature& GetOnDamageDelegate() override;
 	AActor* GetAvatar_Implementation() override;
 	virtual TArray<FTaggedMontage> GetTaggedMontages_Implementation() override;
 	virtual UNiagaraSystem* GetBloodEffect_Implementation() const override;
@@ -167,10 +170,11 @@ public:
 	USkeletalMeshComponent* GetWeapon_Implementation();
 	/** End Combat Interface */
 	
-	virtual void StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
+	UFUNCTION()
+	virtual void OnRep_IsCanMove();
 
 	UFUNCTION()
-	virtual void OnRep_IsStunned();
+	virtual void OnRep_IsCanAttack();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	virtual void MulticastHandleDeath();
@@ -180,7 +184,7 @@ protected:
 	 * 当ASC组件可用时回调，需要子类实现
 	 */
 	UFUNCTION()
-	virtual void OnAbilitySystemComponentAvaliable();
+	virtual void OnAbilitySystemComponentAvailable();
 
 	/**
 	 * 统一处理标签变化的方法

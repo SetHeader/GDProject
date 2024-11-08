@@ -73,8 +73,9 @@ void AGDCharacterBase::PossessedBy(AController* NewController)
 void AGDCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	
-	DOREPLIFETIME(AGDCharacterBase, bIsStunned)
+
+	DOREPLIFETIME(AGDCharacterBase, bCanMove)
+	DOREPLIFETIME(AGDCharacterBase, bCanAttack)
 }
 
 void AGDCharacterBase::AddSetupAbilities()
@@ -96,6 +97,14 @@ void AGDCharacterBase::AddSetupPassiveAbilities()
 	}
 	
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddSetupPassiveAbilities(SetupPassiveAbilities);
+}
+
+float AGDCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+	AActor* DamageCauser)
+{
+	const float DamageTaken = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+	OnDamageDelegate.Broadcast(DamageTaken);
+	return DamageTaken;
 }
 
 FVector AGDCharacterBase::GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag)
@@ -129,6 +138,10 @@ void AGDCharacterBase::Die()
 {
 	// 分离武器，让武器掉到地上
 	WeaponComponent->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, true));;
+	bIsStunned =false;
+	bIsBurning = false;
+	bCanMove = false;
+	bCanAttack = false;
 	MulticastHandleDeath();
 }
 
@@ -140,6 +153,11 @@ bool AGDCharacterBase::IsDead_Implementation() const
 FOnDeathSignature& AGDCharacterBase::GetOnDeathDelegate()
 {
 	return OnDeathDelegate;
+}
+
+FOnDamageSignature& AGDCharacterBase::GetOnDamageDelegate()
+{
+	return OnDamageDelegate;
 }
 
 AActor* AGDCharacterBase::GetAvatar_Implementation()
@@ -177,14 +195,16 @@ USkeletalMeshComponent* AGDCharacterBase::GetWeapon_Implementation()
 	return WeaponComponent.Get();
 }
 
-void AGDCharacterBase::OnAbilitySystemComponentAvaliable()
+void AGDCharacterBase::OnAbilitySystemComponentAvailable()
 {
 	check(ASC);
+	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
+	OnAscRegistered.Broadcast(ASC);
 	if (HasAuthority())
 	{
-		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnGameplayTagChanged);
-		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Burn, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnGameplayTagChanged);
-		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &ThisClass::OnGameplayTagChanged);
+		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterBase::OnGameplayTagChanged);
+		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Burn, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterBase::OnGameplayTagChanged);
+		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterBase::OnGameplayTagChanged);
 	}
 }
 
@@ -195,25 +215,26 @@ void AGDCharacterBase::OnGameplayTagChanged(const FGameplayTag Tag, int32 Count)
 	{
 		bHitReacting = Count > 0;
 		int32 CountStun = ASC->GetTagCount(GameplayTags.Debuff_Stun);
-		GetCharacterMovement()->MaxWalkSpeed = Count + CountStun ? 0.f : BaseWalkSpeed;
+		bCanMove = Count + CountStun <= 0;
+		bCanAttack = bCanMove;
+		GetCharacterMovement()->MaxWalkSpeed = bCanMove ? BaseWalkSpeed : 0.f;
 	}
 	else if (Tag == GameplayTags.Debuff_Stun)
 	{
 		bIsStunned = Count > 0;
 		int32 CountHitReact = ASC->GetTagCount(GameplayTags.Debuff_Stun);
-		GetCharacterMovement()->MaxWalkSpeed = Count + CountHitReact ? 0.f : BaseWalkSpeed;
+		bCanMove = Count + CountHitReact <= 0;
+		bCanAttack = bCanMove;
+		GetCharacterMovement()->MaxWalkSpeed = bCanMove ? BaseWalkSpeed : 0.f;
 	}
 }
 
-void AGDCharacterBase::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+void AGDCharacterBase::OnRep_IsCanMove()
 {
-	bIsStunned = NewCount > 0;
-	GetCharacterMovement()->MaxWalkSpeed = bIsStunned ? 0.f : BaseWalkSpeed;
 }
 
-void AGDCharacterBase::OnRep_IsStunned()
+void AGDCharacterBase::OnRep_IsCanAttack()
 {
-	
 }
 
 void AGDCharacterBase::MulticastHandleDeath_Implementation()

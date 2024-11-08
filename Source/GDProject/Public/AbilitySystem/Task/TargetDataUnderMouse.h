@@ -29,9 +29,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Ability|Tasks", BlueprintInternalUseOnly,
 		meta=(DisplayName = "TargetDataUnderMouse", HidePin="OwningAbility", DefaultToSelf="OwningAbility"))
 	static UTargetDataUnderMouse* CreateTargetDataUnderMouse(UGameplayAbility* OwningAbility);
-
-protected:
+	
 	virtual void Activate() override;
+protected:
 
 	// 在客户端调用，用来向服务端发送鼠标信息
 	void SendMouseCursorData();

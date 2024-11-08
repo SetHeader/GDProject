@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystem/Data/AbilityInfo.h"
 #include "GameFramework/GameModeBase.h"
 #include "GDGameModeBase.generated.h"
 
@@ -17,17 +18,12 @@ UCLASS()
 class GDPROJECT_API AGDGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
-	
+
 public:
 	// 配置敌人和主角的默认属性、默认能力
 	UPROPERTY(EditDefaultsOnly, Category="GDGameModeBase")
 	TObjectPtr<UCharacterClassInfo> CharacterClassInfo;
 
-	// 配置主角的所有技能定义
-	UPROPERTY(EditDefaultsOnly, Category="GDGameModeBase")
-	TObjectPtr<UAbilityInfo> AbilityInfo;
-	
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ULoadScreenSaveGame> LoadScreenSaveGameClass;
 
@@ -43,6 +39,17 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly)
 	FName DefaultPlayerStartTag;
+
+	TObjectPtr<UAbilityInfo> GetAbilityInfo() {
+		if (!_AbilityInfo && AbilityInfoConfig) {
+			FScopeLock ThreadLock(&Mutex);
+			if (!_AbilityInfo) {
+				_AbilityInfo = NewObject<UAbilityInfo>();
+				_AbilityInfo->AbilityInfos = AbilityInfoConfig->AbilityInfos;
+			}
+		}
+		return _AbilityInfo;
+	} 
 	
 	ULoadScreenSaveGame* GetSaveSlotData(const FString& SlotName, int32 SlotIndex) const;
 
@@ -68,4 +75,15 @@ public:
 	
 protected:
 	virtual void BeginPlay() override;
+
+private:
+	FCriticalSection Mutex;
+	
+	// 配置主角的所有技能定义，不要修改配置的内容
+	UPROPERTY(EditDefaultsOnly, Category="GDGameModeBase")
+	TObjectPtr<const UAbilityInfo> AbilityInfoConfig;
+
+	UPROPERTY()
+	TObjectPtr<UAbilityInfo> _AbilityInfo;
+	
 };

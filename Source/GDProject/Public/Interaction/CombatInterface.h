@@ -12,6 +12,7 @@ class UAbilitySystemComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnASCRegistered, UAbilitySystemComponent*);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, AActor*, DeadActor);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnDamageSignature, float /*DamageAmount*/);
 
 enum class ECharacterClass : uint8;
 
@@ -62,7 +63,9 @@ public:
 	bool IsDead() const;
 
 	virtual FOnDeathSignature& GetOnDeathDelegate() = 0;
-
+	
+	virtual FOnDamageSignature& GetOnDamageDelegate() = 0;
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	AActor* GetAvatar();
 

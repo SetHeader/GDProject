@@ -4,9 +4,6 @@
 #include "GDAssetManager.h"
 #include <GDGameplayTags.h>
 
-#include "AbilitySystem/GDAbilitySystemComponent.h"
-#include "AbilitySystemGlobals.h"
-
 UGDAssetManager* UGDAssetManager::INSTANCE;
 
 UGDAssetManager& UGDAssetManager::Get()

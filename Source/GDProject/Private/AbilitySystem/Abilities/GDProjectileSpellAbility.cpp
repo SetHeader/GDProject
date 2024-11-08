@@ -5,7 +5,6 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GDGameplayTags.h"
 #include "Actor/GDProjectile.h"
 #include "Characters/GDCharacterBase.h"
 
@@ -45,7 +44,7 @@ void UGDProjectileSpellAbility::SpawnProjectile(const FVector Destination, const
 		GetOwningActorFromActorInfo(),
 		Cast<APawn>(GetOwningActorFromActorInfo()),
 		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-
+	
 	Projectile->DamageEffectParams = MakeDamageEffectParamsFromClassDefaults();
 	
 	Projectile->FinishSpawning(SpawnTransform);

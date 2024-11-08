@@ -38,9 +38,7 @@ void AGDCharacterMinion::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	
 	ASC->InitAbilityActorInfo(this, this);
-	OnAbilitySystemComponentAvaliable();
-	
-	CastChecked<UGDAbilitySystemComponent>(ASC)->OnAbilityActorInfoSet();
+	OnAbilitySystemComponentAvailable();
 
 	if (HasAuthority())
 	{
@@ -48,7 +46,7 @@ void AGDCharacterMinion::BeginPlay()
 		UGDAbilitySystemLibrary::GiveStartupAbilities(this, ASC, CharacterClass);
 		OnAscRegistered.Broadcast(ASC);
 	}
-	
+
 	if (UGDUserWidget* AuraUserWidget = Cast<UGDUserWidget>(WidgetComponent->GetUserWidgetObject()))
 	{
 		AuraUserWidget->SetWidgetController(this);
@@ -92,7 +90,6 @@ void AGDCharacterMinion::HighlightActor()
 	WeaponComponent->SetCustomDepthStencilValue(250);
 }
 
-
 void AGDCharacterMinion::UnHighlightActor()
 {
 	GetMesh()->SetRenderCustomDepth(false);
@@ -110,25 +107,15 @@ void AGDCharacterMinion::BroadcastInitialValues() const
 
 void AGDCharacterMinion::BindCallbacksToDependencies() const
 {
-	check(ASC);
-	check(AS);
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddLambda([this](const FOnAttributeChangeData& ChangedData)
-	{
-		OnHealthChanged.Broadcast(ChangedData.NewValue);
-	});
-	ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddLambda([this](const FOnAttributeChangeData& ChangedData)
-	{
-		OnMaxHealthChanged.Broadcast(ChangedData.NewValue);
-	});
-}
-
-void AGDCharacterMinion::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
-{
-	bHitReacting = NewCount > 0;
-	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.f : BaseWalkSpeed;
-	if (GDAIController)
-	{
-		GDAIController->GetBlackboardComponent()->SetValueAsBool(FName("HitReacting"), bHitReacting);
+	if (ASC && AS) {
+		ASC->GetGameplayAttributeValueChangeDelegate(AS->GetHealthAttribute()).AddLambda([this](const FOnAttributeChangeData& ChangedData)
+		{
+			OnHealthChanged.Broadcast(ChangedData.NewValue);
+		});
+		ASC->GetGameplayAttributeValueChangeDelegate(AS->GetMaxHealthAttribute()).AddLambda([this](const FOnAttributeChangeData& ChangedData)
+		{
+			OnMaxHealthChanged.Broadcast(ChangedData.NewValue);
+		});
 	}
 }
 

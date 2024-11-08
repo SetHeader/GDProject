@@ -1,7 +1,5 @@
 ﻿#pragma once
 
-#include "GDProject/GDLogChannels.h"
-
 struct FCheckTool
 {
 	FORCEINLINE static bool CheckAndSet(int& ValueToSet, const int NewValue)

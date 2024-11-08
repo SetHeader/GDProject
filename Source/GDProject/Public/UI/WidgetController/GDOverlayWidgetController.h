@@ -67,7 +67,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "GDOverlayWidgetController")
 	TObjectPtr<UDataTable> MessageWidgetDataTable;
 
-	UPROPERTY(EditAnywhere, Category = "GDOverlayWidgetController")
+	UPROPERTY()
 	TObjectPtr<UAbilityInfo> AbilityInfoAsset;
 	
 	UPROPERTY(BlueprintAssignable, Category = "GDOverlayWidgetController")
@@ -75,7 +75,10 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "GDOverlayWidgetController")
 	FAbilityInfoSignature OnAbilityInfoDelegate;
+	
 public:
+	void SetAbilityInfo(UAbilityInfo* AbilityInfo) { AbilityInfoAsset = AbilityInfo; }
+	
 	// 在客户端处理
 	void BindCallbacksToDependencies() const override;
 	// 在客户端处理

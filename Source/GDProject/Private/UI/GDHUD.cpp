@@ -36,6 +36,7 @@ void AGDHUD::InitOverlay(APlayerController* PlayerController, APlayerState* Play
 	
 	OverlayWidget = CreateWidget<UGDUserWidget>(GetWorld(), OverlayWidgetClass);
 	OverlayWidget->SetWidgetController(OverlayWidgetController);
+	OverlayWidgetController->SetAbilityInfo(UGDAbilitySystemLibrary::GetAbilityInfo(this));
 	OverlayWidgetController->BroadcastInitialValues();
 	
 	AttributeMenuWidgetController = NewObject<UGDAttributeMenuWidgetController>(this, AttributeMenuWidgetControllerClass);

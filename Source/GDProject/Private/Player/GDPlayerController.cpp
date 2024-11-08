@@ -8,10 +8,18 @@
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
+#include "Actor/MagicCircle.h"
+#include "Components/DecalComponent.h"
 #include "Components/SplineComponent.h"
+#include "Game/GDGameModeBase.h"
 #include "Input/GDInputComponent.h"
 #include "Interaction/EnemyInterface.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/GameMode.h"
+#include "GDProject/GDLog.h"
+#include "GDProject/GDProject.h"
+#include "Interaction/CombatInterface.h"
+#include "Kismet/GameplayStatics.h"
 #include "UI/Widget/DamageTextComponent.h"
 
 AGDPlayerController::AGDPlayerController()
@@ -43,6 +51,7 @@ void AGDPlayerController::PlayerTick(float DeltaTime)
 	
 	CursorTrace();
 	AutoRun();
+	UpdateMagicCircleLocation();
 }
 
 void AGDPlayerController::OnPossess(APawn* aPawn)
@@ -57,6 +66,37 @@ inline UGDAbilitySystemComponent* AGDPlayerController::GetASC()
 		ASC = Cast<UGDAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn()));
 	}
 	return ASC;
+}
+
+void AGDPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
+{
+	if (!IsValid(MagicCircle))
+	{
+		MagicCircle = GetWorld()->SpawnActor<AMagicCircle>(MagicCircleClass);
+		if (DecalMaterial)
+		{
+			MagicCircle->MagicCircleDecal->SetMaterial(0, DecalMaterial);
+			bShowMouseCursor = false;
+		}
+	}
+}
+
+void AGDPlayerController::HideMagicCircle()
+{
+	if (IsValid(MagicCircle))
+	{
+		MagicCircle->Destroy();
+		bShowMouseCursor = true;
+	}
+}
+
+void AGDPlayerController::UpdateMagicCircleLocation() const
+{
+	if (IsValid(MagicCircle))
+	{
+		MagicCircle->SetActorLocation(CursorHit.ImpactPoint);
+		MagicCircle->AddActorLocalRotation(FRotator(0.f, GetWorld()->DeltaRealTimeSeconds * 30.f, 0.f));
+	}
 }
 
 void AGDPlayerController::Client_ShowDamageNumber_Implementation(float Damage, ACharacter* Target, const bool bBlockedHit, const bool bCriticalHit)
@@ -84,6 +124,12 @@ void AGDPlayerController::SetupInputComponent()
 
 void AGDPlayerController::OnAbilityInputPressed(FGameplayTag InputTag)
 {
+	// 死了就不能操作
+	if (ICombatInterface::Execute_IsDead(GetPawn()))
+	{
+		return;
+	}
+	
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FGDGameplayTags::Get().Player_Block_InputPressed))
 	{
 		return;
@@ -111,6 +157,12 @@ void AGDPlayerController::OnAbilityInputPressed(FGameplayTag InputTag)
 
 void AGDPlayerController::OnAbilityInputReleased(FGameplayTag InputTag)
 {
+	// 死了就不能操作
+	if (ICombatInterface::Execute_IsDead(GetPawn()))
+	{
+		return;
+	}
+	
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FGDGameplayTags::Get().Player_Block_InputReleased))
 	{
 		return;
@@ -160,6 +212,12 @@ void AGDPlayerController::OnAbilityInputReleased(FGameplayTag InputTag)
 
 void AGDPlayerController::OnAbilityInputHeld(FGameplayTag InputTag)
 {
+	// 死了就不能操作
+	if (ICombatInterface::Execute_IsDead(GetPawn()))
+	{
+		return;
+	}
+	
 	if (GetASC() && GetASC()->HasMatchingGameplayTag(FGDGameplayTags::Get().Player_Block_InputHeld))
 	{
 		return;
@@ -197,12 +255,20 @@ void AGDPlayerController::CursorTrace()
 		LastActor = nullptr;
 		return;
 	}
-	
-	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
+
+	// 防止魔法阵固定在敌人身上
+	if (IsValid(MagicCircle))
+	{
+		GetHitResultUnderCursor(ECC_ExcludePlayers, false, CursorHit);
+	}
+	else
+	{
+		GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
+	}
 	if (!CursorHit.bBlockingHit) {
 		return;
 	}
-
+	
 	LastActor = ThisActor;
 	ThisActor = Cast<IEnemyInterface>(CursorHit.GetActor());
 	

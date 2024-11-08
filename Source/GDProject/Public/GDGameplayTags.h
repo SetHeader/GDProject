@@ -82,6 +82,10 @@ public:
 	FGameplayTag Cooldown_Lightning_Electrocute;
 	FGameplayTag Cooldown_Fire_FireBlast;
 	FGameplayTag Cooldown_Arcane_ArcaneShards;
+
+	FGameplayTag Abilities_Passive_HaloOfProtection;
+	FGameplayTag Abilities_Passive_LifeSiphon;
+	FGameplayTag Abilities_Passive_ManaSiphon;
 	
 	// 未解锁
 	FGameplayTag Abilities_Status_Locked;

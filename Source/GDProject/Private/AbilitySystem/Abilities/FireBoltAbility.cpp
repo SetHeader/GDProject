@@ -22,30 +22,28 @@ void UFireBoltAbility::SpawnProjectile(const FVector Destination, const FGamepla
 
 FString UFireBoltAbility::GetDescription(int32 InLevel)
 {
-	switch (InLevel)
-	{
-		case 1:
-			return TEXT("能够发射 1 个火球，增加少量伤害");
-		case 2:
-			return TEXT("能够发射 2 个火球，增加少量伤害");
-		case 3:
-			return TEXT("能够发射 3 个火球，增加少量伤害");
-		case 4:
-			return TEXT("能够发射 4 个火球，增加少量伤害");
-		case 5:
-			return TEXT("能够发射 5 个火球，增加少量伤害");
-		case 6:
-			return TEXT("能够发射 6 个火球，增加少量伤害");
-		case 7:
-			return TEXT("能够发射 7 个火球，增加少量伤害");
-		default:
-			return TEXT("");
-	}
+	int32 ProjectileCount = FMath::Min(InLevel, MaxNumProjectiles);
+	
+	FString ExtraDesc = FString::Printf(
+		TEXT("<Default>发射</><Special>%d</><Default>个火球，每个火球造成伤害: </><Damage>%d</>"),
+		ProjectileCount,
+		static_cast<int>(GetDamageAtLevel(InLevel)));
+	
+	return GetDescTemplate(InLevel, TEXT("火球术"), ExtraDesc);
 }
 
 FString UFireBoltAbility::GetNextLevelDescription(int32 InLevel)
 {
-	return GetDescription(InLevel + 1);
+	int32 NextLevel = InLevel + 1;
+	
+	int32 CurrProjectileCount = FMath::Min(InLevel, MaxNumProjectiles);
+	int32 NextProjectileCount = FMath::Min(NextLevel, MaxNumProjectiles);
+	
+	FString ExtraDesc = FString::Printf(TEXT("<Default>火球数量：</><Special>%d</> -> <Special>%d</>\n"),
+			CurrProjectileCount,
+			NextProjectileCount);
+	
+	return GetNextLevelDescTemplate(InLevel, ExtraDesc);
 }
 
 FString UFireBoltAbility::GetLockedDescription()

@@ -2,7 +2,6 @@
 
 
 #include "UI/Widget/GDUserWidget.h"
-#include "UI/WidgetController/GDWidgetController.h"
 
 void UGDUserWidget::SetWidgetController(UObject* InWidgetController)
 {

@@ -27,6 +27,13 @@ public:
 	virtual FString GetLockedDescription();
 
 protected:
-	float GetManaCost(float InLevel = 1.f) const;
-	float GetCooldown(float InLevel = 1.f) const;
+	/**
+	 * 获取指定等级的魔力消耗
+	 * @param InLevel InLevel默认为-1表示当前能力等级
+	 * @return 魔力消耗
+	 */
+	int32 GetManaCost(int32 InLevel = -1.f) const;
+	
+	// 获取指定等级的冷却，InLevel默认为-1表示当前能力等级
+	float GetCooldown(float InLevel = -1.f) const;
 };
