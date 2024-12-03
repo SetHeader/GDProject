@@ -1,15 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-using UnrealBuildTool;
-using System.Collections.Generic;
-
-public class GDProjectEditorTarget : TargetRules
-{
-	public GDProjectEditorTarget(TargetInfo Target) : base(Target)
-	{
-		Type = TargetType.Editor;
-		DefaultBuildSettings = BuildSettingsVersion.V5;
-
-		ExtraModuleNames.AddRange( new string[] { "GDProject" } );
-	}
-}
+version https://git-lfs.github.com/spec/v1
+oid sha256:3b2d285ce04b563debeef0a4fe4fd0ef97c23d72e1e2922b29d2e40466b63828
+size 401
