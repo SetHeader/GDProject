@@ -1,30 +1,3 @@
-﻿// Fill out your copyright notice in the Description page of Project Settings.
-
-#pragma once
-
-#include "CoreMinimal.h"
-#include "GameplayEffectExecutionCalculation.h"
-#include "ExecCalc_Damage.generated.h"
-
-/**
- * 自定义的伤害执行器，相比于MMC，ExecCalc更加灵活，支持同时修改多个属性。
- */
-UCLASS()
-class GDPROJECT_API UExecCalc_Damage : public UGameplayEffectExecutionCalculation
-{
-	GENERATED_BODY()
-public:
-	UExecCalc_Damage();
-
-	virtual void Execute_Implementation(const FGameplayEffectCustomExecutionParameters& ExecutionParams, FGameplayEffectCustomExecutionOutput& OutExecutionOutput) const override;
-
-	float CaptureAttributeValue(const FGameplayEffectCustomExecutionParameters& ExecutionParams, const FAggregatorEvaluateParameters& EvaluateParameters, const FGameplayEffectAttributeCaptureDefinition& AttrDef) const;
-
-	float GetCoeficientInCurve(const UObject* WorldContextObject, FName RealCurveName, float Time) const;
-
-	void DetermineDebuff(const FGameplayEffectCustomExecutionParameters& ExecutionParams,
-						 const FGameplayEffectSpec& Spec,
-						 FAggregatorEvaluateParameters EvaluationParameters,
-						 const TMap<FGameplayTag, FGameplayEffectAttributeCaptureDefinition>& InTagsToDefs) const;
-
-};
+version https://git-lfs.github.com/spec/v1
+oid sha256:bf63c0095df4b288bbbc39d6241c29ce2e3710a3c3d28461c98fa42bb57ae658
+size 1372
