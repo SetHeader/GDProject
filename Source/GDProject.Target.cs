@@ -1,3 +1,21 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:4f0f8ba6a04b306b470e5ec3ad255cafacc050a20661283f36ce81a2a2403b8e
-size 400
+// Fill out your copyright notice in the Description page of Project Settings.
+
+using UnrealBuildTool;
+using System.Collections.Generic;
+
+public class GDProjectTarget : TargetRules
+{
+	public GDProjectTarget(TargetInfo Target) : base(Target)
+	{
+		Type = TargetType.Game;
+		DefaultBuildSettings = BuildSettingsVersion.V5;
+
+		ExtraModuleNames.AddRange( new string[] { "GDProject" } );
+		RegisterModulesCreatedByRider();
+	}
+
+	private void RegisterModulesCreatedByRider()
+	{
+		ExtraModuleNames.AddRange(new string[] { "InventoryModule", "ToolModule" });
+	}
+}

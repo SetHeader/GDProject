@@ -5,7 +5,7 @@
 #include <AbilitySystem/AttributeSets/GDAttributeSet.h>
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "GDProject/GDLog.h"
+#include "GDLog.h"
 #include "Tools/FCheckTool.h"
 
 AGDPlayerState::AGDPlayerState()
@@ -32,7 +32,7 @@ void AGDPlayerState::SetLevel(int32 InLevel)
 {
     if (InLevel == Level || InLevel < 0)
 	{
-		UE_LOG(LogGD, Warning, TEXT("%hs\t NewLevel Error, NewLevel[%d]"), __FUNCTION__, InLevel);
+		GDLOG_W(TEXT("AGDPlayerState"), TEXT("%hs\t NewLevel Error, NewLevel[%d]"), __FUNCTION__, InLevel);
 		return;
 	}
 	Level = InLevel;
@@ -43,7 +43,7 @@ void AGDPlayerState::AddToLevel(int32 InLevel)
 {
     if (InLevel == 0)
 	{
-		UE_LOG(LogGD, Warning, TEXT("%hs\t InLevel Can't Equals Zero!"), __FUNCTION__);
+		GDLOG_W(TEXT("AGDPlayerState"), TEXT("%hs\t InLevel Can't Equals Zero!"), __FUNCTION__);
 		return;
 	}
 	Level += InLevel;
@@ -140,7 +140,7 @@ void AGDPlayerState::SetXP(int32 InXP)
 {
 	if (InXP == XP || InXP < 0)
 	{
-		UE_LOG(LogGD, Warning, TEXT("%hs\t NewXP Error, NewXP[%d]"), __FUNCTION__, InXP);
+		GDLOG(TEXT("AGDPlayerState"), TEXT("%hs\t NewXP Error, NewXP[%d]"), __FUNCTION__, InXP);
 		return;
 	}
 	XP = InXP;
@@ -151,7 +151,8 @@ void AGDPlayerState::AddToXP(int32 InXP)
 {
 	if (InXP == 0)
 	{
-		UE_LOG(LogGD, Warning, TEXT("%hs\t Addition Can't Equals Zero!"), __FUNCTION__);
+		GDLOG(TEXT("AGDPlayerState"), TEXT("%hs\t Addition Can't Equals Zero!"), __FUNCTION__);
+		
 		return;
 	}
 	XP += InXP;

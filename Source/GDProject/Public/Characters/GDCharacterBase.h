@@ -17,7 +17,8 @@ class UGDAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
 class UDebuffNiagaraComponent;
-
+class UInventoryComponent_Equipment;
+class UInventoryComponent;
 /**
 * 角色基类，提供 GAS 接口
 */
@@ -43,7 +44,13 @@ public:
 	TObjectPtr<UAbilitySystemComponent> ASC;
 	UPROPERTY()
 	TObjectPtr<UGDAttributeSet> AS;
-
+	// 背包组件
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
+	TObjectPtr<UInventoryComponent> InventoryComponent;
+	// 装备栏组件
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
+	TObjectPtr<UInventoryComponent_Equipment> EquipmentInventoryComponent;
+	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float BaseWalkSpeed = 600.f;
 	

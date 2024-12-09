@@ -22,7 +22,9 @@ public class GDProject : ModuleRules
 			"NavigationSystem", 
 			"Niagara", 
 			"AIModule", 
-			"ModelViewViewModel"
+			"ModelViewViewModel",
+			"InventoryModule",
+			"ToolModule"
 		});
 
 		// Uncomment if you are using Slate UI

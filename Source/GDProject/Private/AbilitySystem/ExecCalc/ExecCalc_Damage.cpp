@@ -190,7 +190,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	// 获取伤害计算中的各种系数
 	const float ArmorPenetrationCoeff = GetCoeficientInCurve(SourceAvatar, FName("ArmorPenetration"), SourceCombatLevel);
 	const float EffectiveArmorCoeff = GetCoeficientInCurve(SourceAvatar, FName("EffectiveArmor"), TargetCombatLevel);
-	// 暴击伤害抵抗系数，范围 0-1，该系统越小，造成的暴击伤害越低
+	// 暴击伤害抵抗系数，范围 0-1，该系数越小，造成的暴击伤害越低
 	const float CriticalHitResistanceCoeff = GetCoeficientInCurve(SourceAvatar, FName("CriticalHitResistance"), TargetCombatLevel);
 	
 	// 获取 Target的BlockChange，决定是否要格挡成功

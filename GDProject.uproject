@@ -1,3 +1,55 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:57819c607a3098171d74f57572b3b8d02fd3b7eb61e4679157eaad0f75972b2d
-size 716
+{
+	"FileVersion": 3,
+	"EngineAssociation": "{EA9EC578-40C0-4642-6E26-368E1BDEF52C}",
+	"Category": "",
+	"Description": "",
+	"Modules": [
+		{
+			"Name": "GDProject",
+			"Type": "Runtime",
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine",
+				"UMG",
+				"CoreUObject",
+				"GameplayAbilities",
+				"ModelViewViewModel"
+			]
+		},
+		{
+			"Name": "InventoryModule",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "ToolModule",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ModelingToolsEditorMode",
+			"Enabled": true,
+			"TargetAllowList": [
+				"Editor"
+			]
+		},
+		{
+			"Name": "GameplayAbilities",
+			"Enabled": true
+		},
+		{
+			"Name": "MotionWarping",
+			"Enabled": true
+		},
+		{
+			"Name": "GameplayInsights",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelViewViewModel",
+			"Enabled": true
+		}
+	]
+}

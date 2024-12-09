@@ -5,7 +5,7 @@
 
 #include "GameplayAbilitySpec.h"
 #include "GDGameplayTags.h"
-#include "GDProject/GDLog.h"
+#include "GDLog.h"
 
 FGameplayAbilitySpec FGDAbilityInfo::CreateAbilitySpec(int32 AbilityLevel) const
 {
@@ -31,7 +31,7 @@ FGDAbilityInfo UAbilityInfo::FindAbilityInfoForTag(const FGameplayTag& Tag, bool
 
 	if (bLogNotFound)
 	{
-		UE_LOG(LogGD, Error, TEXT("AbilityInfo\t Not Found Ability With Tag: %s"), *Tag.ToString())
+		GDLOG_E(TEXT("AbilityInfo"), TEXT("Not Found Ability With Tag: %s"), *Tag.ToString())
 	}
 
 	return FGDAbilityInfo();
@@ -49,7 +49,7 @@ FGDAbilityInfo* UAbilityInfo::FindAbilityInfoPtrForTag(const FGameplayTag& Tag, 
 
 	if (bLogNotFound)
 	{
-		UE_LOG(LogGD, Error, TEXT("AbilityInfo\t Not Found Ability With Tag: %s"), *Tag.ToString())
+		GDLOG_E(TEXT("AbilityInfo"), TEXT("Not Found Ability With Tag: %s"), *Tag.ToString())
 	}
 
 	return nullptr;

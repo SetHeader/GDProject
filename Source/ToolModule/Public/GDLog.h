@@ -2,13 +2,13 @@
 
 #include "CoreMinimal.h"
 
-DECLARE_LOG_CATEGORY_EXTERN(LogGD, Log, All)
+TOOLMODULE_API DECLARE_LOG_CATEGORY_EXTERN(LogGD, Log, All)
 
 #define GDLOG(Category, Format, ...) GDLog::Log(Category, Format, ##__VA_ARGS__);
 #define GDLOG_E(Category, Format, ...) GDLog::Error(Category, Format, ##__VA_ARGS__);
 #define GDLOG_W(Category, Format, ...) GDLog::Warning(Category, Format, ##__VA_ARGS__);
 
-class GDLog
+TOOLMODULE_API class GDLog
 {
 public:
 	template <typename T1, size_t N1, typename T2, size_t N2, typename... T>

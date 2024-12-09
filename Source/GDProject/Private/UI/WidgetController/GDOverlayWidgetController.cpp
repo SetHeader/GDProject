@@ -9,7 +9,7 @@
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
-#include "GDProject/GDLog.h"
+#include "GDLog.h"
 #include "Player/GDPlayerState.h"
 
 void UGDOverlayWidgetController::BindCallbacksToDependencies() const
@@ -141,7 +141,7 @@ void UGDOverlayWidgetController::OnXPChanged(int32 NewXP) const
 	
 	if (!GDPS->LevelUpInfo)
 	{
-		UE_LOG(LogGD, Error, TEXT("%hs\t Not Set LevelUpInfo"), __FUNCTION__);
+		GDLOG_E(TEXT("UGDOverlayWidgetController"), TEXT("%hs\t Not Set LevelUpInfo"), __FUNCTION__);
 		OnXPPercentChangedDelegate.Broadcast(0.f);
 		return;
 	}

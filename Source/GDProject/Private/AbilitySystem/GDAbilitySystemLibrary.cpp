@@ -11,7 +11,7 @@
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Characters/Minions/GDCharacterMinion.h"
 #include "Game/LoadScreenSaveGame.h"
-#include "GDProject/GDLog.h"
+#include "GDLog.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
@@ -338,7 +338,7 @@ int32 UGDAbilitySystemLibrary::GetCharacterLevel(const AActor* Character)
 		return ICombatInterface::Execute_GetPlayerLevel(Character);
 	}
 	
-	UE_LOG(LogGD, Warning, TEXT("%hs\t Character Is Not Valid"), __FUNCTION__)
+	GDLOG_W(TEXT("UGDAbilitySystemLibrary"), TEXT("%hs\t Character Is Not Valid"), __FUNCTION__)
 	return 1;
 }
 
