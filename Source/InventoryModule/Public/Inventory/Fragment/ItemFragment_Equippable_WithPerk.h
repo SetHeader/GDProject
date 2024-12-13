@@ -3,15 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Inventory/AbilitySet_GameplayAbility.h"
-#include "Inventory/InventoryItemFragment.h"
-#include "GameplayEffectTypes.h"
-#include "Inventory/InventorySettings.h"
-#include "ItemFragment_Equipment.generated.h"
-
-struct FAbilitySet;
-struct FAbilitySet_GrantHandles;
-class UAbilitySystemComponent;
+#include "ItemFragment_Equippable.h"
+#include "ItemFragment_Equippable_WithPerk.generated.h"
 
 // 对某个属性的操作
 USTRUCT(BlueprintType)
@@ -60,23 +53,30 @@ class INVENTORYMODULE_API UItemPerk_RandomEquipAttribute : public UItemPerk {
 };
 
 /**
- * 装备Fragment，如果物品有该Fragment，即表示该物品是个装备
+ * 可装备的物品片段。在原有功能的基础上提供了随机属性的功能。
  */
 UCLASS()
-class INVENTORYMODULE_API UItemFragment_Equipment : public UInventoryItemFragment {
+class INVENTORYMODULE_API UItemFragment_Equippable_WithPerk : public UItemFragment_Equippable {
 	GENERATED_BODY()
 
 public:
-	// TODO 逻辑有点怪，让抽象的Instance去依赖具体的Equipment。
-	friend class UInventoryItemInstance;
-	
-	virtual bool GiveToAbilitySystem(UAbilitySystemComponent* ASC, FAbilitySet_GrantHandles* OutHandleStorage, UInventoryItemInstance* SourceObject) const;
-	// 根据Perk来动态创建GE
-	FGameplayEffectSpecHandle MakeEquipmentPerkEffectSpec(UAbilitySystemComponent* ASC, const FItemPerkContainer& Perk) const;
-protected:
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Inventory")
-	FAbilitySet EquipmentAbilitySet;
+	/**
+	 * 把当前定义的能力给予到ASC中，并把能力句柄存放到OutHandleStorage中
+	 * @return 能力是否给予成功
+	 */
+	virtual bool GiveToAbilitySystem(UAbilitySystemComponent* ASC, FAbilitySet_GrantHandles* OutHandleStorage, UInventoryItemInstance* SourceObject) const override;
 
-	UPROPERTY(BlueprintReadOnly, EditDefaultsOnly, Category = "Inventory")
+	virtual void OnInstancedCreated(UInventoryItemInstance* Instance) override;
+	
+	// 根据Perk来动态创建GE，并把生成的随机属性存放到OutPerkContainer中
+	FGameplayEffectSpecHandle MakeEquipmentPerkEffectSpec(UAbilitySystemComponent* ASC, const FItemPerkContainer& OutPerkContainer) const;
+	
+private:
+	// 用于生成随机属性的工具类
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
 	TSoftClassPtr<UItemPerk> EquipmentPerk;
+	
+	// 随机属性生成后的存放容器
+	UPROPERTY(VisibleAnywhere, Category = "Inventory")
+	FItemPerkContainer PerkContainer;
 };

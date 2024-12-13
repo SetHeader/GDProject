@@ -1,12 +1,11 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Inventory/Fragment/ItemFragment_Equipment.h"
+#include "Inventory/Fragment/ItemFragment_Equippable_WithPerk.h"
 
 #include "AbilitySystemComponent.h"
 #include "GDLog.h"
 #include "Inventory/InventoryItemInstance.h"
-#include "Inventory/Fragment/ItemFragment_EquipmentInstance.h"
 
 
 FItemPerkContainer UItemPerk::GenerateItemPerk_Implementation() {
@@ -59,51 +58,31 @@ FItemPerkContainer UItemPerk_RandomEquipAttribute::GenerateItemPerk_Implementati
 	return PerkContainer;
 }
 
-bool UItemFragment_Equipment::GiveToAbilitySystem(UAbilitySystemComponent* ASC,
-                                                  FAbilitySet_GrantHandles* OutHandleStorage,
-                                                  UInventoryItemInstance* SourceObject) const {
-	if (!IsValid(ASC) || !OutHandleStorage || !IsValid(SourceObject)) 
-		return false;
+bool UItemFragment_Equippable_WithPerk::GiveToAbilitySystem(UAbilitySystemComponent* ASC,
+                                                            FAbilitySet_GrantHandles* OutHandleStorage,
+                                                            UInventoryItemInstance* SourceObject) const {
 
-	for (const auto& AbilityToGrant : EquipmentAbilitySet.GrantAbilities) {
-		if (AbilityToGrant.Ability) {
-			FGameplayAbilitySpec AbilitySpec(AbilityToGrant.Ability, AbilityToGrant.AbilityLevel);
-			AbilitySpec.SourceObject = SourceObject;
-
-			FGameplayAbilitySpecHandle AbilitySpecHandle;
-			
-			if (AbilityToGrant.bActivateOnce) 
-				AbilitySpecHandle = ASC->GiveAbilityAndActivateOnce(AbilitySpec);
-			else
-				AbilitySpecHandle = ASC->GiveAbility(AbilitySpec);
-			
-			OutHandleStorage->AddAbilitySpecHandle(AbilitySpecHandle);
-		}
-	}
-
-	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(SourceObject);
-	for (const auto& EffectToGrant : EquipmentAbilitySet.GrantEffects) {
-		if (EffectToGrant.GameplayEffect) {
-			FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(EffectToGrant.GameplayEffect, EffectToGrant.EffectLevel, EffectContextHandle);
-			FActiveGameplayEffectHandle ActiveEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data);
-			OutHandleStorage->AddGameplayEffectHandle(ActiveEffectHandle);
-		}
-	}
-
-	if (IsValid(EquipmentPerk.Get()) && IsValid(SourceObject)) {
-		if (const auto* EquipmentInstanceFragment = SourceObject->FindFragmentByClass<UItemFragment_EquipmentInstance>()) {
-			FGameplayEffectSpecHandle EffectSpecHandle = MakeEquipmentPerkEffectSpec(ASC, EquipmentInstanceFragment->PerkContainer);
+	if (Super::GiveToAbilitySystem(ASC, OutHandleStorage, SourceObject))
+		if (IsValid(EquipmentPerk.Get()) && IsValid(SourceObject)) {
+			FGameplayEffectSpecHandle EffectSpecHandle = MakeEquipmentPerkEffectSpec(ASC, PerkContainer);
 			const FActiveGameplayEffectHandle GameplayEffectHandle = ASC->ApplyGameplayEffectSpecToSelf(*EffectSpecHandle.Data);
 			OutHandleStorage->AddGameplayEffectHandle(GameplayEffectHandle);
 		}
-	}
-	
+
 	return true;
 }
 
-FGameplayEffectSpecHandle UItemFragment_Equipment::MakeEquipmentPerkEffectSpec(UAbilitySystemComponent* ASC,
-	const FItemPerkContainer& Perk) const {
+void UItemFragment_Equippable_WithPerk::OnInstancedCreated(UInventoryItemInstance* Instance) {
+	Super::OnInstancedCreated(Instance);
+
+	TSubclassOf<UItemPerk> Perk = EquipmentPerk.LoadSynchronous();
+	if (Perk) {
+		PerkContainer = Perk.GetDefaultObject()->GenerateItemPerk();
+	}
+}
+
+FGameplayEffectSpecHandle UItemFragment_Equippable_WithPerk::MakeEquipmentPerkEffectSpec(UAbilitySystemComponent* ASC,
+                                                                                         const FItemPerkContainer& OutPerkContainer) const {
 	if (!IsValid(ASC))
 		return FGameplayEffectSpecHandle();
 	
@@ -112,17 +91,17 @@ FGameplayEffectSpecHandle UItemFragment_Equipment::MakeEquipmentPerkEffectSpec(U
 	Effect->DurationPolicy = EGameplayEffectDurationType::Infinite;
 	
 	FGameplayModifierInfo MainAttributeModifier;
-	MainAttributeModifier.Attribute = Perk.MainAttributeDefine.Attribute;
-	MainAttributeModifier.ModifierOp = Perk.MainAttributeDefine.ModifierOp;
-	MainAttributeModifier.ModifierMagnitude = FScalableFloat(Perk.MainAttributeDefine.Value);
+	MainAttributeModifier.Attribute = OutPerkContainer.MainAttributeDefine.Attribute;
+	MainAttributeModifier.ModifierOp = OutPerkContainer.MainAttributeDefine.ModifierOp;
+	MainAttributeModifier.ModifierMagnitude = FScalableFloat(OutPerkContainer.MainAttributeDefine.Value);
 	
 	Effect->Modifiers.Add(MoveTemp(MainAttributeModifier));
 
-	for (const auto& AttributeDefine : Perk.SecondaryAttributeDefines) {
+	for (const auto& AttributeDefine : OutPerkContainer.SecondaryAttributeDefines) {
 		FGameplayModifierInfo AttributeModifier;
-		AttributeModifier.Attribute = Perk.MainAttributeDefine.Attribute;
-		AttributeModifier.ModifierOp = Perk.MainAttributeDefine.ModifierOp;
-		AttributeModifier.ModifierMagnitude = FScalableFloat(Perk.MainAttributeDefine.Value);
+		AttributeModifier.Attribute = AttributeDefine.Attribute;
+		AttributeModifier.ModifierOp = AttributeDefine.ModifierOp;
+		AttributeModifier.ModifierMagnitude = FScalableFloat(AttributeDefine.Value);
 	
 		Effect->Modifiers.Add(MoveTemp(AttributeModifier));
 	}

@@ -19,7 +19,4 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;
 	// End USubsystem
-
-	UFUNCTION(BlueprintCallable, Category="Inventory")
-	UInventoryItemInstance* GenerateItemInstance(UInventoryItemDefinition* ItemDefinition) const;
 };

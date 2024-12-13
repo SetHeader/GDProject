@@ -23,7 +23,8 @@ public class InventoryModule : ModuleRules
                 "GameplayAbilities", 
                 "GameplayTags",
                 "ToolModule",
-                "DeveloperSettings"
+                "DeveloperSettings", 
+                "Niagara"
             }
         );
     }

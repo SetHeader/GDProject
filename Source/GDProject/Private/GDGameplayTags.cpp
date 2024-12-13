@@ -241,6 +241,20 @@ void FGDGameplayTags::InitializeGameplayTags()
 	 */
 	Attribute_Primary = FGameplayTag::RequestGameplayTag(FName("Attribute.Primary"));
 	Abilities = FGameplayTag::RequestGameplayTag(FName("Abilities"));
+
+	/**
+	 *	物品类型
+	 */
+	InitTagVariable(Inventory_Category_Equipment, "Inventory.Category.Equipment", TEXT("装备"));
+	InitTagVariable(Inventory_Category_Consumable, "Inventory.Category.Consumable", TEXT("消耗品"));
+	InitTagVariable(Inventory_Category_Common, "Inventory.Category.Common", TEXT("普通物品"));
+	InitTagVariable(Inventory_Category_Equipment_Weapon, "Inventory.Category.Equipment.Weapon", TEXT("武器"));
+	InitTagVariable(Inventory_Category_Equipment_HeadArmor, "Inventory.Category.Equipment.HeadArmor", TEXT("头部防具，如帽子、头盔"));
+	InitTagVariable(Inventory_Category_Equipment_UpperBodyArmor, "Inventory.Category.Equipment.UpperBodyArmor", TEXT("上身防具，如布衣、盔甲"));
+	InitTagVariable(Inventory_Category_Equipment_LowerBodyArmor, "Inventory.Category.Equipment.LowerBodyArmor", TEXT("下身防具，如裤子、裙子"));
+	InitTagVariable(Inventory_Category_Equipment_UpperLimbArmor, "Inventory.Category.Equipment.UpperLimbArmor", TEXT("上肢防具，如护腕、手套"));
+	InitTagVariable(Inventory_Category_Equipment_LowerLimbArmor, "Inventory.Category.Equipment.LowerLimbArmor", TEXT("下肢防具，如护膝、鞋子"));
+	InitTagVariable(Inventory_Category_Equipment_Accessory, "Inventory.Category.Equipment.Accessory", TEXT("饰品，如项链、戒子"));
 	
 	/*
 	 * 广播初始化完毕

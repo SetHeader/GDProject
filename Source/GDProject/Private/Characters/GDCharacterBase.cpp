@@ -14,7 +14,6 @@
 #include "GDProject/GDProject.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-#include "Inventory/InventoryComponent_Equipment.h"
 
 AGDCharacterBase::AGDCharacterBase()
 {
@@ -38,9 +37,6 @@ AGDCharacterBase::AGDCharacterBase()
 
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
-
-	InventoryComponent = CreateDefaultSubobject<UInventoryComponent>(TEXT("InventoryComponent"));
-	EquipmentInventoryComponent = CreateDefaultSubobject<UInventoryComponent_Equipment>(TEXT("EquipmentInventoryComponent"));
 }
 
 void AGDCharacterBase::Dissolve()
@@ -90,7 +86,6 @@ void AGDCharacterBase::AddSetupAbilities()
 	}
 
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddSetupAbilities(SetupAbilities);
-	
 }
 
 void AGDCharacterBase::AddSetupPassiveAbilities()
@@ -103,7 +98,7 @@ void AGDCharacterBase::AddSetupPassiveAbilities()
 	CastChecked<UGDAbilitySystemComponent>(GetAbilitySystemComponent())->AddSetupPassiveAbilities(SetupPassiveAbilities);
 }
 
-float AGDCharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator,
+float AGDCharacterBase::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
 	const float DamageTaken = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -209,7 +204,6 @@ void AGDCharacterBase::OnAbilitySystemComponentAvailable()
 		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Effects_HitReact, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterBase::OnGameplayTagChanged);
 		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Burn, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterBase::OnGameplayTagChanged);
 		ASC->RegisterGameplayTagEvent(FGDGameplayTags::Get().Debuff_Stun, EGameplayTagEventType::NewOrRemoved).AddUObject(this, &AGDCharacterBase::OnGameplayTagChanged);
-		EquipmentInventoryComponent->SetOwnerAbilitySystemComponent(ASC);
 	}
 }
 

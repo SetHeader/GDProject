@@ -6,43 +6,48 @@
 #include "GDLog.h"
 #include "Inventory/InventoryItemDefinition.h"
 #include "Inventory/InventoryItemFragment.h"
-#include "Inventory/Fragment/ItemFragment_Equipment.h"
-#include "Inventory/Fragment/ItemFragment_EquipmentInstance.h"
 
-const UInventoryItemFragment* UInventoryItemInstance::FindFragmentByClass(
-	TSubclassOf<UInventoryItemFragment> FragmentClass) const {
+UInventoryItemFragment* UInventoryItemInstance::FindFragmentByClass(
+	TSubclassOf<UInventoryItemFragment> FragmentClass) {
 	if (FragmentClass == nullptr) {
 		return nullptr;
 	}
 
 	if (ItemDefinition) {
-		if (const UInventoryItemFragment* Fragment = ItemDefinition->FindFragmentByClass(FragmentClass)) {
+		if (UInventoryItemFragment* Fragment = ItemDefinition->FindFragmentByClass(FragmentClass)) {
 			return Fragment;
 		}
 	}
 	
-	for (const auto& Fragment : DynamicFragments) {
-		if (Fragment && Fragment.IsA(FragmentClass)) {
-			return Fragment;
-		}
-	}
-
 	return nullptr;
 }
 
-void UInventoryItemInstance::SetItemDifinition(TObjectPtr<UInventoryItemDefinition> InDefinition) {
-	ItemDefinition = InDefinition;
+TArray<UInventoryItemFragment*> UInventoryItemInstance::GetFragments() {
+	return ItemDefinition->GetFragments();
+}
 
-	DynamicFragments.Reset();
-	// TODO 让父类去依赖子类，不好，得优化一下。
-	if (const auto* EquipmentFragment = ItemDefinition->FindFragmentByClass<UItemFragment_Equipment>()) {
-		TSubclassOf<UItemPerk> Perk = EquipmentFragment->EquipmentPerk.LoadSynchronous();
-		if (Perk) {
-			UItemFragment_EquipmentInstance* EquipmentFragmentInstance = NewObject<UItemFragment_EquipmentInstance>(this);
-			EquipmentFragmentInstance->PerkContainer = Perk.GetDefaultObject()->GenerateItemPerk();
-			DynamicFragments.Add(EquipmentFragmentInstance);
-		}
+int32 UInventoryItemInstance::GetMaxStackCount() const {
+	return ItemDefinition ? ItemDefinition->MaxStackCount : 1;
+}
+
+FText UInventoryItemInstance::GetItemName() const {
+	return ItemDefinition ? ItemDefinition->ItemName : FText::FromString("null");
+}
+
+FGameplayTagContainer UInventoryItemInstance::GetItemTags() const {
+	return ItemDefinition ? ItemDefinition->ItemTags.CombinedTags : FGameplayTagContainer::EmptyContainer;
+}
+
+void UInventoryItemInstance::SetItemDifinition(TSubclassOf<UInventoryItemDefinition> InDefinition) {
+	ItemDefinition = NewObject<UInventoryItemDefinition>(this, InDefinition);
+
+	if (!ItemDefinition) {
+		GDLOG_W(TEXT("UInventoryItemInstance"), TEXT("ItemDefinition is nullptr"));
+		return;
 	}
+	
+	for (auto& ItemFragment : ItemDefinition->GetFragments()) 
+		ItemFragment->OnInstancedCreated(this);
 }
 
 void UInventoryItemInstance::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const {
@@ -51,4 +56,15 @@ void UInventoryItemInstance::GetOwnedGameplayTags(FGameplayTagContainer& TagCont
 	} else {
 		GDLOG_W(TEXT("UInventoryItemInstance"), TEXT("ItemDefinition is nullptr"));
 	}
+}
+
+FString UInventoryItemInstance::ToString() const {
+	if (ItemDefinition) 
+		return ItemDefinition->GetName();
+	
+	return GetName();
+}
+
+bool UInventoryItemInstance::operator==(const UInventoryItemInstance& Other) const {
+	return ItemDefinition && Other.ItemDefinition && *ItemDefinition == *Other.ItemDefinition;
 }

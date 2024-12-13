@@ -137,7 +137,21 @@ public:
 	FGameplayTag Player_Block_InputHeld;
 	FGameplayTag Player_Block_InputReleased;
 	FGameplayTag Player_Block_CursorTrace;
-	
+
+	/** 物品主类型 */
+	FGameplayTag Inventory_Category_Equipment;	// 装备
+	FGameplayTag Inventory_Category_Consumable;	// 消耗品
+	FGameplayTag Inventory_Category_Common;		// 普通物品
+	/** 物品的次类型 */
+	FGameplayTag Inventory_Category_Equipment_Weapon;			// 武器
+	FGameplayTag Inventory_Category_Equipment_HeadArmor;		// 头部防具，如帽子、头盔
+	FGameplayTag Inventory_Category_Equipment_UpperBodyArmor;	// 上身防具，如布衣、盔甲
+	FGameplayTag Inventory_Category_Equipment_LowerBodyArmor;	// 下身防具，如裤子、裙子
+	FGameplayTag Inventory_Category_Equipment_UpperLimbArmor;	// 上肢防具，如护腕、手套
+	FGameplayTag Inventory_Category_Equipment_LowerLimbArmor;	// 下肢防具，如护膝、鞋子
+	FGameplayTag Inventory_Category_Equipment_Accessory;		// 饰品，如项链、戒子
+
+
 private:
 	bool bInitialized = false;
 

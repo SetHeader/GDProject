@@ -17,8 +17,8 @@ class UGDAttributeSet;
 class UGameplayAbility;
 class UGameplayEffect;
 class UDebuffNiagaraComponent;
-class UInventoryComponent_Equipment;
-class UInventoryComponent;
+class UEquipmentManagerComponent;
+class UInventoryManagerComponent;
 /**
 * 角色基类，提供 GAS 接口
 */
@@ -44,12 +44,6 @@ public:
 	TObjectPtr<UAbilitySystemComponent> ASC;
 	UPROPERTY()
 	TObjectPtr<UGDAttributeSet> AS;
-	// 背包组件
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
-	TObjectPtr<UInventoryComponent> InventoryComponent;
-	// 装备栏组件
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
-	TObjectPtr<UInventoryComponent_Equipment> EquipmentInventoryComponent;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float BaseWalkSpeed = 600.f;
@@ -159,7 +153,7 @@ public:
 	// 添加初始被动能力
 	void AddSetupPassiveAbilities();
 
-	virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	/** Combat Interface */
 	FVector GetCombatSocketLocation_Implementation(const FGameplayTag& CombatSocketTag);

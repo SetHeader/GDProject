@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "../GDCharacterBase.h"
 #include "Interaction/PlayerInterface.h"
+#include "Interface/InventoryManagerInferface.h"
+#include "Interface/EquipmentManagerInferface.h"
 #include "GDCharacterHero.generated.h"
 
 class UPassiveNiagaraComponent;
@@ -19,8 +21,7 @@ class UDebuffNiagaraComponent;
 * 玩家角色，封装了增强输入功能，实现了GAS接口。
 */
 UCLASS()
-class GDPROJECT_API AGDCharacterHero : public AGDCharacterBase, public IPlayerInterface
-{
+class GDPROJECT_API AGDCharacterHero : public AGDCharacterBase, public IPlayerInterface, public IInventoryManagerInterface, public IEquipmentManagerInterface {
 	GENERATED_BODY()
 
 public:
@@ -49,6 +50,13 @@ public:
 	// 被动效果特效的附加点
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<USceneComponent> EffectAttachComponent;
+
+	// 背包组件
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
+	TObjectPtr<UInventoryManagerComponent> InventoryManagerComponent;
+	// 装备栏组件
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GDCharacterBase")
+	TObjectPtr<UEquipmentManagerComponent> EquipmentManagerComponent;
 public:
 	AGDCharacterHero();
 	
@@ -85,6 +93,13 @@ public:
 	virtual void SaveProgress_Implementation(const FName& CheckpointTag) override;
 	/** End Player Interface */
 
+	/** Begin IInventoryManagerInterface */
+	virtual UInventoryManagerComponent* GetInventoryManagerComponent() const override;
+	/** End IInventoryManagerInterface */
+	
+	/** Begin IEquipmentManagerInterface */
+	virtual UEquipmentManagerComponent* GetEquipmentManagerComponent() const override;
+	/** End IEquipmentManagerInterface */
 	virtual void OnRep_IsCanAttack() override;
 	
 	UFUNCTION(Reliable, NetMulticast)
