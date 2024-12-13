@@ -107,7 +107,7 @@ FGameplayEffectSpecHandle UItemFragment_Equipment::MakeEquipmentPerkEffectSpec(U
 	if (!IsValid(ASC))
 		return FGameplayEffectSpecHandle();
 	
-	TObjectPtr<UGameplayEffect> Effect = NewObject<UGameplayEffect>(GetTransientPackage(), FName("EquipmentEffect"));
+	TObjectPtr<UGameplayEffect> Effect = NewObject<UGameplayEffect>();
 	
 	Effect->DurationPolicy = EGameplayEffectDurationType::Infinite;
 	
