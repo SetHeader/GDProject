@@ -4,6 +4,7 @@
 #include "UI/GDHUD.h"
 
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
+#include "UI/Base/UISubsystem.h"
 #include "UI/Widget/GDUserWidget.h"
 #include "UI/WidgetController/GDAttributeMenuWidgetController.h"
 #include "UI/WidgetController/GDOverlayWidgetController.h"
@@ -30,6 +31,9 @@ void AGDHUD::InitOverlay(APlayerController* PlayerController, APlayerState* Play
 	checkf(OverlayWidgetClass, TEXT("OverlayWidgetClass 未定义"));
 	checkf(OverlayWidgetControllerClass, TEXT("WidgetControllerClass 未定义"));
 	checkf(AttributeMenuWidgetControllerClass, TEXT("WidgetControllerClass 未定义"));
+
+	UUISubsystem* Subsystem = PlayerController->GetLocalPlayer()->GetSubsystem<UUISubsystem>();
+	Subsystem->InitializeSubsystem();
 	
 	OverlayWidgetController = NewObject<UGDOverlayWidgetController>(this, OverlayWidgetControllerClass);
 	OverlayWidgetController->SetParams(PlayerController, PlayerState, AbilitySystemComponent, AttributeSet);
