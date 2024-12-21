@@ -18,6 +18,9 @@ USTRUCT(BlueprintType)
 struct FItemSlotInfo {
 	GENERATED_BODY()
 
+	UPROPERTY(BlueprintReadOnly, Category = "ItemSlotInfo")
+	int32 SlotId = 0;
+	
 	// 插槽tag，可以指定插槽类型，如武器、防具等
 	UPROPERTY(BlueprintReadOnly, Category = "ItemSlotInfo")
 	FGameplayTagContainer SlotTags = FGameplayTagContainer::EmptyContainer;

@@ -5,7 +5,6 @@
 
 #include "Inventory/Fragment/ItemFragment_Available.h"
 #include "Inventory/Fragment/ItemFragment_BaseInfo.h"
-#include "Inventory/Fragment/ItemFragment_Equippable.h"
 #include "Inventory/Fragment/ItemFragment_Pickupable.h"
 
 UItemDefinition_Available::UItemDefinition_Available(const FObjectInitializer& ObjectInitializer) {

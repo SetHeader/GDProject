@@ -48,9 +48,11 @@ FItemSlotInfo UInventoryStatics::GetItemSlotInfo(FInventoryItemSlotHandle SlotHa
 
 	FInventoryItemSlot ItemSlot = InventoryManagerComponent->GetItemSlot(SlotHandle);
 
+	SlotInfo.SlotId = ItemSlot.SlotId;
 	SlotInfo.SlotTags = ItemSlot.SlotTags;
 	if (!ItemSlot.ItemInstance)
 		return SlotInfo;
+
 
 	SlotInfo.ContainItem = true;
 	SlotInfo.StackCount = ItemSlot.StackCount;

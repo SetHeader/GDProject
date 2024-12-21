@@ -35,7 +35,12 @@ FText UInventoryItemInstance::GetItemName() const {
 }
 
 FGameplayTagContainer UInventoryItemInstance::GetItemTags() const {
-	return ItemDefinition ? ItemDefinition->ItemTags.CombinedTags : FGameplayTagContainer::EmptyContainer;
+	if (ItemDefinition) {
+		FGameplayTagContainer Results;
+		ItemDefinition->ItemTags.ApplyTo(Results);
+		return Results;
+	}
+	return FGameplayTagContainer::EmptyContainer;
 }
 
 void UInventoryItemInstance::SetItemDifinition(TSubclassOf<UInventoryItemDefinition> InDefinition) {
