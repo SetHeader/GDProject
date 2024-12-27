@@ -4,6 +4,7 @@
 #include "UI/Base/UISubsystem.h"
 
 #include "UI/Base/WidgetController.h"
+#include "UI/Base/WidgetViewModel.h"
 
 void UUISubsystem::InitializeSubsystem() {
 	if (bInitialized) return;
@@ -14,7 +15,11 @@ void UUISubsystem::InitializeSubsystem() {
 
 void UUISubsystem::PlayerControllerChanged(APlayerController* NewPlayerController) {
 	Super::PlayerControllerChanged(NewPlayerController);
-	CurrentPlayerController = NewPlayerController;
+	if (CurrentPlayerController != NewPlayerController) {
+		WidgetControllers.Empty();
+		WidgetViewModels.Empty();
+		CurrentPlayerController = NewPlayerController;
+	}
 }
 
 UWidgetController* UUISubsystem::FindOrCreateWidgetController(TSubclassOf<UWidgetController> WidgetControllerClass) {
@@ -34,4 +39,23 @@ UWidgetController* UUISubsystem::FindOrCreateWidgetController(TSubclassOf<UWidge
 
 UWidgetController* UUISubsystem::CreateWidgetController(TSubclassOf<UWidgetController> WidgetControllerClass) const {
 	return NewObject<UWidgetController>(CurrentPlayerController.Get(), WidgetControllerClass);
+}
+
+UWidgetViewModel* UUISubsystem::FindOrCreateWidgetViewModel(TSubclassOf<UWidgetViewModel> WidgetViewModelClass) {
+	TObjectPtr<UWidgetViewModel>* WidgetViewModel = WidgetViewModels.Find(WidgetViewModelClass);
+	
+	if (!WidgetViewModel) {
+		UWidgetViewModel* WidgetViewModelTemp = CreateWidgetViewModel(WidgetViewModelClass);
+		if (WidgetViewModelTemp) {
+			WidgetViewModelTemp->Initialize(CurrentPlayerController.Get());
+			WidgetViewModels.Add(WidgetViewModelClass, WidgetViewModelTemp);
+			return WidgetViewModelTemp;
+		}
+	}
+	
+	return WidgetViewModel ? *WidgetViewModel : nullptr;
+}
+
+UWidgetViewModel* UUISubsystem::CreateWidgetViewModel(TSubclassOf<UWidgetViewModel> WidgetViewModelClass) const {
+	return NewObject<UWidgetViewModel>(CurrentPlayerController.Get(), WidgetViewModelClass);
 }

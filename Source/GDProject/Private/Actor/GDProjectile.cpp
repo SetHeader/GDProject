@@ -131,6 +131,9 @@ void AGDProjectile::Destroyed()
 void AGDProjectile::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                    UPrimitiveComponent* OtherComp, int OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if (!HasAuthority()) 
+		return;
+	
 	// 不会对自己造成伤害
 	if (OtherActor == DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor())
 		return;
@@ -160,6 +163,9 @@ void AGDProjectile::OnEndOverlap(UPrimitiveComponent* OverlappedComponent,
 	AActor* OtherActor,
 	UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex) {
+	if (!HasAuthority()) 
+		return;
+	
 	if (OtherActor == DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor())
 		return;
 	

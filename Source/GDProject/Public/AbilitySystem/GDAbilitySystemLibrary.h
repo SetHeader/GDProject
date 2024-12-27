@@ -11,6 +11,7 @@
 
 struct FGameplayAbilitySpec;
 struct FGameplayEffectContextHandle;
+class UPlayerSaveGame;
 /**
  * 
  */
@@ -39,7 +40,7 @@ public:
 	static void InitializeDefaultAttributes(const UObject* WorldContextObject, ECharacterClass CharacterClass, float Level, UAbilitySystemComponent* ASC);
 	
 	UFUNCTION(BlueprintCallable, Category="AuraAbilitySystemLibrary|CharacterClassDefaults")
-	static void InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ULoadScreenSaveGame* SaveGame);
+	static void InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, UPlayerSaveGame* SaveGame);
 	
 	UFUNCTION(BlueprintCallable, Category="GDAbilitySystemLibrary|CharacterClassDefault")
 	static void GiveStartupAbilities(const UObject* WorldContextObject, UAbilitySystemComponent* ASC, ECharacterClass CharacterClass);
@@ -100,10 +101,10 @@ public:
 	static int32 GetXPRewardForClassAndLevel(const UObject* WorldContextObject, ECharacterClass CharacterClass, int32 CharacterLevel);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="GDAbilitySystemLibrary|Character")
-	static UCharacterClassInfo* GetCharacterClassInfo(const UObject* WorldContextObject);
+	static const UCharacterClassInfo* GetCharacterClassInfo(const UObject* WorldContextObject);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category="GDAbilitySystemLibrary|Character")
-	static UAbilityInfo* GetAbilityInfo(const UObject* WorldContextObject);
+	static const UAbilityInfo* GetAbilityInfo(const UObject* WorldContextObject);
 
 	/* 
 	 * Effect

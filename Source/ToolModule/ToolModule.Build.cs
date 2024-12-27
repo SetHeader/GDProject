@@ -17,7 +17,7 @@ public class ToolModule : ModuleRules
             new string[]
             {
                 "CoreUObject",
-                // "Engine",
+                "Engine",
                 // "Slate",
                 // "SlateCore"
             }

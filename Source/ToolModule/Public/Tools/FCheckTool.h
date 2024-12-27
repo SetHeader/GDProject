@@ -6,7 +6,7 @@ struct FCheckTool
 	{
 		if (ValueToSet == NewValue || NewValue <= 0)
 		{
-			UE_LOG(LogGD, Warning, TEXT("%hs\t Ignore Set Value. OldValue[%d]  NewValue[%d]"), __FUNCTION__, ValueToSet, NewValue)
+			SimpleLogger::WarningStatic(TEXT("FCheckTool"), TEXT("%hs\t Ignore Set Value. OldValue[%d]  NewValue[%d]"), __FUNCTION__, ValueToSet, NewValue);
 			return false;
 		}
 
@@ -18,7 +18,7 @@ struct FCheckTool
 	{
 		if (NewValue <= 0)
 		{
-			UE_LOG(LogGD, Warning, TEXT("%hs\t Ignore Add Value. OldValue[%d]  NewValue[%d]"), __FUNCTION__, ValueToAdd, NewValue)
+			SimpleLogger::WarningStatic(TEXT("FCheckTool"), TEXT("%hs\t Ignore Add Value. OldValue[%d]  NewValue[%d]"), __FUNCTION__, ValueToAdd, NewValue);
 			return false;
 		}
 

@@ -4,7 +4,7 @@
 #include "Inventory/Fragment/ItemFragment_Equippable_WithPerk.h"
 
 #include "AbilitySystemComponent.h"
-#include "GDLog.h"
+#include "GDProject/GDProject.h"
 #include "Inventory/InventoryItemInstance.h"
 
 

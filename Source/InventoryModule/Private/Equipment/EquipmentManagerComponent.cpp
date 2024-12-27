@@ -4,8 +4,7 @@
 #include "Equipment/EquipmentManagerComponent.h"
 
 #include "AbilitySystemComponent.h"
-#include "GDLog.h"
-#include "IDetailTreeNode.h"
+#include "GDProject/GDProject.h"
 #include "Inventory/InventoryManagerComponent.h"
 #include "Inventory/InventoryItemInstance.h"
 #include "Inventory/Fragment/ItemFragment_Equippable.h"

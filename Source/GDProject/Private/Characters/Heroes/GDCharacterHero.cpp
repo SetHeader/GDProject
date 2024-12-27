@@ -19,12 +19,13 @@
 #include "AbilitySystem/Passive/PassiveNiagaraComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Equipment/EquipmentManagerComponent.h"
-#include "Game/LoadScreenSaveGame.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Inventory/InventoryManagerComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Niagara\Public\NiagaraComponent.h"
+#include "Subsystem/SaveGame/PlayerSaveGame.h"
+#include "Subsystem/SaveGame/SaveGameSubsystem.h"
 
 AGDCharacterHero::AGDCharacterHero()
 {
@@ -66,25 +67,43 @@ AGDCharacterHero::AGDCharacterHero()
 	EquipmentManagerComponent = CreateDefaultSubobject<UEquipmentManagerComponent>(TEXT("EquipmentInventoryComponent"));
 }
 
-void AGDCharacterHero::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
+void AGDCharacterHero::InitializeOnAuth() {
+	Super::InitializeOnAuth();
 	// 在服务端初始化
 	InitAbilityActorInfo();
-	LoadProgress();
-
-	if (AGDGameModeBase* AuraGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(this)))
-	{
-		AuraGameMode->LoadWorldState(GetWorld());
+	// 即在监听服务器和Standalone上
+	if (GetNetMode() != NM_DedicatedServer) {
+		USaveGameSubsystem* SaveGameSubsystem = UGameInstance::GetSubsystem<USaveGameSubsystem>(GetGameInstance());
+		if (SaveGameSubsystem) {
+			ServerLoadProgress(SaveGameSubsystem->GetLoadedPlayerSaveGame());
+		} else {
+			ServerLoadProgress(nullptr);
+		}
+		// 初始化HUD
+		if (APlayerController* PC = Cast<APlayerController>(GetController())) {
+			if (AGDHUD* HUD = Cast<AGDHUD>(PC->GetHUD())) {
+				HUD->InitOverlay(PC, GetPlayerState(), ASC, AS);
+			}
+		}
 	}
 }
 
-void AGDCharacterHero::OnRep_PlayerState()
-{
-	Super::OnRep_PlayerState();
-
+void AGDCharacterHero::InitializeOnNonAuth() {
+	Super::InitializeOnNonAuth();
 	// 在客户端初始化
 	InitAbilityActorInfo();
+	USaveGameSubsystem* SaveGameSubsystem = UGameInstance::GetSubsystem<USaveGameSubsystem>(GetGameInstance());
+	if (SaveGameSubsystem) {
+		ServerLoadProgress(SaveGameSubsystem->GetLoadedPlayerSaveGame());
+	} else {
+		ServerLoadProgress(nullptr);
+	}
+	// 初始化HUD
+	if (APlayerController* PC = Cast<APlayerController>(GetController())) {
+		if (AGDHUD* HUD = Cast<AGDHUD>(PC->GetHUD())) {
+			HUD->InitOverlay(PC, GetPlayerState(), ASC, AS);
+		}
+	}
 }
 
 void AGDCharacterHero::AddIMC(UInputMappingContext* IMC, int32 Priority)
@@ -111,17 +130,13 @@ void AGDCharacterHero::RemoveIMC(UInputMappingContext* IMC)
 	}
 }
 
-void AGDCharacterHero::LoadProgress()
-{
-	AGDGameModeBase* GameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(this));
+void AGDCharacterHero::ServerLoadProgress_Implementation(UPlayerSaveGame* SaveData) {
 	UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC);
-	if (GameMode && GDASC)
+	
+	if (GDASC)
 	{
-		ULoadScreenSaveGame* SaveData = GameMode->RetrieveInGameSaveData();
-		if (!SaveData) return;
-
 		// 第一次加载就使用默认属性
-		if (SaveData->bFirstTimeLoadIn)
+		if (!SaveData || SaveData->bFirstTimeLoadIn)
 		{
 			InitializeDefaultAttributes();
 			AddSetupAbilities();
@@ -170,13 +185,6 @@ void AGDCharacterHero::InitAbilityActorInfo()
 	AS = PS->GetGDASBase();
 	OnAbilitySystemComponentAvailable();
 	EquipmentManagerComponent->SetOwnerAbilitySystemComponent(ASC);
-	
-	// 初始化HUD
-	if (APlayerController* PC = Cast<APlayerController>(GetController())) {
-		if (AGDHUD* HUD = Cast<AGDHUD>(PC->GetHUD())) {
-			HUD->InitOverlay(PC, PS, ASC, AS);
-		}
-	}
 }
 
 int32 AGDCharacterHero::GetPlayerLevel_Implementation() const
@@ -269,10 +277,10 @@ void AGDCharacterHero::LevelUp_Implementation()
 
 void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
 {
-	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	if (GameModeBase)
+	USaveGameSubsystem* SaveGameSubsystem = UGameInstance::GetSubsystem<USaveGameSubsystem>(GetGameInstance());
+	if (SaveGameSubsystem)
 	{
-		ULoadScreenSaveGame* SaveData = GameModeBase->RetrieveInGameSaveData();
+		UPlayerSaveGame* SaveData = SaveGameSubsystem->CreatePlayerGameSave(SaveGameSubsystem->LoadSlotName, SaveGameSubsystem->LoadSlotIndex);
 		AGDPlayerState* PS = Cast<AGDPlayerState>(GetPlayerState());
 		if (SaveData && PS)
 		{
@@ -288,16 +296,15 @@ void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
 			SaveData->Vigor = UGDAttributeSet::GetVigorAttribute().GetNumericValue(AS);
 			SaveData->bFirstTimeLoadIn = false;
 
-			UAbilityInfo* AbilityInfos = UGDAbilitySystemLibrary::GetAbilityInfo(this);
 			UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(ASC);
+			UAbilityInfo* AbilityInfos = GDASC->AbilityInfo;
+			
 			SaveData->SavedAbilities.Empty();
 
 			for (const auto& AbilityInfo : AbilityInfos->AbilityInfos) {
 				auto AbilitySpec = GDASC->GetSpecFromAbilityTag(AbilityInfo.AbilityTag);
 				FSavedAbility SavedAbility;
-
 				SavedAbility.AbilityLevel = AbilitySpec ? AbilitySpec->Level : 1;
-				
 				SavedAbility.GameplayAbility = AbilityInfo.Ability;
 				SavedAbility.AbilitySlot = AbilityInfo.InputTag;
 				SavedAbility.AbilityStatus = AbilityInfo.StatusTag;
@@ -306,7 +313,7 @@ void AGDCharacterHero::SaveProgress_Implementation(const FName& CheckpointTag)
 				SaveData->SavedAbilities.Add(SavedAbility);
 			}
 			
-			GameModeBase->SaveInGameProgressData(SaveData);
+			SaveGameSubsystem->SetPlayerSaveGame(SaveData);
 		}
 	}
 }

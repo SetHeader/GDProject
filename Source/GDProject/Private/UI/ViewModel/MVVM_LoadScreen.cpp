@@ -3,26 +3,48 @@
 
 #include "UI/ViewModel/MVVM_LoadScreen.h"
 
+#include "Game/GDEntryGameModeBase.h"
+#include "Game/GDEntryGameSession.h"
 #include "Game/GDGameModeBase.h"
-#include "Game/GDGameInstance.h"
+#include "GDProject/GDProject.h"
 #include "Kismet/GameplayStatics.h"
+#include "Subsystem/SaveGame/PlayerSaveGame.h"
+#include "Subsystem/SaveGame/SaveGameSubsystem.h"
+#include "UI/Base/UISubsystem.h"
 #include "UI/ViewModel/MVVM_LoadSlot.h"
+#include "UI/WidgetController/GDMainMenuWidgetController.h"
 
-void UMVVM_LoadScreen::InitializeLoadSlots()
+
+void UMVVM_LoadScreen::OnInitialized()
 {
+	MainMenuWidgetController = Cast<UGDMainMenuWidgetController>(GetUISubsystem()->FindOrCreateWidgetController(UGDMainMenuWidgetController::StaticClass()));
+	
 	// 仅指定存档槽的名字和下标，详细数据需要在LoadData中加载
-	LoadSlot_0 = NewObject<UMVVM_LoadSlot>(this, LoadSlotViewModelClass);
-	LoadSlot_0->LoadSlotName = FString("LoadSlot_0");
-	LoadSlot_0->SlotIndex = 0;
-	LoadSlots.Add(0, LoadSlot_0);
-	LoadSlot_1 = NewObject<UMVVM_LoadSlot>(this, LoadSlotViewModelClass);
-	LoadSlot_1->LoadSlotName = FString("LoadSlot_1");
-	LoadSlot_1->SlotIndex = 1;
-	LoadSlots.Add(1, LoadSlot_1);
-	LoadSlot_2 = NewObject<UMVVM_LoadSlot>(this, LoadSlotViewModelClass);
-	LoadSlot_2->LoadSlotName = FString("LoadSlot_2");
-	LoadSlot_2->SlotIndex = 2;
-	LoadSlots.Add(2, LoadSlot_2);
+	for (int32 SlotIndex = 0; SlotIndex < 3; ++SlotIndex) {
+		FString SlotName = FString("LoadSlot_") + FString::FromInt(SlotIndex);
+		
+		UMVVM_LoadSlot* LoadSlot = NewObject<UMVVM_LoadSlot>(this, LoadSlotViewModelClass);
+		UPlayerSaveGame* SaveObject = SaveGameSubsystem->GetPlayerSaveGame(SlotName, SlotIndex);
+		
+		LoadSlot->LoadSlotName = SlotName;
+		LoadSlot->SlotIndex = SlotIndex;
+
+		if (SaveObject) {
+			const FString PlayerName = SaveObject->PlayerName;
+			LoadSlot->PlayerStartTag = SaveObject->PlayerStartTag;
+			LoadSlot->SlotStatus = SaveObject->SaveSlotStatus;
+			LoadSlot->SetPlayerName(SaveObject->PlayerName);
+			LoadSlot->SetMapName(SaveObject->MapName);
+			LoadSlot->InitializeSlot();
+		} else {
+			LoadSlot->SlotStatus = Vacant;
+		}
+		
+		LoadSlots.Add(SlotIndex, LoadSlot);
+	}
+	
+	SaveGameSubsystem = GetSaveGameSubsystem();
+	
 }
 
 UMVVM_LoadSlot* UMVVM_LoadScreen::GetLoadSlotViewModelByIndex(int32 Index) const
@@ -35,36 +57,32 @@ void UMVVM_LoadScreen::NewGameButtonPressed(int32 Slot)
 	LoadSlots[Slot]->SetWidgetSwitcherIndex.Broadcast(1);
 }
 
-void UMVVM_LoadScreen::NewSlotButtonPressed(int32 Slot, const FString& EnteredName)
+void UMVVM_LoadScreen::NewSlotButtonPressed(int32 SlotIndex, const FString& PlayerName)
 {
-	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	// 多人模式中没有GameModeBase
-	if (!IsValid(GameModeBase))
-	{
-		GEngine->AddOnScreenDebugMessage(1, 15.f, FColor::Magenta, FString("Please switch to Single Player"));
+	AGDEntryGameModeBase* GameModeBase = Cast<AGDEntryGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (!GameModeBase) {
+		GDLog::ErrorStatic(TEXT("UMVVM_LoadScreen"), TEXT("GameModeBase Not Found"));
 		return;
 	}
-
-	LoadSlots[Slot]->SetMapName(GameModeBase->DefaultMapName);
-	LoadSlots[Slot]->SetPlayerName(EnteredName);
-	LoadSlots[Slot]->SlotStatus = Taken;
-	LoadSlots[Slot]->PlayerStartTag = GameModeBase->DefaultPlayerStartTag;
-	GameModeBase->SaveSlotData(LoadSlots[Slot], Slot);
 	
-	LoadSlots[Slot]->InitializeSlot();
-
-	UGDGameInstance* GameInstance = Cast<UGDGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	GameInstance->LoadSlotIndex = Slot;
-	GameInstance->LoadSlotName = LoadSlots[Slot]->LoadSlotName;
-	GameInstance->PlayerStartTag = GameModeBase->DefaultPlayerStartTag;
+	LoadSlots[SlotIndex]->SetMapName(GameModeBase->DefaultMapName);
+	if (PlayerName.IsEmpty()) {
+		LoadSlots[SlotIndex]->SetPlayerName(GameModeBase->DefaultUserName);
+	}
+	LoadSlots[SlotIndex]->SlotStatus = Taken;
+	LoadSlots[SlotIndex]->PlayerStartTag = GameModeBase->DefaultPlayerStartTag;
+	
+	SaveSlotData(LoadSlots[SlotIndex], SlotIndex);
+	
+	LoadSlots[SlotIndex]->InitializeSlot();
 }
 
-void UMVVM_LoadScreen::SelectSlotButtonPressed(int32 Slot)
+void UMVVM_LoadScreen::SelectSlotButtonPressed(int32 SlotIndex)
 {
 	SlotSelected.Broadcast();
 	for (TTuple<int, UMVVM_LoadSlot*> LoadSlot : LoadSlots)
 	{
-		if (LoadSlot.Key == Slot)
+		if (LoadSlot.Key == SlotIndex)
 		{
 			LoadSlot.Value->EnableSelectSlotButton.Broadcast(true);
 		}
@@ -73,14 +91,19 @@ void UMVVM_LoadScreen::SelectSlotButtonPressed(int32 Slot)
 			LoadSlot.Value->EnableSelectSlotButton.Broadcast(false);
 		}
 	}
-	SelectedSlot = LoadSlots[Slot];
+	SelectedSlot = LoadSlots[SlotIndex];
 }
 
 void UMVVM_LoadScreen::DeleteButtonPressed()
 {
+	if (!SaveGameSubsystem) {
+		GDLog::ErrorStatic(TEXT("UMVVM_LoadScreen"), TEXT("SaveGameSubsystem Not Found"));
+		return;
+	}
+	
 	if (SelectedSlot)
 	{
-		AGDGameModeBase::DeleteSlot(SelectedSlot->LoadSlotName, SelectedSlot->SlotIndex);
+		SaveGameSubsystem->DeletePlayerSaveGame(SelectedSlot->LoadSlotName, SelectedSlot->SlotIndex);
 		SelectedSlot->SlotStatus = Vacant;
 		SelectedSlot->InitializeSlot();
 		SelectedSlot->EnableSelectSlotButton.Broadcast(true);
@@ -89,44 +112,49 @@ void UMVVM_LoadScreen::DeleteButtonPressed()
 
 void UMVVM_LoadScreen::PlayButtonPressed()
 {
-	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
-	UGDGameInstance* GameInst = Cast<UGDGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-	
-	// 多人模式中没有GameModeBase
-	if (!IsValid(GameModeBase))
-	{
-		GEngine->AddOnScreenDebugMessage(1, 15.f, FColor::Magenta, FString("Please switch to Single Player"));
+	if (!SaveGameSubsystem) {
+		GDLog::ErrorStatic(TEXT("UMVVM_LoadScreen"), TEXT("SaveGameSubsystem Not Found"));
 		return;
 	}
 	
-	GameInst->PlayerStartTag = SelectedSlot->PlayerStartTag;
-	GameInst->LoadSlotName = SelectedSlot->LoadSlotName;
-	GameInst->LoadSlotIndex = SelectedSlot->SlotIndex;
-	
-	GameModeBase->DefaultPlayerStartTag = GameInst->PlayerStartTag;
-	
-	if (IsValid(SelectedSlot)) {
-		GameModeBase->TravelToMap(SelectedSlot);
+	if (!IsValid(SelectedSlot)) {
+		GDLog::ErrorStatic(TEXT("UMVVM_LoadScreen"), TEXT("SelectedSlot Not Found"));
+		return;
 	}
+	
+	AGDEntryGameModeBase* GameModeBase = Cast<AGDEntryGameModeBase>(UGameplayStatics::GetGameMode(GetWorld()));
+	if (!GameModeBase) {
+		GDLog::ErrorStatic(TEXT("UMVVM_LoadScreen"), TEXT("GameModeBase Not Found"));
+		return;
+	}
+	
+	SaveGameSubsystem->PlayerStartTag = SelectedSlot->PlayerStartTag;
+	SaveGameSubsystem->LoadSlotName = SelectedSlot->LoadSlotName;
+	SaveGameSubsystem->LoadSlotIndex = SelectedSlot->SlotIndex;
+	
+	OnPlayButtonClickedDelegate.Broadcast();
 }
 
-void UMVVM_LoadScreen::LoadData()
-{
-	AGameModeBase* GMB = UGameplayStatics::GetGameMode(this);
-	AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(GMB);
-	if (!GameModeBase) return;
+USaveGameSubsystem* UMVVM_LoadScreen::GetSaveGameSubsystem() const {
+	return UGameInstance::GetSubsystem<USaveGameSubsystem>(UGameplayStatics::GetGameInstance(this));
+}
 
-	// 把SaveGame存档数据转移到对应UMVVM_LoadSlot插槽中。
-	for (TTuple<int, UMVVM_LoadSlot*> LoadSlot : LoadSlots)
+void UMVVM_LoadScreen::SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex) {
+	// 先删除再保存
+	if (UGameplayStatics::DoesSaveGameExist(LoadSlot->LoadSlotName, SlotIndex))
 	{
-		ULoadScreenSaveGame* SaveObject = GameModeBase->GetSaveSlotData(LoadSlot.Value->LoadSlotName, LoadSlot.Key);
-		
-		const FString PlayerName = LoadSlot.Value->GetPlayerName();
-
-		LoadSlot.Value->PlayerStartTag = SaveObject->PlayerStartTag;
-		LoadSlot.Value->SlotStatus = SaveObject->SaveSlotStatus;
-		LoadSlot.Value->SetPlayerName(SaveObject->PlayerName);
-		LoadSlot.Value->SetMapName(SaveObject->MapName);
-		LoadSlot.Value->InitializeSlot();
+		UGameplayStatics::DeleteGameInSlot(LoadSlot->LoadSlotName, SlotIndex);
 	}
+
+	if (!SaveGameSubsystem) {
+		GDLog::ErrorStatic(TEXT("UMVVM_LoadScreen"), TEXT("SaveGameSubsystem Not Found"));
+		return;
+	}
+	USaveGame* SaveGameObject = SaveGameSubsystem->CreatePlayerGameSave(LoadSlot->LoadSlotName, SlotIndex);
+	UPlayerSaveGame* SaveGame = Cast<UPlayerSaveGame>(SaveGameObject);
+	SaveGame->PlayerName = LoadSlot->GetPlayerName();
+	SaveGame->MapName = LoadSlot->GetMapName();
+	SaveGame->SaveSlotStatus = Taken;
+	SaveGame->PlayerStartTag = LoadSlot->PlayerStartTag;
+	SaveGameSubsystem->SetPlayerSaveGame(SaveGame);
 }

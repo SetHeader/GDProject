@@ -3,46 +3,51 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MVVMViewModelBase.h"
+#include "UI/Base/WidgetViewModel.h"
 #include "MVVM_LoadScreen.generated.h"
 
+class UGDMainMenuWidgetController;
+class UMVVM_LoadSlot;
+class USaveGameSubsystem;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSlotSelected);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPlayButtonClicked);
 
 /**
  * 
  */
 UCLASS()
-class GDPROJECT_API UMVVM_LoadScreen : public UMVVMViewModelBase
+class GDPROJECT_API UMVVM_LoadScreen : public UWidgetViewModel
 {
 	GENERATED_BODY()
 
+public:
+	UPROPERTY(BlueprintAssignable)
+	FOnPlayButtonClicked OnPlayButtonClickedDelegate;
+	
 private:
+	UPROPERTY()
+	TObjectPtr<USaveGameSubsystem> SaveGameSubsystem;
 	
 	UPROPERTY(BlueprintAssignable)
 	FSlotSelected SlotSelected;
 	
 	// 当前选择的存档槽
 	UPROPERTY()
-	UMVVM_LoadSlot* SelectedSlot;
-	
-	// 存档插槽下标 -> 对应VM
-	UPROPERTY()
-	TMap<int32, UMVVM_LoadSlot*> LoadSlots;
-
-	UPROPERTY()
-	TObjectPtr<UMVVM_LoadSlot> LoadSlot_0;
-
-	UPROPERTY()
-	TObjectPtr<UMVVM_LoadSlot> LoadSlot_1;
-
-	UPROPERTY()
-	TObjectPtr<UMVVM_LoadSlot> LoadSlot_2;
-	
-public:
-	void InitializeLoadSlots();
+	TObjectPtr<UMVVM_LoadSlot> SelectedSlot;
 
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UMVVM_LoadSlot> LoadSlotViewModelClass;
+	
+	// 存档插槽下标 -> 对应插槽VM
+	UPROPERTY()
+	TMap<int32, TObjectPtr<UMVVM_LoadSlot>> LoadSlots;
+
+	UPROPERTY()
+	TObjectPtr<UGDMainMenuWidgetController> MainMenuWidgetController;
+	
+public:
+	virtual void OnInitialized() override;
 
 	UFUNCTION(BlueprintPure)
 	UMVVM_LoadSlot* GetLoadSlotViewModelByIndex(int32 Index) const;
@@ -52,17 +57,18 @@ public:
 	void NewGameButtonPressed(int32 Slot);
 	// 新建存档
 	UFUNCTION(BlueprintCallable)
-	void NewSlotButtonPressed(int32 Slot, const FString& EnteredName);
+	void NewSlotButtonPressed(int32 SlotIndex, const FString& PlayerName);
 	// 选择存档进入游戏
 	UFUNCTION(BlueprintCallable)
-	void SelectSlotButtonPressed(int32 Slot);
+	void SelectSlotButtonPressed(int32 SlotIndex);
 	
 	UFUNCTION(BlueprintCallable)
 	void DeleteButtonPressed();
 
 	UFUNCTION(BlueprintCallable)
 	void PlayButtonPressed();
-	
-	// 加载存档槽的信息
-	void LoadData();
+
+private:
+	USaveGameSubsystem* GetSaveGameSubsystem() const;
+	void SaveSlotData(UMVVM_LoadSlot* LoadSlot, int32 SlotIndex);
 };

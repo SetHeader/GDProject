@@ -8,6 +8,7 @@
 
 class UUISubsystem;
 class UWidgetController;
+class UWidgetViewModel;
 
 /**
  * 
@@ -16,8 +17,7 @@ UCLASS()
 class GDPROJECT_API USimpleUserWidget : public UUserWidget {
 	GENERATED_BODY()
 
-	friend class UUISubsystem;
-
+public:
 	virtual bool Initialize() override;
 
 	virtual void BeginDestroy() override;
@@ -29,14 +29,28 @@ class GDPROJECT_API USimpleUserWidget : public UUserWidget {
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnWidgetControllerSet();
-
-protected:
-	UPROPERTY(BlueprintReadOnly, Category = "SimpleUserWidget")
-	TObjectPtr<UWidgetController> WidgetController;
 	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnWidgetViewModelSet();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnWidgetControllerOrViewModelSet();
+protected:
 	UPROPERTY(EditDefaultsOnly, Category = "SimpleUserWidget")
 	TSubclassOf<UWidgetController> WidgetControllerClass;
-	
+
+	UPROPERTY(BlueprintReadOnly, Category = "SimpleUserWidget")
+	TObjectPtr<UWidgetController> WidgetController;
+
 	UPROPERTY(EditDefaultsOnly, DisplayName = "AlwaysCreateNewWidgetController", Category = "SimpleUserWidget")
 	bool bAlwaysCreateNewWidgetController = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "SimpleUserWidget")
+	TSubclassOf<UWidgetViewModel> WidgetViewModelClass;
+	
+	UPROPERTY(BlueprintReadOnly, Category = "SimpleUserWidget")
+	TObjectPtr<UWidgetViewModel> WidgetViewModel;
+
+	UPROPERTY(EditDefaultsOnly, DisplayName = "AlwaysCreateNewWidgetViewModel", Category = "SimpleUserWidget")
+	bool bAlwaysCreateNewWidgetViewModel = false;
 };

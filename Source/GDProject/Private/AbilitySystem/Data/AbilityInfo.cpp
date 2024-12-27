@@ -5,7 +5,8 @@
 
 #include "GameplayAbilitySpec.h"
 #include "GDGameplayTags.h"
-#include "GDLog.h"
+#include "GDProject/GDProject.h"
+#include "Net/UnrealNetwork.h"
 
 FGameplayAbilitySpec FGDAbilityInfo::CreateAbilitySpec(int32 AbilityLevel) const
 {
@@ -53,4 +54,10 @@ FGDAbilityInfo* UAbilityInfo::FindAbilityInfoPtrForTag(const FGameplayTag& Tag, 
 	}
 
 	return nullptr;
+}
+
+void UAbilityInfo::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UAbilityInfo, AbilityInfos);
 }

@@ -24,7 +24,9 @@ public class GDProject : ModuleRules
 			"AIModule", 
 			"ModelViewViewModel",
 			"InventoryModule",
-			"ToolModule"
+			"ToolModule",
+			"OnlineSubsystem", 
+			"OnlineSubsystemUtils"
 		});
 
 		// Uncomment if you are using Slate UI

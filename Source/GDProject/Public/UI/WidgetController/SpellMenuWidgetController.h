@@ -40,8 +40,10 @@ private:
 	FGameplayTag SelectedAbilityTag;
 	
 public:
-	virtual void BroadcastInitialValues() const override;
-	virtual void BindCallbacksToDependencies() const override;
+	virtual void BindCallbacksToDependencies() override;
+	virtual void BroadcastInitialValues() override;
+	
+	void OnInitializeStartupAbilities(UGDAbilitySystemComponent* GDASC);
 
 	// 选中某个能力
 	UFUNCTION(BlueprintCallable)

@@ -5,7 +5,7 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GDLog.h"
+#include "GDProject/GDProject.h"
 #include "Interface/EquipmentManagerInferface.h"
 #include "Interface/InventoryManagerInferface.h"
 #include "Inventory/InventoryManagerComponent.h"

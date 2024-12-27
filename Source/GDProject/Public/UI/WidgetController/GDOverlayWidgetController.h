@@ -77,14 +77,12 @@ public:
 	FAbilityInfoSignature OnAbilityInfoDelegate;
 	
 public:
-	void SetAbilityInfo(UAbilityInfo* AbilityInfo) { AbilityInfoAsset = AbilityInfo; }
-	
 	// 在客户端处理
-	void BindCallbacksToDependencies() const override;
+	void BindCallbacksToDependencies() override;
 	// 在客户端处理
-	void BroadcastInitialValues() const override;
+	void BroadcastInitialValues() override;
 	// 在客户端处理
-	void OnInitializeStartupAbilities(UGDAbilitySystemComponent* ASC) const;
+	void OnInitializeStartupAbilities(UGDAbilitySystemComponent* ASC);
 	// 广播所有的能力
 	void BroadcastAbilityInfos() const;
 

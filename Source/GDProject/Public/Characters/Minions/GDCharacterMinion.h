@@ -55,9 +55,9 @@ public:
 	AGDCharacterMinion();
 
 	void BeginPlay() override;
-
-	virtual void PossessedBy(AController* NewController) override;
 	
+	virtual void InitializeOnAuth() override;
+
 	/** Enemy Interface */
 	virtual void HighlightActor() override;
 	virtual void UnHighlightActor() override;

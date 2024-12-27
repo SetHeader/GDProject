@@ -17,8 +17,8 @@ public:
 	UPROPERTY(BlueprintAssignable)
 	FOnStatChangedSignature OnAttributePointsChangedDelegate;
 
-	virtual void BroadcastInitialValues() const override;
-	virtual void BindCallbacksToDependencies() const override;
+	virtual void BroadcastInitialValues() override;
+	virtual void BindCallbacksToDependencies() override;
 
 	UFUNCTION(BlueprintCallable, Category = "GDAttributeMenuWidgetController")
 	void UpgradeAttributePoint(FGameplayTag Tag);

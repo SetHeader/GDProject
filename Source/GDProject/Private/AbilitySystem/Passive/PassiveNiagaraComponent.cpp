@@ -39,7 +39,7 @@ void UPassiveNiagaraComponent::BeginPlay()
 
 void UPassiveNiagaraComponent::ActivateIfEquipped(UGDAbilitySystemComponent* AuraASC)
 {
-	const bool bStartupAbilitiesGiven = AuraASC->bStartupAbilitiesGiven;
+	const bool bStartupAbilitiesGiven = AuraASC->IsASCInited();
 	if (bStartupAbilitiesGiven)
 	{
 		if (AuraASC->GetStatusFromAbilityTag(PassiveSpellTag) == FGDGameplayTags::Get().Abilities_Status_Equipped)

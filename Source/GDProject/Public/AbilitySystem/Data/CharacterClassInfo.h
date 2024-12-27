@@ -71,5 +71,5 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category="Common Class Defaults")
 	TObjectPtr<UCurveTable> DamageCalculationCoefficients;
 	
-	FCharacterClassDefaultInfo GetClassDefaultInfo(ECharacterClass CharacterClass);
+	FCharacterClassDefaultInfo GetClassDefaultInfo(ECharacterClass CharacterClass) const;
 };

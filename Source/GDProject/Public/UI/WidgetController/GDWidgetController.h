@@ -45,9 +45,9 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "GDWidgetController")
-	virtual void BroadcastInitialValues() const {}
+	virtual void BroadcastInitialValues() {}
 
-	virtual void BindCallbacksToDependencies() const {}
+	virtual void BindCallbacksToDependencies() {}
 
 	UGDAbilitySystemComponent* GetGDASC() const;
 };

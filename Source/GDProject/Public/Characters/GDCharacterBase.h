@@ -121,6 +121,15 @@ protected:
 	FOnDamageSignature OnDamageDelegate;
 	
 	bool bIsDead = false;
+
+	virtual void BeginPlay() override;
+
+	// ServerOnly, 在权威端初始化，保障Controller、PlayerState、GameState可用
+	virtual void InitializeOnAuth() {}
+	// ClientOnly, 在非权威端初始化，保障Controller、PlayerState、GameState可用
+	virtual void InitializeOnNonAuth() {}
+
+	virtual void OnRep_PlayerState() override;
 	
 	void Dissolve();
 
@@ -130,13 +139,17 @@ protected:
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartDissolveTimeline(UMaterialInstanceDynamic* MaterialInstanceDynamic);
-
+	
 	/**
 	 * 开始随时间线溶解，蓝图比较好实现
 	 * @param MaterialInstanceDynamic 材质 
 	 */
 	UFUNCTION(BlueprintImplementableEvent)
 	void StartWeaponDissolveTimeline(UMaterialInstanceDynamic* MaterialInstanceDynamic);
+
+private:
+	// ClientOnly
+	void CheckAndInitNonAuth(AGameStateBase* = nullptr);
 	
 public:
 	virtual void PossessedBy(AController* NewController) override;

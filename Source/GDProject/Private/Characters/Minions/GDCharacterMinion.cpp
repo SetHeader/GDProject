@@ -56,13 +56,10 @@ void AGDCharacterMinion::BeginPlay()
 	}
 }
 
-void AGDCharacterMinion::PossessedBy(AController* NewController)
-{
-	Super::PossessedBy(NewController);
+void AGDCharacterMinion::InitializeOnAuth() {
+	Super::InitializeOnAuth();
 
-	if (!HasAuthority()) return;
-	
-	GDAIController = Cast<AGDAIController>(NewController);
+	GDAIController = Cast<AGDAIController>(GetController());
 	if (!GDAIController)
 	{
 		return;

@@ -60,11 +60,8 @@ public:
 public:
 	AGDCharacterHero();
 	
-	// ServerOnly	用来初始化数据
-	void PossessedBy(AController* NewController) override;
-
-	// ClientOnly	用来初始化UI
-	void OnRep_PlayerState() override;
+	virtual void InitializeOnAuth() override;
+	virtual void InitializeOnNonAuth() override;
 	
 	UFUNCTION(BlueprintCallable, Category = "GDCharacterHero")
 	void AddIMC(UInputMappingContext* IMC, int32 Priority = 0);
@@ -104,8 +101,8 @@ public:
 	
 	UFUNCTION(Reliable, NetMulticast)
 	void Multicast_LevelUpParticles() const;
-	
-	void LoadProgress();
+	UFUNCTION(Server, Reliable)
+	void ServerLoadProgress(UPlayerSaveGame* SaveData);
 protected:
 	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

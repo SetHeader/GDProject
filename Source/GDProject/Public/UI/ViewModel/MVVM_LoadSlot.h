@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "MVVMViewModelBase.h"
-#include "Game/LoadScreenSaveGame.h"
+#include "Subsystem/SaveGame/PlayerSaveGame.h"
+#include "UI/Base/WidgetViewModel.h"
 #include "MVVM_LoadSlot.generated.h"
 
 // Switcher组件设置下标后，会通知
@@ -15,7 +15,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEnableSelectSlotButton, bool, bEnab
  * 
  */
 UCLASS()
-class GDPROJECT_API UMVVM_LoadSlot : public UMVVMViewModelBase
+class GDPROJECT_API UMVVM_LoadSlot : public UWidgetViewModel
 {
 	GENERATED_BODY()
 
@@ -42,7 +42,7 @@ public:
 	UPROPERTY()
 	int32 SlotIndex;
 	
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly)
 	TEnumAsByte<ESaveSlotStatus> SlotStatus;
 
 	UPROPERTY()

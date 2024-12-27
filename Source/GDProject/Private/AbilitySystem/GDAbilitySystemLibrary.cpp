@@ -10,13 +10,14 @@
 #include "AbilitySystem/GDAbilityTypes.h"
 #include "AbilitySystem/Data/CharacterClassInfo.h"
 #include "Characters/Minions/GDCharacterMinion.h"
-#include "Game/LoadScreenSaveGame.h"
-#include "GDLog.h"
+#include "Game/GDGameStateBase.h"
+#include "GDProject/GDProject.h"
 #include "Interaction/CombatInterface.h"
 #include "Kismet/GameplayStatics.h"
 #include "UI/GDHUD.h"
 #include "UI/WidgetController/SpellMenuWidgetController.h"
 #include "GameplayAbilities\Public\GameplayEffectTypes.h"
+#include "Subsystem/SaveGame/PlayerSaveGame.h"
 
 UGDOverlayWidgetController* UGDAbilitySystemLibrary::GetOverlayWidgetController(const UObject* WorldContextObject)
 {
@@ -60,13 +61,9 @@ void UGDAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldCo
 	checkf(WorldContextObject, TEXT("WorldContextObject is null"));
 	checkf(ASC, TEXT("ASC is null"));
 	
-	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!IsValid(GDGameMode))
-	{
+	const UCharacterClassInfo* ClassInfo = GetCharacterClassInfo(WorldContextObject);
+	if (!ClassInfo)
 		return;
-	}
-	
-	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
 	checkf(ClassInfo, TEXT("ClassInfo is null"));
 	checkf(ClassInfo->SecondaryAttributes, TEXT("ClassInfo->SecondaryAttributes is null"));
 	checkf(ClassInfo->VitalAttributes, TEXT("ClassInfo->VitalAttributes is null"));
@@ -87,9 +84,9 @@ void UGDAbilitySystemLibrary::InitializeDefaultAttributes(const UObject* WorldCo
 }
 
 void UGDAbilitySystemLibrary::InitializeDefaultAttributesFromSaveData(const UObject* WorldContextObject,
-	UAbilitySystemComponent* ASC, ULoadScreenSaveGame* SaveGame)
+	UAbilitySystemComponent* ASC, UPlayerSaveGame* SaveGame)
 {
-	UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
+	const UCharacterClassInfo* CharacterClassInfo = GetCharacterClassInfo(WorldContextObject);
 	if (!CharacterClassInfo) return;
 
 	const FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
@@ -119,17 +116,9 @@ void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextOb
 	checkf(WorldContextObject, TEXT("WorldContextObject is null"));
 	checkf(ASC, TEXT("ASC is null"));
 	
-	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!IsValid(GDGameMode))
-	{
-		return;
-	}
-
-	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
+	const UCharacterClassInfo* ClassInfo = GetCharacterClassInfo(WorldContextObject);
 	if (!ClassInfo)
-	{
 		return;
-	}
 
 	for (TSubclassOf<UGameplayAbility> CommonAbility : ClassInfo->CommonAbilities)
 	{
@@ -155,13 +144,7 @@ void UGDAbilitySystemLibrary::GiveStartupAbilities(const UObject* WorldContextOb
 
 const UCurveTable* UGDAbilitySystemLibrary::GetDamageCoefficientsCurveTable(const UObject* WorldContextObject)
 {
-	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!IsValid(GDGameMode))
-	{
-		return nullptr;
-	}
-
-	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
+	const UCharacterClassInfo* ClassInfo = GetCharacterClassInfo(WorldContextObject);
 	checkf(ClassInfo, TEXT("ClassInfo is null"));
 
 	return ClassInfo->DamageCalculationCoefficients;
@@ -345,19 +328,11 @@ int32 UGDAbilitySystemLibrary::GetCharacterLevel(const AActor* Character)
 int32 UGDAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* WorldContextObject,
 	ECharacterClass CharacterClass, int32 CharacterLevel)
 {
-	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!IsValid(GDGameMode))
-	{
-		return 0;
-	}
-
-	UCharacterClassInfo* ClassInfo = GDGameMode->CharacterClassInfo;
+	const UCharacterClassInfo* ClassInfo = GetCharacterClassInfo(WorldContextObject);
 	if (!ClassInfo)
-	{
 		return 0;
-	}
 
-	FCharacterClassDefaultInfo* ClassDefaultInfo = ClassInfo->CharacterClassInformation.Find(CharacterClass);
+	const FCharacterClassDefaultInfo* ClassDefaultInfo = ClassInfo->CharacterClassInformation.Find(CharacterClass);
 	if (ClassDefaultInfo && ClassDefaultInfo->XPReward.IsValid())
 	{
 		return ClassDefaultInfo->XPReward.GetValueAtLevel(CharacterLevel);
@@ -366,26 +341,22 @@ int32 UGDAbilitySystemLibrary::GetXPRewardForClassAndLevel(const UObject* WorldC
 	return 0;
 }
 
-UCharacterClassInfo* UGDAbilitySystemLibrary::GetCharacterClassInfo(const UObject* WorldContextObject)
+const UCharacterClassInfo* UGDAbilitySystemLibrary::GetCharacterClassInfo(const UObject* WorldContextObject)
 {
-	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!IsValid(GDGameMode))
-	{
+	AGDGameStateBase* GDGameState = Cast<AGDGameStateBase>(UGameplayStatics::GetGameState(WorldContextObject));
+	if (!IsValid(GDGameState))
 		return nullptr;
-	}
 
-	return GDGameMode->CharacterClassInfo;
+	return GDGameState->CharacterClassInfo;
 }
 
-UAbilityInfo* UGDAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldContextObject)
+const UAbilityInfo*  UGDAbilitySystemLibrary::GetAbilityInfo(const UObject* WorldContextObject)
 {
-	AGDGameModeBase* GDGameMode = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(WorldContextObject));
-	if (!IsValid(GDGameMode))
-	{
+	AGDGameStateBase* GDGameState = Cast<AGDGameStateBase>(UGameplayStatics::GetGameState(WorldContextObject));
+	if (!IsValid(GDGameState))
 		return nullptr;
-	}
 
-	return GDGameMode->GetAbilityInfo();
+	return GDGameState->AbilityInfo;
 }
 
 FGameplayEffectContextHandle UGDAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectParams& DamageEffectParams)

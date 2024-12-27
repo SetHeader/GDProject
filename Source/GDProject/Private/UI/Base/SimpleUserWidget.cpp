@@ -5,6 +5,7 @@
 
 #include "UI/Base/UISubsystem.h"
 #include "UI/Base/WidgetController.h"
+#include "UI/Base/WidgetViewModel.h"
 
 bool USimpleUserWidget::Initialize() {
 	if (!Super::Initialize()) 
@@ -26,21 +27,33 @@ void USimpleUserWidget::BeginDestroy() {
 	if (bAlwaysCreateNewWidgetController && WidgetController) {
 		WidgetController->Deinitialize();
 	}
+	if (bAlwaysCreateNewWidgetViewModel && WidgetViewModel) {
+		WidgetViewModel->Deinitialize();
+	}
 }
 
 void USimpleUserWidget::OnUISubsystemInited(UUISubsystem* InSubsystem) {
-	if (!WidgetControllerClass) {
-		return;
+	if (WidgetControllerClass) {
+		if (bAlwaysCreateNewWidgetController)
+			WidgetController = InSubsystem->CreateWidgetController(WidgetControllerClass);
+		else
+			WidgetController = InSubsystem->FindOrCreateWidgetController(WidgetControllerClass);
+	
+		if (WidgetController)
+			OnWidgetControllerSet();
 	}
-	
-	if (bAlwaysCreateNewWidgetController)
-		WidgetController = InSubsystem->CreateWidgetController(WidgetControllerClass);
-	else
-		WidgetController = InSubsystem->FindOrCreateWidgetController(WidgetControllerClass);
-	
-	if (WidgetController)
-		OnWidgetControllerSet();
-	
+
+	if (WidgetViewModelClass) {
+		if (bAlwaysCreateNewWidgetViewModel)
+			WidgetViewModel = InSubsystem->CreateWidgetViewModel(WidgetViewModelClass);
+		else
+			WidgetViewModel = InSubsystem->FindOrCreateWidgetViewModel(WidgetViewModelClass);
+		
+		if (WidgetViewModel)
+			OnWidgetViewModelSet();
+	}
+
+	OnWidgetControllerOrViewModelSet();
 	InSubsystem->OnInitedDelegate.RemoveAll(this);
 }
 

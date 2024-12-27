@@ -36,11 +36,6 @@ void ACheckpoint::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AAct
 	if (OtherActor->ActorHasTag(FName("Player")))
 	{
 		bReached = true;
-		if (AGDGameModeBase* GameModeBase = Cast<AGDGameModeBase>(UGameplayStatics::GetGameMode(this)))
-		{
-			GameModeBase->SaveWorldState(GetWorld());
-		}
-		
 		IPlayerInterface::Execute_SaveProgress(OtherActor, PlayerStartTag);
 		HandleGlowEffects();
 	}

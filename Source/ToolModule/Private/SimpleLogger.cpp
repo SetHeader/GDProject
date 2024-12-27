@@ -1,8 +1,6 @@
 ﻿#include "SimpleLogger.h"
 
-DEFINE_LOG_CATEGORY(LogSimple)
-
-TFunction<FString(const TCHAR*)> SimpleLogger::CreateNetwordInfoFormatter(AActor* Actor) {
+TFunction<FString(const TCHAR*)> SimpleLogger::CreateNetworkInfoFormatter(AActor* Actor) {
 	return [Actor](const TCHAR* Msg) {
 		FString NetModeName;
 		switch (Actor->GetNetMode()) {
@@ -44,7 +42,7 @@ TFunction<FString(const TCHAR*)> SimpleLogger::CreateNetwordInfoFormatter(AActor
 	};
 }
 
-TFunction<FString(const TCHAR*)> SimpleLogger::CreateNetwordInfoFormatter(UActorComponent* ActorComponent) {
+TFunction<FString(const TCHAR*)> SimpleLogger::CreateNetworkInfoFormatter(UActorComponent* ActorComponent) {
 	return [ActorComponent](const TCHAR* Msg) {
 		FString NetModeName;
 		switch (ActorComponent->GetNetMode()) {

@@ -5,7 +5,7 @@
 #include <AbilitySystem/AttributeSets/GDAttributeSet.h>
 #include "AbilitySystem/GDAbilitySystemComponent.h"
 #include "Net/UnrealNetwork.h"
-#include "GDLog.h"
+#include "GDProject/GDProject.h"
 #include "Tools/FCheckTool.h"
 
 AGDPlayerState::AGDPlayerState()
@@ -48,16 +48,6 @@ void AGDPlayerState::AddToLevel(int32 InLevel)
 	}
 	Level += InLevel;
 	OnLevelChangedDelegate.Broadcast(Level, true);
-}
-
-int32 AGDPlayerState::GetAttributePoints() const
-{
-	return AttributePoints;
-}
-
-int32 AGDPlayerState::GetSpellPoints() const
-{
-	return SpellPoints;
 }
 
 void AGDPlayerState::SetAttributePoints(int32 InPoints)

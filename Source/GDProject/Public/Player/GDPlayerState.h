@@ -38,6 +38,7 @@ public:
 	FStatChangedSignature OnXPChangedDelegate;
 	FStatChangedSignature OnAttributePointsChangedDelegate;
 	FStatChangedSignature OnSpellPointsChangedDelegate;
+
 protected:
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_Level)
 	int32 Level = 1;
@@ -69,7 +70,7 @@ public:
 	void AddToLevel(int32 InLevel);
 
 	UFUNCTION()
-	FORCEINLINE int32 GetAttributePoints() const;
+	FORCEINLINE int32 GetAttributePoints() const { return AttributePoints; }
 	
 	UFUNCTION()
 	void SetAttributePoints(int32 InPoints);
@@ -78,7 +79,7 @@ public:
 	void AddToAttributePoints(int32 InPoints);
 
 	UFUNCTION()
-	FORCEINLINE int32 GetSpellPoints() const;
+	FORCEINLINE int32 GetSpellPoints() const { return SpellPoints; }
 	
 	UFUNCTION()
 	void SetSpellPoints(int32 InPoints);

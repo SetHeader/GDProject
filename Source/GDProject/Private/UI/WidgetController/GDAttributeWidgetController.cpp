@@ -6,7 +6,7 @@
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayTagContainer.h"
 
-void UGDAttributeWidgetController::BroadcastInitialValues() const
+void UGDAttributeWidgetController::BroadcastInitialValues()
 {
 	if (IsValid(AttributesInfo)) {
 		UGDAttributeSet* AS = CastChecked<UGDAttributeSet>(AttributeSet);
@@ -23,7 +23,7 @@ void UGDAttributeWidgetController::BroadcastInitialValues() const
 	}
 }
 
-void UGDAttributeWidgetController::BindCallbacksToDependencies() const
+void UGDAttributeWidgetController::BindCallbacksToDependencies()
 {
 	const UGDAttributeSet* AS = Cast<UGDAttributeSet>(AttributeSet);
 	

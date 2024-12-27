@@ -4,8 +4,9 @@
 #include "Actor/PickupableActor.h"
 
 #include "InventoryStatics.h"
-#include "NiagaraFunctionLibrary.h"
 #include "Components/SphereComponent.h"
+#include "GDProject/GDProject.h"
+#include "Inventory/InventoryItemDefinition.h"
 #include "Inventory/InventoryManagerComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -33,13 +34,28 @@ void APickupableActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	int OtherBodyIndex,
 	bool bFromSweep,
 	const FHitResult& SweepResult) {
+	
+	if (!ItemDefinition) {
+		GDLOG_W(TEXT("PickupableActor"), TEXT("%s ItemDefinition未定义"), *GetName());
+		return;
+	}
+	
+	UInventoryManagerComponent* InventoryComponent = UInventoryStatics::GetInventoryManagerComponent(OtherActor);
+	if (InventoryComponent) {
+		int32 AddedCount = InventoryComponent->AddItem(UInventoryStatics::GenerateItemInstance(ItemDefinition), StackCount);
+		StackCount -= AddedCount;
+		if (StackCount == 0) {
 
-	if (HasAuthority()) {
-		UInventoryManagerComponent* InventoryComponent = UInventoryStatics::GetInventoryManagerComponent(OtherActor);
-		if (InventoryComponent) {
-			InventoryComponent->AddItem(UInventoryStatics::GenerateItemInstance(ItemDefinition), StackCount);
-			// TODO 应该在客户端播放声音
-			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), PickupSound, GetActorLocation());
+			if (HasLocalNetOwner()) {
+				GDLOG(TEXT("PickupableActor"), TEXT("HasLocalNetOwner"));
+			}
+			if (HasNetOwner()) {
+				GDLOG(TEXT("PickupableActor"), TEXT("HasNetOwner"));
+			}
+			if (!HasAuthority()) {
+				UGameplayStatics::SpawnSoundAtLocation(GetWorld(), PickupSound, GetActorLocation());
+			}
+			
 			Destroy();
 		}
 	}

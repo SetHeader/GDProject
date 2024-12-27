@@ -3,8 +3,7 @@
 
 #include "InventorySubsystem.h"
 
-#include "GDLog.h"
-#include "Inventory/InventoryItemInstance.h"
+#include "GDProject/GDProject.h"
 
 void UInventorySubsystem::Initialize(FSubsystemCollectionBase& Collection) {
 	Super::Initialize(Collection);

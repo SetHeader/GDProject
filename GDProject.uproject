@@ -13,7 +13,9 @@
 				"UMG",
 				"CoreUObject",
 				"GameplayAbilities",
-				"ModelViewViewModel"
+				"ModelViewViewModel",
+				"OnlineSubsystem",
+				"OnlineSubsystemUtils"
 			]
 		},
 		{

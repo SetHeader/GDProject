@@ -74,10 +74,20 @@ class GDPROJECT_API UAbilityInfo : public UDataAsset
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="AbilityInformation")
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category="AbilityInformation")
 	TArray<FGDAbilityInfo> AbilityInfos;
 
 	FGDAbilityInfo FindAbilityInfoForTag(const FGameplayTag& Tag, bool bLogNotFound = false) const;
 
 	FGDAbilityInfo* FindAbilityInfoPtrForTag(const FGameplayTag& Tag, bool bLogNotFound = false);
+
+	// 需要重写该方法，才能在Actor中复制该UObject
+	virtual bool IsSupportedForNetworking() const override {
+		return bReplicated || Super::IsSupportedForNetworking();
+	}
+    
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+public:
+	bool bReplicated = false;
 };

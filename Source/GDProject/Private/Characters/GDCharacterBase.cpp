@@ -39,6 +39,26 @@ AGDCharacterBase::AGDCharacterBase()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Projectile, ECR_Overlap);
 }
 
+void AGDCharacterBase::BeginPlay() {
+	Super::BeginPlay();
+	if (GetNetMode() == NM_Client) {
+		GetWorld()->GameStateSetEvent.AddUObject(this, &AGDCharacterBase::CheckAndInitNonAuth);
+		CheckAndInitNonAuth();
+	}
+}
+
+void AGDCharacterBase::CheckAndInitNonAuth(AGameStateBase*) {
+	if (GetPlayerState() && GetWorld()->GetGameState()) {
+		GetWorld()->GameStateSetEvent.RemoveAll(this);
+		InitializeOnNonAuth();
+	}	
+}
+
+void AGDCharacterBase::OnRep_PlayerState() {
+	Super::OnRep_PlayerState();
+	CheckAndInitNonAuth();
+}
+
 void AGDCharacterBase::Dissolve()
 {
 	if (IsValid(DissolveMaterialInstance))
@@ -61,13 +81,7 @@ void AGDCharacterBase::Dissolve()
 void AGDCharacterBase::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
-	if (GetLocalRole() != ROLE_Authority) {
-		return;
-	}
-	
-	if (!ASC) {
-		return;
-	}
+	InitializeOnAuth();
 }
 
 void AGDCharacterBase::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const

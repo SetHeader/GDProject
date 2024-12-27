@@ -9,10 +9,29 @@
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Abilities/GDGameplayAbility.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
-#include "Game/LoadScreenSaveGame.h"
-#include "GDLog.h"
+#include "Engine/ActorChannel.h"
+#include "Subsystem/SaveGame/PlayerSaveGame.h"
+#include "GDProject/GDProject.h"
 #include "Interaction/PlayerInterface.h"
+#include "Net/UnrealNetwork.h"
 #include "Player/GDPlayerState.h"
+
+bool UGDAbilitySystemComponent::IsASCInited() const {
+	return bAbilityInfoAvaliable && bAbilitiesGiven;
+}
+
+void UGDAbilitySystemComponent::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(UGDAbilitySystemComponent, AbilityInfo);
+}
+
+bool UGDAbilitySystemComponent::ReplicateSubobjects(class UActorChannel* Channel,
+                                                    class FOutBunch* Bunch,
+                                                    FReplicationFlags* RepFlags) {
+	bool Result = Super::ReplicateSubobjects(Channel, Bunch, RepFlags);
+	Result |= Channel->ReplicateSubobject(AbilityInfo, *Bunch, *RepFlags);
+	return Result;
+}
 
 void UGDAbilitySystemComponent::OnAbilityActorInfoSet()
 {
@@ -20,26 +39,34 @@ void UGDAbilitySystemComponent::OnAbilityActorInfoSet()
 	OnGameplayEffectAppliedDelegateToSelf.AddUObject(this, &UGDAbilitySystemComponent::ClientEffectApplied);
 }
 
-void UGDAbilitySystemComponent::InitAbilityInfosFromSaveData(ULoadScreenSaveGame* SaveData)
+void UGDAbilitySystemComponent::InitAbilityInfosFromSaveData(UPlayerSaveGame* SaveData)
 {
-	UAbilityInfo* AbilityInfos = UGDAbilitySystemLibrary::GetAbilityInfo(this);
+	const UAbilityInfo* AbilityInfoConfig = UGDAbilitySystemLibrary::GetAbilityInfo(this);
+	if (!AbilityInfoConfig) {
+		GDLOG_E(TEXT("UGDAbilitySystemComponent"), TEXT("AbilityInfo is nullptr"));
+		return;
+	}
+	
+	AbilityInfo = NewObject<UAbilityInfo>(this, UAbilityInfo::StaticClass());
+	AbilityInfo->bReplicated = true;
+	AbilityInfo->AbilityInfos = AbilityInfoConfig->AbilityInfos;
 	
 	FGDGameplayTags& GameplayTags = FGDGameplayTags::Get();
 	for (const FSavedAbility& SavedAbility : SaveData->SavedAbilities)
 	{
-		FGDAbilityInfo* AbilityInfo = AbilityInfos->FindAbilityInfoPtrForTag(SavedAbility.AbilityTag);
-		if (!AbilityInfo)
+		FGDAbilityInfo* Info = AbilityInfo->FindAbilityInfoPtrForTag(SavedAbility.AbilityTag);
+		if (!Info)
 		{
 			GDLOG_W(TEXT("GDAbilitySystemComponent"), TEXT("AbilityInfo is nullptr"));
 			continue;
 		}
-		AbilityInfo->InputTag = SavedAbility.AbilitySlot;
-		AbilityInfo->StatusTag = SavedAbility.AbilityStatus;
+		Info->InputTag = SavedAbility.AbilitySlot;
+		Info->StatusTag = SavedAbility.AbilityStatus;
 
-		if (AbilityInfo->StatusTag == GameplayTags.Abilities_Status_Unlocked
-			|| AbilityInfo->StatusTag == GameplayTags.Abilities_Status_Equipped) {
+		if (Info->StatusTag == GameplayTags.Abilities_Status_Unlocked
+			|| Info->StatusTag == GameplayTags.Abilities_Status_Equipped) {
 			
-			FGameplayAbilitySpec AbilitySpec = AbilityInfo->CreateAbilitySpec(SavedAbility.AbilityLevel);
+			FGameplayAbilitySpec AbilitySpec = Info->CreateAbilitySpec(SavedAbility.AbilityLevel);
 			
 			if (SavedAbility.AbilityType == GameplayTags.Abilities_Type_Offensive)
 			{
@@ -52,8 +79,9 @@ void UGDAbilitySystemComponent::InitAbilityInfosFromSaveData(ULoadScreenSaveGame
 			}
 		}
 	}
-	bStartupAbilitiesGiven = true;
-	OnAbilitiesGiven.Broadcast(this);
+	bAbilityInfoAvaliable = true;
+	bAbilitiesGiven = true;
+	CheckAndBrocastInited();
 }
 
 void UGDAbilitySystemComponent::AddSetupAbilities(const TArray<TSubclassOf<UGameplayAbility>>& SetupAbilities)
@@ -121,9 +149,20 @@ void UGDAbilitySystemComponent::OnRep_ActivateAbilities()
 	//		在先执行流程2，再执行海程1时，可能会出现。但实际测试下来，永远是先执行流程1，再执行流程2。	
 	//		故先不处理。
 	
-	if (!bStartupAbilitiesGiven)
+	if (!bAbilitiesGiven)
 	{
-		bStartupAbilitiesGiven = true;
+		bAbilitiesGiven = true;
+		CheckAndBrocastInited();
+	}
+}
+
+void UGDAbilitySystemComponent::OnRep_AbilityInfo() {
+	bAbilityInfoAvaliable = true;
+	CheckAndBrocastInited();
+}
+
+void UGDAbilitySystemComponent::CheckAndBrocastInited() {
+	if (bAbilityInfoAvaliable && bAbilitiesGiven) {
 		OnAbilitiesGiven.Broadcast(this);
 	}
 }
@@ -327,53 +366,60 @@ bool UGDAbilitySystemComponent::AbilityHasSlot(FGameplayAbilitySpec* Spec, const
 
 void UGDAbilitySystemComponent::InitAbilityInfos()
 {
-	UAbilityInfo* AbilityInfos = UGDAbilitySystemLibrary::GetAbilityInfo(this);
-
-	for (FGDAbilityInfo& AbilityInfo : AbilityInfos->AbilityInfos)
+	const UAbilityInfo* AbilityInfoConfig = UGDAbilitySystemLibrary::GetAbilityInfo(this);
+	if (!AbilityInfoConfig) {
+		GDLOG_E(TEXT("UGDAbilitySystemComponent"), TEXT("AbilityInfo is nullptr"));
+		return;
+	}
+	AbilityInfo = NewObject<UAbilityInfo>(this, UAbilityInfo::StaticClass());
+	AbilityInfo->bReplicated = true;
+	AbilityInfo->AbilityInfos = AbilityInfoConfig->AbilityInfos;
+	for (FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
 	{
 		// 如果SetupAbility也存在于技能树中，就设置技能树的InputTag、StatusTag
-		if (FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityInfo.AbilityTag))
+		if (FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(Info.AbilityTag))
 		{
-			AbilityInfo.InputTag = UGDAbilitySystemLibrary::FindInputTagFromAbilitySpec(AbilitySpec).First();
-			if (AbilityInfo.InputTag.IsValid())
+			Info.InputTag = UGDAbilitySystemLibrary::FindInputTagFromAbilitySpec(AbilitySpec).First();
+			if (Info.InputTag.IsValid())
 			{
-				AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Equipped;
+				Info.StatusTag = FGDGameplayTags::Get().Abilities_Status_Equipped;
 			}
 			else
 			{
-				AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
+				Info.StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
 			}
 			continue;
 		}
 
-		if (!AbilityInfo.AbilityTag.IsValid())
+		if (!Info.AbilityTag.IsValid())
 		{
-			GDLOG_E(TEXT("GDCharacterHero"), TEXT("AbilityInfo Invalid"));
+			GDLOG_E(TEXT("GDCharacterHero"), TEXT("AbilityInfo.AbilityTag Invalid"));
 			continue;
 		}
 
-		if (AbilityInfo.LevelRequirement <= 1)
+		if (Info.LevelRequirement <= 1)
 		{
-			UGDGameplayAbility* GDAbilityCDO = AbilityInfo.Ability->GetDefaultObject<UGDGameplayAbility>();
+			UGDGameplayAbility* GDAbilityCDO = Info.Ability->GetDefaultObject<UGDGameplayAbility>();
 			if (GDAbilityCDO && GDAbilityCDO->SetupInputTag.IsValid())
 			{
-				AbilityInfo.InputTag = GDAbilityCDO->SetupInputTag;
-				AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Equipped;
+				Info.InputTag = GDAbilityCDO->SetupInputTag;
+				Info.StatusTag = FGDGameplayTags::Get().Abilities_Status_Equipped;
 			}
 			else
 			{
-				AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
+				Info.StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
 			}
-			GiveAbility(AbilityInfo.CreateAbilitySpec());
+			GiveAbility(Info.CreateAbilitySpec());
 		}
 		else
 		{
-			AbilityInfo.StatusTag = FGDGameplayTags::Get().Abilities_Status_Locked;
+			Info.StatusTag = FGDGameplayTags::Get().Abilities_Status_Locked;
 		}
 	}
 
-	bStartupAbilitiesGiven = true;
-	OnAbilitiesGiven.Broadcast(this);
+	bAbilityInfoAvaliable = true;
+	bAbilitiesGiven = true;
+	CheckAndBrocastInited();
 }
 
 void UGDAbilitySystemComponent::MulticastActivatePassiveEffect_Implementation(const FGameplayTag& AbilityTag,
@@ -392,7 +438,6 @@ void UGDAbilitySystemComponent::UpgradeAttributePoint(const FGameplayTag& Tag)
 
 void UGDAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
 {
-	UAbilityInfo* AbilityInfo = UGDAbilitySystemLibrary::GetAbilityInfo(this);
 	for (FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
 	{
 		if (!Info.AbilityTag.IsValid())
@@ -407,14 +452,20 @@ void UGDAbilitySystemComponent::UpdateAbilityStatus(int32 Level)
 		if (Info.StatusTag == FGDGameplayTags::Get().Abilities_Status_Locked)
 		{
 			Info.StatusTag = FGDGameplayTags::Get().Abilities_Status_Eligible;
-			ClientNotifyAbilityStatusChanged(Info.AbilityTag, Info.StatusTag, 1);
+			ClientNotifyAbilityStatusChanged(Info.AbilityTag, 1, Info.StatusTag, Info.InputTag);
 		}
 	}
 }
 
-void UGDAbilitySystemComponent::ClientNotifyAbilityStatusChanged_Implementation(const FGameplayTag& AbilityTag,
-                                                                         const FGameplayTag& StatusTag, int32 AbilityLevel)
+void UGDAbilitySystemComponent::ClientNotifyAbilityStatusChanged_Implementation(const FGameplayTag& AbilityTag, int32 AbilityLevel, const FGameplayTag& StatusTag, const FGameplayTag& InputTag)
 {
+	for (FGDAbilityInfo& Info : AbilityInfo->AbilityInfos) {
+		if (Info.AbilityTag == AbilityTag) {
+			Info.InputTag = InputTag;
+			Info.StatusTag = StatusTag;
+			break;
+		}
+	}
 	OnAbilityStatusChangedDelegate.Broadcast(AbilityTag, StatusTag, AbilityLevel);
 }
 
@@ -431,42 +482,39 @@ void UGDAbilitySystemComponent::ServerUpgradeAttributePoint_Implementation(const
 
 void UGDAbilitySystemComponent::ServerUpgradeAbility_Implementation(FGameplayTag AbilityTag)
 {
-	if (UAbilityInfo* AbilityInfo = UGDAbilitySystemLibrary::GetAbilityInfo(GetOwner()))
-	{
-		FGDAbilityInfo* Info = AbilityInfo->FindAbilityInfoPtrForTag(AbilityTag);
-		AGDPlayerState* GDPlayerState = CastChecked<AGDPlayerState>(GetOwner());
+	FGDAbilityInfo* Info = AbilityInfo->FindAbilityInfoPtrForTag(AbilityTag);
+	AGDPlayerState* GDPlayerState = CastChecked<AGDPlayerState>(GetOwner());
 
-		if (!Info)
+	if (!Info)
+	{
+		GDLOG(TEXT("GDAbilitySystemComponent"), TEXT("Info is nullptr"));
+	}
+	if (GDPlayerState->GetPlayerLevel() >= Info->LevelRequirement && GDPlayerState->GetSpellPoints() > 0)
+	{
+		// 解锁能力
+		if (Info->StatusTag == FGDGameplayTags::Get().Abilities_Status_Eligible)
 		{
-			GDLOG(TEXT("GDAbilitySystemComponent"), TEXT("Info is nullptr"));
+			GDPlayerState->AddToSpellPoints(-1);
+			Info->StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
+			
+			GiveAbility(Info->CreateAbilitySpec());
+			
+			ClientNotifyAbilityStatusChanged(AbilityTag, 1, Info->StatusTag, Info->InputTag);
 		}
-		if (GDPlayerState->GetPlayerLevel() >= Info->LevelRequirement && GDPlayerState->GetSpellPoints() > 0)
+		// 升级能力
+		else
 		{
-			// 解锁能力
-			if (Info->StatusTag == FGDGameplayTags::Get().Abilities_Status_Eligible)
+			FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
+			if (!AbilitySpec) return;
+			int32 AbilityLevel = AbilitySpec->Level + 1;
+			// 最高9级
+			if (AbilityLevel <= 9)
 			{
 				GDPlayerState->AddToSpellPoints(-1);
-				Info->StatusTag = FGDGameplayTags::Get().Abilities_Status_Unlocked;
-				
-				GiveAbility(Info->CreateAbilitySpec());
-				
-				ClientNotifyAbilityStatusChanged(AbilityTag, Info->StatusTag, 1);
-			}
-			// 升级能力
-			else
-			{
-				FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag);
-				if (!AbilitySpec) return;
-				int32 AbilityLevel = AbilitySpec->Level + 1;
-				// 最高9级
-				if (AbilityLevel <= 9)
-				{
-					GDPlayerState->AddToSpellPoints(-1);
-					ClearAbility(AbilitySpec->Handle);
-					GiveAbility(Info->CreateAbilitySpec(AbilityLevel));
+				ClearAbility(AbilitySpec->Handle);
+				GiveAbility(Info->CreateAbilitySpec(AbilityLevel));
 
-					ClientNotifyAbilityStatusChanged(AbilityTag, Info->StatusTag, AbilityLevel);
-				}
+				ClientNotifyAbilityStatusChanged(AbilityTag, AbilityLevel, Info->StatusTag, Info->InputTag);
 			}
 		}
 	}
@@ -482,9 +530,8 @@ void UGDAbilitySystemComponent::ServerEquipAbility_Implementation(FGameplayTag A
 		return;
 	}
 	
-	UAbilityInfo* AbilityInfos = UGDAbilitySystemLibrary::GetAbilityInfo(this);
-	FGDAbilityInfo* AbilityInfo = AbilityInfos->FindAbilityInfoPtrForTag(GetAbilityTagFromSpec(*AbilitySpec));
-	if (!AbilityInfo)
+	FGDAbilityInfo* Info = AbilityInfo->FindAbilityInfoPtrForTag(GetAbilityTagFromSpec(*AbilitySpec));
+	if (!Info)
 	{
 		GDLOG_W(TEXT("GDAbilitySystemComponent"), TEXT("AbilityInfo is nullptr"));
 		return;
@@ -509,12 +556,12 @@ void UGDAbilitySystemComponent::ServerEquipAbility_Implementation(FGameplayTag A
 		ForEachAbility(Delegate);
 		
 		// 更新 InputTag
-		AbilityInfo->InputTag = InputTag;
-		UGDAbilitySystemLibrary::ResetInputTagFromAbilitySpec(AbilitySpec, AbilityInfo->InputTag);
-
-		if (AbilityInfo->StatusTag != GameplayTags.Abilities_Status_Equipped)
+		Info->InputTag = InputTag;
+		UGDAbilitySystemLibrary::ResetInputTagFromAbilitySpec(AbilitySpec, Info->InputTag);
+		MarkAbilitySpecDirty(*AbilitySpec);
+		if (Info->StatusTag != GameplayTags.Abilities_Status_Equipped)
 		{
-			AbilityInfo->StatusTag = GameplayTags.Abilities_Status_Equipped;
+			Info->StatusTag = GameplayTags.Abilities_Status_Equipped;
 
 			// 如果是被动能力，还需要激活一次
 			if (GameplayTags.Abilities_Type_Passive == GetTypeTagFromSpec(*AbilitySpec))
@@ -530,9 +577,9 @@ void UGDAbilitySystemComponent::ServerEquipAbility_Implementation(FGameplayTag A
 		// 删除Input标签，修改Status标签
 		UGDAbilitySystemLibrary::ResetInputTagFromAbilitySpec(AbilitySpec, FGameplayTag::EmptyTag);
 		UGDAbilitySystemLibrary::ResetStatusTagFromAbilitySpec(AbilitySpec, GameplayTags.Abilities_Status_Unlocked);
-		
-		AbilityInfo->InputTag = FGameplayTag::EmptyTag;
-		AbilityInfo->StatusTag = GameplayTags.Abilities_Status_Unlocked;
+		MarkAbilitySpecDirty(*AbilitySpec);
+		Info->InputTag = FGameplayTag::EmptyTag;
+		Info->StatusTag = GameplayTags.Abilities_Status_Unlocked;
 		
 		// 如果是被动技能，还需要结束该技能
 		if (GameplayTags.Abilities_Type_Passive == GetTypeTagFromSpec(*AbilitySpec))
@@ -543,5 +590,5 @@ void UGDAbilitySystemComponent::ServerEquipAbility_Implementation(FGameplayTag A
 		}
 	}
 	
-	ClientNotifyAbilityStatusChanged(AbilityInfo->AbilityTag, AbilityInfo->StatusTag, AbilitySpec->Level);
+	ClientNotifyAbilityStatusChanged(Info->AbilityTag, AbilitySpec->Level, Info->StatusTag, Info->InputTag);
 }

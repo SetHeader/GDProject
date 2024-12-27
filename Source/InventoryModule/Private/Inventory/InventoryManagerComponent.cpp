@@ -3,7 +3,7 @@
 
 #include "Inventory/InventoryManagerComponent.h"
 
-#include "GDLog.h"
+#include "GDProject/GDProject.h"
 #include "Inventory/InventoryItemInstance.h"
 
 bool UInventoryManagerComponent::IsValidItemSlot(const FInventoryItemSlotHandle& Handle) const {
@@ -102,6 +102,7 @@ void UInventoryManagerComponent::RemoveItemFromSlot(const FInventoryItemSlotHand
 	}
 	
 	FItemSlotChangedData ChangedData;
+	ChangedData.SlotHandle = SlotHandle;
 	ChangedData.InventoryComponent = this;
 	ChangedData.Operation = EItemSlotOperation::REMOVE;
 	ChangedData.PreviousItem = Slot->ItemInstance;

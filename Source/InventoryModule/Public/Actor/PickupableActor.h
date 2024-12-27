@@ -39,7 +39,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PickupableActor")
 	TSubclassOf<UInventoryItemDefinition> ItemDefinition;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PickupableActor")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "PickupableActor", meta = (ClampMin=1))
 	int32 StackCount = 1;
 	
 	// 拾取时的音效

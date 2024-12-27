@@ -7,22 +7,10 @@
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Abilities/GDGameplayAbility.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
+#include "GDProject/GDProject.h"
 #include "Player/GDPlayerState.h"
 
-void USpellMenuWidgetController::BroadcastInitialValues() const
-{
-	Super::BroadcastInitialValues();
-
-	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
-	OnSpellPointsChangedDelegate.Broadcast(GDPS->GetSpellPoints());
-
-	for (const FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
-	{
-		OnAbilityInfoChangedDelegate.Broadcast(Info);
-	} 
-}
-
-void USpellMenuWidgetController::BindCallbacksToDependencies() const
+void USpellMenuWidgetController::BindCallbacksToDependencies()
 {
 	UGDAbilitySystemComponent* GDASC = GetGDASC();
 	if (GDASC) {
@@ -34,6 +22,15 @@ void USpellMenuWidgetController::BindCallbacksToDependencies() const
 				OnAbilityInfoChangedDelegate.Broadcast(Info);
 			}
 		});
+		
+		if (GDASC->IsASCInited())
+		{
+			OnInitializeStartupAbilities(GDASC);
+		}
+		else
+		{
+			GDASC->OnAbilitiesGiven.AddUObject(this, &USpellMenuWidgetController::OnInitializeStartupAbilities);
+		}
 	}
 
 	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
@@ -41,6 +38,26 @@ void USpellMenuWidgetController::BindCallbacksToDependencies() const
 	{
 		OnSpellPointsChangedDelegate.Broadcast(SpellPoints);
 	});
+}
+
+void USpellMenuWidgetController::BroadcastInitialValues()
+{
+	Super::BroadcastInitialValues();
+	if (!AbilityInfo) {
+		GDLog::ErrorStatic(TEXT("USpellMenuWidgetController"), TEXT("AbilityInfo is nullptr"));
+		return;
+	}
+	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
+	OnSpellPointsChangedDelegate.Broadcast(GDPS->GetSpellPoints());
+	for (const FGDAbilityInfo& Info : AbilityInfo->AbilityInfos)
+	{
+		OnAbilityInfoChangedDelegate.Broadcast(Info);
+	}
+}
+
+void USpellMenuWidgetController::OnInitializeStartupAbilities(UGDAbilitySystemComponent* GDASC) {
+	AbilityInfo = GDASC->AbilityInfo;
+	BroadcastInitialValues();
 }
 
 void USpellMenuWidgetController::SelectAbility(FGameplayTag AbilityTag)
@@ -56,6 +73,10 @@ void USpellMenuWidgetController::SelectAbility(FGameplayTag AbilityTag)
 
 FGDAbilityInfo USpellMenuWidgetController::FindAbilityInfoForTag(const FGameplayTag& AbilityTag) const
 {
+	if (!AbilityInfo) {
+		GDLog::ErrorStatic(TEXT("USpellMenuWidgetController"), TEXT("AbilityInfo is nullptr"));
+		return FGDAbilityInfo();
+	}
 	return AbilityInfo->FindAbilityInfoForTag(AbilityTag);
 }
 

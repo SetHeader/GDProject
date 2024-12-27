@@ -15,11 +15,8 @@
 #include "Input/GDInputComponent.h"
 #include "Interaction/EnemyInterface.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/GameMode.h"
-#include "GDLog.h"
 #include "GDProject/GDProject.h"
 #include "Interaction/CombatInterface.h"
-#include "Kismet/GameplayStatics.h"
 #include "UI/Widget/DamageTextComponent.h"
 
 AGDPlayerController::AGDPlayerController()

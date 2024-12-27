@@ -2,6 +2,7 @@
 
 
 #include "UI/WidgetController/GDOverlayWidgetController.h"
+
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "GameplayEffectTypes.h"
 #include "AbilitySystem/GDAbilitySystemComponent.h"
@@ -9,10 +10,10 @@
 #include "AbilitySystem/GDAbilitySystemLibrary.h"
 #include "AbilitySystem/Data/AbilityInfo.h"
 #include "AbilitySystem/Data/LevelUpInfo.h"
-#include "GDLog.h"
+#include "GDProject/GDProject.h"
 #include "Player/GDPlayerState.h"
 
-void UGDOverlayWidgetController::BindCallbacksToDependencies() const
+void UGDOverlayWidgetController::BindCallbacksToDependencies()
 {
 	UGDAttributeSet* GDAS = CastChecked<UGDAttributeSet>(AttributeSet);
 	check(AbilitySystemComponent);
@@ -38,9 +39,9 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GDAS->GetMaxManaAttribute()).AddUObject(this, &UGDOverlayWidgetController::MaxManaChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GDAS->GetStaminaAttribute()).AddUObject(this, &UGDOverlayWidgetController::StaminaChanged);
 	AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(GDAS->GetMaxStaminaAttribute()).AddUObject(this, &UGDOverlayWidgetController::MaxStaminaChanged);
-
+	
 	check(MessageWidgetDataTable);
-
+	
 	if (UGDAbilitySystemComponent* GDASC = Cast<UGDAbilitySystemComponent>(AbilitySystemComponent)) {
 		// 在客户端绑定，且只会在客户端通知
 		GDASC->OnEffectTagApplied.AddLambda([this](const FGameplayTagContainer& TagContainer) {
@@ -54,7 +55,7 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 			}
 		});
 		
-		if (GDASC->bStartupAbilitiesGiven)
+		if (GDASC->IsASCInited())
 		{
 			OnInitializeStartupAbilities(GDASC);
 		}
@@ -70,7 +71,7 @@ void UGDOverlayWidgetController::BindCallbacksToDependencies() const
 	}
 }
 
-void UGDOverlayWidgetController::BroadcastInitialValues() const
+void UGDOverlayWidgetController::BroadcastInitialValues()
 {
 	UGDAttributeSet* GDAS = CastChecked<UGDAttributeSet>(AttributeSet);
 	AGDPlayerState* GDPS = CastChecked<AGDPlayerState>(PlayerState);
@@ -86,18 +87,18 @@ void UGDOverlayWidgetController::BroadcastInitialValues() const
 	BroadcastAbilityInfos();
 }
 
-void UGDOverlayWidgetController::OnInitializeStartupAbilities(UGDAbilitySystemComponent* ASC) const
+void UGDOverlayWidgetController::OnInitializeStartupAbilities(UGDAbilitySystemComponent* ASC)
 {
-	if (!ASC->bStartupAbilitiesGiven)
-	{
-		return;
-	}
-
+	AbilityInfoAsset = ASC->AbilityInfo;
 	BroadcastAbilityInfos();
 }
 
 void UGDOverlayWidgetController::BroadcastAbilityInfos() const
 {
+	if (!AbilityInfoAsset) {
+		GDLog::ErrorStatic(TEXT("UGDOverlayWidgetController"), TEXT("AbilityInfoAsset is nullptr"));
+		return;
+	}
 	for (const FGDAbilityInfo& Info : AbilityInfoAsset->AbilityInfos)
 	{
 		OnAbilityInfoDelegate.Broadcast(Info);

@@ -3,7 +3,7 @@
 
 #include "Inventory/InventoryItemInstance.h"
 
-#include "GDLog.h"
+#include "GDProject/GDProject.h"
 #include "Inventory/InventoryItemDefinition.h"
 #include "Inventory/InventoryItemFragment.h"
 

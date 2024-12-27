@@ -5,7 +5,7 @@
 #include "AbilitySystem/AttributeSets/GDAttributeSet.h"
 #include "Player/GDPlayerState.h"
 
-void UGDAttributeMenuWidgetController::BroadcastInitialValues() const
+void UGDAttributeMenuWidgetController::BroadcastInitialValues()
 {
 	Super::BroadcastInitialValues();
 	
@@ -13,7 +13,7 @@ void UGDAttributeMenuWidgetController::BroadcastInitialValues() const
 	OnAttributePointsChangedDelegate.Broadcast(GDPS->GetAttributePoints());
 }
 
-void UGDAttributeMenuWidgetController::BindCallbacksToDependencies() const
+void UGDAttributeMenuWidgetController::BindCallbacksToDependencies()
 {
 	Super::BindCallbacksToDependencies();
 	

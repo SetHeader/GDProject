@@ -16,6 +16,7 @@
 
 void UWidgetController::Initialize(APlayerController* Owner) {
 	check(IsValid(Owner));
+	LocalPlayer = Owner->GetLocalPlayer();
 	PlayerController = Owner;
 	Character = PlayerController->GetCharacter();
 	if (Character.IsValid()) {
