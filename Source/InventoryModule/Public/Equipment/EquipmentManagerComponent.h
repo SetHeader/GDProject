@@ -52,13 +52,7 @@ public:
 	bool UnequipItem(FInventoryItemSlotHandle SlotHandle);
 	
 	virtual int32 AddItem(UInventoryItemInstance* Item, int32 Count) override;
-	
-	UFUNCTION(BlueprintCallable, Category="Inventory")
-	// 返回满足标签的插槽。相当于 Tag.MatchesAny(SlotTags)
-	TArray<FInventoryItemSlot> BP_GetItemSlotsByTag(const FGameplayTag& Tag);
-	UFUNCTION(BlueprintCallable, Category="Inventory")
-	// 返回满足标签的插槽。相当于为每Tags.HasAny(SlotTags)
-	TArray<FInventoryItemSlot> BP_GetItemSlotsByTags(const FGameplayTagContainer& Tags);
+
 private:
 	UFUNCTION()
 	void OnEquipSlotUpdate(const FItemSlotChangedData& ChangedData);
@@ -66,11 +60,6 @@ private:
 	void Internal_HandleItemEquipped(const FInventoryItemSlotHandle& SlotHandle, UInventoryItemInstance* ItemInstance);
 	void Internal_HandleItemUnequipped(const FInventoryItemSlotHandle& SlotHandle);
 	
-	// 返回满足标签的插槽。相当于 Tag.MatchesAny(SlotTags)
-	TArray<FInventoryItemSlot*> GetItemSlotsByTag(const FGameplayTag& Tag);
-	// 返回满足标签的插槽。相当于为每Tags.HasAny(SlotTags)
-	TArray<FInventoryItemSlot*> GetItemSlotsByTags(const FGameplayTagContainer& Tags);
-
 	// 重写判断条件，增加tags的检查
 	virtual bool IsItemAcceptable(const UInventoryItemInstance* Item, const FInventoryItemSlot& Slot) const override;
 protected:

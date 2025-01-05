@@ -2,14 +2,14 @@
 
 #include "Inventory/InventoryItemDefinition.h"
 
-#include "Algo/Compare.h"
 #include "Inventory/InventoryItemFragment.h"
+#include "Net/UnrealNetwork.h"
 
 UInventoryItemDefinition::UInventoryItemDefinition(const FObjectInitializer& ObjectInitializer): Super(ObjectInitializer) {
 }
 
-UInventoryItemFragment* UInventoryItemDefinition::FindFragmentByClass(
-	TSubclassOf<UInventoryItemFragment> FragmentClass) {
+const UInventoryItemFragment* UInventoryItemDefinition::FindFragmentByClass(
+	TSubclassOf<UInventoryItemFragment> FragmentClass) const {
 	if (FragmentClass == nullptr) {
 		return nullptr;
 	}
@@ -23,8 +23,15 @@ UInventoryItemFragment* UInventoryItemDefinition::FindFragmentByClass(
 	return nullptr;
 }
 
+UInventoryItemFragment* UInventoryItemDefinition::
+FindFragmentByClass(TSubclassOf<UInventoryItemFragment> FragmentClass) {
+	return const_cast<UInventoryItemFragment*>(
+		static_cast<const UInventoryItemDefinition*>(this)->FindFragmentByClass(FragmentClass)
+	);
+}
+
 void UInventoryItemDefinition::GetOwnedGameplayTags(FGameplayTagContainer& TagContainer) const {
-	TagContainer.AppendTags(ItemTags.CombinedTags);
+	ItemTags.ApplyTo(TagContainer);
 }
 
 bool UInventoryItemDefinition::operator==(const UInventoryItemDefinition& Other) const {
@@ -47,4 +54,13 @@ bool UInventoryItemDefinition::operator==(const UInventoryItemDefinition& Other)
 
 bool UInventoryItemDefinition::operator!=(const UInventoryItemDefinition& Other) const {
 	return !operator==(Other);
+}
+
+void UInventoryItemDefinition::GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const {
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(UInventoryItemDefinition, ItemName);
+	DOREPLIFETIME(UInventoryItemDefinition, ItemTags);
+	DOREPLIFETIME(UInventoryItemDefinition, MaxStackCount);
+	DOREPLIFETIME(UInventoryItemDefinition, ItemFragments);
 }

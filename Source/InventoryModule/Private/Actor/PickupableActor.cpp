@@ -25,7 +25,6 @@ APickupableActor::APickupableActor() {
 
 void APickupableActor::BeginPlay() {
 	Super::BeginPlay();
-	
 }
 
 void APickupableActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent,
@@ -44,18 +43,10 @@ void APickupableActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	if (InventoryComponent) {
 		int32 AddedCount = InventoryComponent->AddItem(UInventoryStatics::GenerateItemInstance(ItemDefinition), StackCount);
 		StackCount -= AddedCount;
+		if (AddedCount > 0 && !IsRunningDedicatedServer()) {
+			UGameplayStatics::SpawnSoundAtLocation(GetWorld(), PickupSound, GetActorLocation());
+		}
 		if (StackCount == 0) {
-
-			if (HasLocalNetOwner()) {
-				GDLOG(TEXT("PickupableActor"), TEXT("HasLocalNetOwner"));
-			}
-			if (HasNetOwner()) {
-				GDLOG(TEXT("PickupableActor"), TEXT("HasNetOwner"));
-			}
-			if (!HasAuthority()) {
-				UGameplayStatics::SpawnSoundAtLocation(GetWorld(), PickupSound, GetActorLocation());
-			}
-			
 			Destroy();
 		}
 	}

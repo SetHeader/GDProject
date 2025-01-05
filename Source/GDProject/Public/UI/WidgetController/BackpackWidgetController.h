@@ -10,8 +10,9 @@
 
 struct FInventoryItemSlot;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRightClickedSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotInfoChangedSignature, const FItemSlotInfo&, ChangedItemSlotInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnContextMenuChangedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnSlotInfoChangedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnEquipmentSlotChangedSignature);
 
 UCLASS()
 class GDPROJECT_API UBackpackWidgetController : public UWidgetController {
@@ -34,20 +35,35 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = "BackpackWidgetController")
 	void EquipItem(FInventoryItemSlotHandle SlotHandle);
+	
+	UFUNCTION(BlueprintCallable, Category = "BackpackWidgetController")
+	void UnequipItem(FInventoryItemSlotHandle EquipmentSlotHandle);
 
 	// 移动插槽内的物品到指定插槽
 	UFUNCTION(BlueprintCallable, Category = "BackpackWidgetController")
 	void MoveItem(FInventoryItemSlotHandle FromSlotHandle, FInventoryItemSlotHandle ToSlotHandle, int32 AmountToMove = 1);
 	
 	UFUNCTION(BlueprintCallable, Category = "BackpackWidgetController")
-	void OnRightClicked(UUserWidget* UserWidget, FInventoryItemSlotHandle SlotHandle);
+	void OpenContextMenu(UUserWidget* UserWidget, FInventoryItemSlotHandle SlotHandle);
 	
+	UFUNCTION(BlueprintCallable, Category = "BackpackWidgetController")
+	void CloseContextMenu();
+
+	UFUNCTION(BlueprintCallable, Category = "BackpackWidgetController")
+	bool IsContextMenuOpened();
+	
+	UFUNCTION(BlueprintCallable, Category = "BackpackWidgetController")
+	FInventoryItemSlotHandle GetEquipmentSlot(FGameplayTag EquipmentTag, int32 Index = 0);
 protected:
 	UPROPERTY(BlueprintAssignable, Category = "BackpackWidgetController")
-	FOnRightClickedSignature OnRightClickedDelegate;
+	FOnContextMenuChangedSignature OnContextMenuChangedDelegate;
 	
 	UPROPERTY(BlueprintAssignable, Category = "BackpackWidgetController")
 	FOnSlotInfoChangedSignature OnSlotInfoChangedDelegate;
+	
+	UPROPERTY(BlueprintAssignable, Category = "BackpackWidgetController")
+	FOnEquipmentSlotChangedSignature OnEquipmentSlotChangedDelegate;
+	
 	// 右键菜单弹出时，前一个控件
 	UPROPERTY(BlueprintReadOnly, Category = "BackpackWidgetController")
 	UUserWidget* PreviousUserWidget;
@@ -60,10 +76,12 @@ protected:
 	// 右键菜单弹出时，当前选择的插槽的信息
 	UPROPERTY(BlueprintReadOnly, Category = "BackpackWidgetController")
 	FItemSlotInfo CurrentItemSlotInfo;
-
+	
 	// 当前悬浮的物品信息
 	UPROPERTY(BlueprintReadWrite, Category = "BackpackWidgetController")
 	FItemSlotInfo CurrentHoverSlotInfo;
+
 private:
 	FDelegateHandle OnItemSlotChangedHandle;
+	FDelegateHandle OnEquipmentSlotChangedHandle;
 };

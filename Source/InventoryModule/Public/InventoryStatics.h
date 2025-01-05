@@ -7,6 +7,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "InventoryStatics.generated.h"
 
+class UInventoryItemInstance;
 struct FInventoryItemSlot;
 struct FUseItemParams;
 class UAbilitySystemComponent;
@@ -55,7 +56,7 @@ class INVENTORYMODULE_API UInventoryStatics : public UBlueprintFunctionLibrary {
 	GENERATED_BODY()
 	
 public:
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "InventorySystem")
+	UFUNCTION(BlueprintCallable, BlueprintPure,  Category = "InventorySystem")
 	static UInventoryManagerComponent* GetInventoryManagerComponent(AActor* Actor);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "InventorySystem")
@@ -67,13 +68,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "InventorySystem")
 	static FItemSlotInfo GetItemSlotInfo(FInventoryItemSlotHandle SlotHandle);
 	// 使用插槽内的物品
-	UFUNCTION(BlueprintCallable, Category = "InventorySystem")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "InventorySystem")
 	static void UseItem(UAbilitySystemComponent* TargetASC, FInventoryItemSlotHandle SlotHandle, int32 AmountToUse = 1);
 	// 移动插槽内的物品到指定插槽
-	UFUNCTION(BlueprintCallable, Category = "InventorySystem")
-	static void MoveItem(FInventoryItemSlotHandle FromSlotHandle, FInventoryItemSlotHandle ToSlotHandle, int32 AmountToMove = 1);
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "InventorySystem")
+	static void MoveItemWithSlot(FInventoryItemSlotHandle FromSlotHandle, FInventoryItemSlotHandle ToSlotHandle, int32 AmountToMove = 1);
+	// 移动插槽内的物品到指定插槽
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "InventorySystem")
+	static void MoveItem(FInventoryItemSlotHandle FromSlotHandle, UInventoryManagerComponent* ToInventoryComponent, int32 AmountToMove = 1);
 	// 交换两个插槽的物品
-	UFUNCTION(BlueprintCallable, Category = "InventorySystem")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "InventorySystem")
 	static void SwapItem(FInventoryItemSlotHandle FromSlotHandle, FInventoryItemSlotHandle ToSlotHandle);
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "InventorySystem")
 	static FUseItemParams MakeUseItemParams(AActor* TargetActor);

@@ -41,33 +41,43 @@ FInventoryItemSlotHandle UEquipmentManagerComponent::CreateInventorySlotWithMaxS
 }
 
 FInventoryItemSlotHandle UEquipmentManagerComponent::EquipItem(UInventoryItemInstance* Item) {
+	if (!HasAuthority()) {
+		return FInventoryItemSlotHandle::EmptyHandle;
+	}
 	if (!IsValid(Item)) 
 		return FInventoryItemSlotHandle::EmptyHandle;
 
 	FGameplayTagContainer ItemTags;
 	Item->GetOwnedGameplayTags(ItemTags);
-	TArray<FInventoryItemSlot*> TargetSlots = GetItemSlotsByTags(ItemTags);
-	if (TargetSlots.IsEmpty())
+	TArray<FInventoryItemSlotHandle> TargetSlotHandles = GetItemSlotsByTags(ItemTags);
+	if (TargetSlotHandles.IsEmpty())
 		return FInventoryItemSlotHandle::EmptyHandle;
 	
 	// 优先装备到可用的空插槽上
-	for (auto* TargetSlot : TargetSlots) {
+	for (auto& TargetSlotHandle : TargetSlotHandles) {
+		auto TargetSlot = GetItemSlotPtr(TargetSlotHandle);
 		if (!TargetSlot->ItemInstance && Super::AddItemToSlot(Item, *TargetSlot)) 
 			return *TargetSlot;
 	}
-
+	
 	// 没办法才装备到非空插槽上，替换掉原有的物品
-	if (EquipItemToSlot(Item, FInventoryItemSlotHandle(*TargetSlots[0])))
-		return *TargetSlots[0];
+	if (EquipItemToSlot(Item, TargetSlotHandles[0]))
+		return TargetSlotHandles[0];
 	return FInventoryItemSlotHandle::EmptyHandle;
 }
 
 bool UEquipmentManagerComponent::EquipItemToSlot(UInventoryItemInstance* Item,
 	const FInventoryItemSlotHandle& SlotHandle) {
+	if (!HasAuthority()) {
+		return false;
+	}
 	return Super::AddItemToSlot(Item, SlotHandle) > 0;
 }
 
 bool UEquipmentManagerComponent::UnequipItem(FInventoryItemSlotHandle SlotHandle) {
+	if (!HasAuthority()) {
+		return false;
+	}
 	FInventoryRemovedItemInfo Info;
 	RemoveItemFromSlot(SlotHandle, 1, Info);
 	return Info.ItemInstance != nullptr;
@@ -75,20 +85,6 @@ bool UEquipmentManagerComponent::UnequipItem(FInventoryItemSlotHandle SlotHandle
 
 int32 UEquipmentManagerComponent::AddItem(UInventoryItemInstance* Item, int32 Count) {
 	return EquipItem(Item).IsValid() ? 1 : 0;
-}
-
-TArray<FInventoryItemSlot> UEquipmentManagerComponent::BP_GetItemSlotsByTag(const FGameplayTag& Tag) {
-	return BP_GetItemSlotsByTags(FGameplayTagContainer(Tag));
-}
-
-TArray<FInventoryItemSlot> UEquipmentManagerComponent::BP_GetItemSlotsByTags(const FGameplayTagContainer& Tags) {
-	TArray<FInventoryItemSlot*> Arr = GetItemSlotsByTags(Tags);
-	TArray<FInventoryItemSlot> Result;
-	Result.SetNum(Arr.Num());
-	Algo::Transform(Arr, Result, [](FInventoryItemSlot* Item) {
-		return *Item;	
-	});
-	return Result;
 }
 
 void UEquipmentManagerComponent::OnEquipSlotUpdate(const FItemSlotChangedData& ChangedData) {
@@ -130,20 +126,6 @@ void UEquipmentManagerComponent::Internal_HandleItemUnequipped(const FInventoryI
 	EquipmentInfos.RemoveAll([SlotHandle](const FInventoryItemInfoEntry& InEntry) {
 		return SlotHandle == InEntry.SlotHandle;
 	});
-}
-
-TArray<FInventoryItemSlot*> UEquipmentManagerComponent::GetItemSlotsByTag(const FGameplayTag& Tag) {
-	return GetItemSlotsByTags(FGameplayTagContainer(Tag));
-}
-
-TArray<FInventoryItemSlot*> UEquipmentManagerComponent::GetItemSlotsByTags(const FGameplayTagContainer& Tags) {
-	TArray<FInventoryItemSlot*> Result;
-	for (FInventoryItemSlot& Slot : Slots) {
-		if (Tags.HasAny(Slot.SlotTags))
-			Result.Add(&Slot);
-	}
-
-	return Result;
 }
 
 bool UEquipmentManagerComponent::IsItemAcceptable(const UInventoryItemInstance* Item,

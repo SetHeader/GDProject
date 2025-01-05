@@ -32,7 +32,7 @@ class INVENTORYMODULE_API UItemFragment_Available : public UInventoryItemFragmen
 	GENERATED_BODY()
 	
 public:
-	virtual bool UseItem(const FUseItemParams& Params);
+	virtual bool UseItem(const FUseItemParams& Params) const;
 	
 private:
 	virtual bool GiveToAbilitySystem(UAbilitySystemComponent* ASC, FAbilitySet_GrantHandles* OutHandleStorage) const;

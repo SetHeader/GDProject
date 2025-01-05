@@ -60,7 +60,7 @@ FItemSlotInfo UInventoryStatics::GetItemSlotInfo(FInventoryItemSlotHandle SlotHa
 	SlotInfo.ItemName = ItemSlot.ItemInstance->GetItemName();
 	SlotInfo.ItemTags = ItemSlot.ItemInstance->GetItemTags();
 	
-	if (UItemFragment_BaseInfo* BaseInfoFragment = ItemSlot.ItemInstance->FindFragmentByClass<UItemFragment_BaseInfo>()) {
+	if (const UItemFragment_BaseInfo* BaseInfoFragment = ItemSlot.ItemInstance->FindFragmentByClass<UItemFragment_BaseInfo>()) {
         SlotInfo.Icon = BaseInfoFragment->Icon;
         SlotInfo.Description = BaseInfoFragment->Description;
 	}
@@ -95,7 +95,7 @@ void UInventoryStatics::UseItem(UAbilitySystemComponent* TargetASC,
 	}
 }
 
-void UInventoryStatics::MoveItem(FInventoryItemSlotHandle FromSlotHandle,
+void UInventoryStatics::MoveItemWithSlot(FInventoryItemSlotHandle FromSlotHandle,
 	FInventoryItemSlotHandle ToSlotHandle,
 	int32 AmountToMove) {
 	check(FromSlotHandle.IsValid());
@@ -117,8 +117,40 @@ void UInventoryStatics::MoveItem(FInventoryItemSlotHandle FromSlotHandle,
 	if (!ToSlot.ItemInstance) {
 		FInventoryRemovedItemInfo RemovedItemInfo;
 		FromInventoryComponent->RemoveItemFromSlot(FromSlotHandle, AmountToMove, RemovedItemInfo);
-		if (RemovedItemInfo.ItemInstance) 
-			ToInventoryComponent->AddItemToSlot(RemovedItemInfo.ItemInstance, ToSlotHandle, RemovedItemInfo.Count);
+		if (!RemovedItemInfo.ItemInstance) {
+			return;
+		}
+		int32 AddedCount = ToInventoryComponent->AddItemToSlot(RemovedItemInfo.ItemInstance, ToSlotHandle, RemovedItemInfo.Count);
+		if (AddedCount < RemovedItemInfo.Count) {
+			FromInventoryComponent->AddItemToSlot(RemovedItemInfo.ItemInstance, FromSlotHandle, RemovedItemInfo.Count - AddedCount);
+		}
+	}
+}
+
+void UInventoryStatics::MoveItem(FInventoryItemSlotHandle FromSlotHandle,
+	UInventoryManagerComponent* ToInventoryComponent,
+	int32 AmountToMove) {
+	check(FromSlotHandle.IsValid());
+	check(ToInventoryComponent);
+	check(AmountToMove > 0);
+
+	UInventoryManagerComponent* FromInventoryComponent = FromSlotHandle.GetOwner();
+	
+	check(IsValid(FromInventoryComponent));
+
+	FInventoryItemSlot FromSlot = FromInventoryComponent->GetItemSlot(FromSlotHandle);
+
+	if (!FromSlot.ItemInstance)
+		return;
+
+	FInventoryRemovedItemInfo RemovedItemInfo;
+	FromInventoryComponent->RemoveItemFromSlot(FromSlotHandle, AmountToMove, RemovedItemInfo);
+	if (!RemovedItemInfo.ItemInstance) {
+		return;
+	}
+	int32 AddedCount = ToInventoryComponent->AddItem(RemovedItemInfo.ItemInstance, RemovedItemInfo.Count);
+	if (AddedCount < RemovedItemInfo.Count) {
+		FromInventoryComponent->AddItemToSlot(RemovedItemInfo.ItemInstance, FromSlotHandle, RemovedItemInfo.Count - AddedCount);
 	}
 }
 

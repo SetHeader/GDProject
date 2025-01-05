@@ -7,7 +7,7 @@
 #include "GameplayEffectTypes.h"
 #include "Inventory/InventoryItemInstance.h"
 
-bool UItemFragment_Available::UseItem(const FUseItemParams& Params) {
+bool UItemFragment_Available::UseItem(const FUseItemParams& Params) const {
 	if (IsValid(Params.TargetASC)) 
 		return GiveToAbilitySystem(Params.TargetASC, nullptr);
 	
@@ -16,13 +16,12 @@ bool UItemFragment_Available::UseItem(const FUseItemParams& Params) {
 
 bool UItemFragment_Available::GiveToAbilitySystem(UAbilitySystemComponent* ASC,
                                                   FAbilitySet_GrantHandles* OutHandleStorage) const {
-	if (!IsValid(ASC) || !OwnerItemInstance.IsValid())
+	if (!IsValid(ASC))
 		return false;
 	
 	for (const auto& AbilityToGrant : EquipmentAbilitySet.GrantAbilities) {
 		if (AbilityToGrant.Ability) {
 			FGameplayAbilitySpec AbilitySpec(AbilityToGrant.Ability, AbilityToGrant.AbilityLevel);
-			AbilitySpec.SourceObject = OwnerItemInstance;
 
 			FGameplayAbilitySpecHandle AbilitySpecHandle;
 			
@@ -37,7 +36,6 @@ bool UItemFragment_Available::GiveToAbilitySystem(UAbilitySystemComponent* ASC,
 	}
 
 	FGameplayEffectContextHandle EffectContextHandle = ASC->MakeEffectContext();
-	EffectContextHandle.AddSourceObject(OwnerItemInstance.Get());
 	for (const auto& EffectToGrant : EquipmentAbilitySet.GrantEffects) {
 		if (EffectToGrant.GameplayEffect) {
 			FGameplayEffectSpecHandle EffectSpecHandle = ASC->MakeOutgoingSpec(EffectToGrant.GameplayEffect, EffectToGrant.EffectLevel, EffectContextHandle);

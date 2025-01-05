@@ -15,19 +15,19 @@ class UInventoryItemDefinition;
 UCLASS(BlueprintType, Blueprintable)
 class INVENTORYMODULE_API UInventoryItemInstance : public UObject, public IGameplayTagAssetInterface {
 	GENERATED_BODY()
-
+	
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
-	UInventoryItemFragment* FindFragmentByClass(TSubclassOf<UInventoryItemFragment> FragmentClass);
-
+	const UInventoryItemFragment* FindFragmentByClass(TSubclassOf<UInventoryItemFragment> FragmentClass) const;
+	
 	template<typename FragmentClass>
 	requires std::is_base_of_v<UInventoryItemFragment, FragmentClass>
-	FragmentClass* FindFragmentByClass();
+	const FragmentClass* FindFragmentByClass() const;
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
-	TArray<UInventoryItemFragment*> GetFragments();
+	TArray<UInventoryItemFragment*> GetFragments() const;
 	
-	TObjectPtr<UInventoryItemDefinition> GetItemDefinition() { return ItemDefinition; }
+	const UInventoryItemDefinition* GetItemDefinition() const;
 	
 	UFUNCTION(BlueprintGetter, Category = "Inventory")
 	int32 GetMaxStackCount() const;
@@ -47,13 +47,15 @@ public:
 	
 	bool operator==(const UInventoryItemInstance& Other) const;
 	
+	virtual bool IsSupportedForNetworking() const override { return true; }
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
-	// 该实例不是CDO对象，是NewObject出来对象
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
-	TObjectPtr<UInventoryItemDefinition> ItemDefinition;
+	// 该实例就是CDO
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Inventory")
+	TSubclassOf<UInventoryItemDefinition> ItemDefinition;
 };
 
 template <typename FragmentClass> requires std::is_base_of_v<UInventoryItemFragment, FragmentClass>
-FragmentClass* UInventoryItemInstance::FindFragmentByClass() {
+const FragmentClass* UInventoryItemInstance::FindFragmentByClass() const {
 	return Cast<FragmentClass>(FindFragmentByClass(FragmentClass::StaticClass()));
 }

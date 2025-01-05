@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameplayTagContainer.h"
 #include "InventoryItemSlot.h"
+#include "SimpleLogger.h"
 #include "UObject/Object.h"
 #include "InventoryManagerComponent.generated.h"
 
@@ -15,6 +16,7 @@ struct FInventoryItemSlot;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnInventoryUpdatedSignature, UInventoryManagerComponent* /*this*/);
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnItemSlotUpdatedSignature, const FItemSlotChangedData& /*ChangedData*/);
+DECLARE_MULTICAST_DELEGATE(FOnItemSlotChangedSignature);
 
 UENUM(BlueprintType)
 enum class EItemSlotOperation : uint8 {
@@ -72,14 +74,14 @@ public:
 	virtual void InitializeComponent() override;
 	
 	// 创建插槽
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	virtual FInventoryItemSlotHandle CreateInventorySlot(const FGameplayTagContainer& SlotTags);
 
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	virtual FInventoryItemSlotHandle CreateInventorySlotWithMaxStackCount(const FGameplayTagContainer& SlotTags, int32 MaxStackCount);
 	
 	// 删除已有插槽
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	bool RemoveInventorySlot(const FInventoryItemSlotHandle& Handle);
 	
 	UFUNCTION(BlueprintCallable, Category = "Inventory")
@@ -90,12 +92,12 @@ public:
 	
 	// 把物品放到空插槽中。可能会放到多个插槽中。且可能只放入一部分的物品。
 	// @return 放入物品的数量。
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	virtual int32 AddItem(UInventoryItemInstance* Item, int32 Count = 1);
 	
 	// 把物品放到指定插槽中。若插槽内大小不足，那么就只放入一部分的物品。
 	// @return 放入物品的数量。
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	virtual int32 AddItemToSlot(UInventoryItemInstance* Item, const FInventoryItemSlotHandle& SlotHandle, int32 Count = 1);
 	
 	/* 移除插槽中指定数量的物品
@@ -103,14 +105,14 @@ public:
 	 * @param Count 指定移除物品的数量
 	 * @param OutRemovedItemInfo 已移除的物品信息
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	void RemoveItemFromSlot(const FInventoryItemSlotHandle& SlotHandle, int32 Count, FInventoryRemovedItemInfo& OutRemovedItemInfo);
 	
 	/** 移除插槽中的所有物品
 	 * @param SlotHandle 要移除哪个插槽的物品
 	 * @param OutRemovedItemInfo 已移除的物品信息
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Inventory")
 	void RemoveAllItemFromSlot(const FInventoryItemSlotHandle& SlotHandle, FInventoryRemovedItemInfo& OutRemovedItemInfo);
 	
 	// 判断指定插槽能否放入指定物品
@@ -128,22 +130,50 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Inventory")
 	FInventoryItemSlotHandle CreateItemSlotHandle(const FInventoryItemSlot& ItemSlot);
 
+	// 使用插槽内的物品
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Inventory")
+	void ServerUseItem(UAbilitySystemComponent* TargetASC, FInventoryItemSlotHandle SlotHandle, int32 AmountToUse = 1);
+	// 移动插槽内的物品到指定插槽
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Inventory")
+	void ServerMoveItemWithSlot(FInventoryItemSlotHandle FromSlotHandle, FInventoryItemSlotHandle ToSlotHandle, int32 AmountToMove = 1);
+	// 交换两个插槽的物品
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Inventory")
+	void ServerSwapItem(FInventoryItemSlotHandle FromSlotHandle, FInventoryItemSlotHandle ToSlotHandle);
+	// 移动插槽内的物品到别的物品系统
+	UFUNCTION(Server, Reliable, BlueprintCallable, Category = "Inventory")
+	void ServerMoveItem(FInventoryItemSlotHandle FromSlotHandle, UInventoryManagerComponent* ToInventoryComponent, int32 AmountToMove = 1);
+
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+	// 返回满足标签的插槽。相当于 Tag.MatchesAny(SlotTags)
+	TArray<FInventoryItemSlotHandle> GetItemSlotsByTag(const FGameplayTag& Tag);
+	UFUNCTION(BlueprintCallable, Category="Inventory")
+	// 返回满足标签的插槽。相当于为每Tags.HasAny(SlotTags)
+	TArray<FInventoryItemSlotHandle> GetItemSlotsByTags(const FGameplayTagContainer& Tags);
 protected:
+	SimpleLogger Logger = SimpleLogger(*GetClass()->GetName(), SimpleLogger::CreateNetworkInfoFormatter(this));
 	FInventoryItemSlot* GetItemSlotPtr(const FInventoryItemSlotHandle& Handle);
 	const FInventoryItemSlot* GetItemSlotPtr(const FInventoryItemSlotHandle& Handle) const;
 	virtual bool IsItemAcceptable(const UInventoryItemInstance* Item, const FInventoryItemSlot& Slot) const;
 	
+	virtual void GetLifetimeReplicatedProps(TArray<class FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual bool ReplicateSubobjects(class UActorChannel* Channel, class FOutBunch* Bunch, FReplicationFlags* RepFlags) override;
+	
+	UFUNCTION()
+	void OnRep_Slots();
+	bool HasAuthority() const;
 private:
 	int32 GenerateNextSlotId() const;
-	
+
 public:
-	// 新增插槽或移除插槽时会回调
+	// 服务器：新增插槽或移除插槽时会回调
 	FOnInventoryUpdatedSignature OnItemSlotAddedOrRemovedDelegate;
-	// 插槽内物品变化时会回调
+	// 服务器：插槽内物品变化时会回调
 	FOnItemSlotUpdatedSignature OnItemSlotUpdatedDelegate;
-	
+	// 用在客户端的通知，只要有变化就通知
+	FOnItemSlotChangedSignature OnItemSlotChanged;
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory", Replicated, ReplicatedUsing=OnRep_Slots)
 	TArray<FInventoryItemSlot> Slots;
 
 private:

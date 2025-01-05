@@ -52,6 +52,7 @@ public:
 private:
 	UPROPERTY()
 	TWeakObjectPtr<UInventoryManagerComponent> Owner = nullptr;
+	UPROPERTY()
 	int32 SlotId = 0;
 };
 

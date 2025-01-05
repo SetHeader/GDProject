@@ -9,14 +9,19 @@
 
 void UBackpackWidgetController::OnInitialized() {
 	OnItemSlotChangedHandle =
-		InventoryManagerComponent->OnItemSlotUpdatedDelegate.AddLambda([this](const FItemSlotChangedData& ChangedData) {
-			FItemSlotInfo SlotInfo = UInventoryStatics::GetItemSlotInfo(ChangedData.SlotHandle);
-			this->OnSlotInfoChangedDelegate.Broadcast(SlotInfo);
+		InventoryManagerComponent->OnItemSlotChanged.AddLambda([this]() {
+			this->OnSlotInfoChangedDelegate.Broadcast();
+		});
+
+	OnEquipmentSlotChangedHandle =
+		EquipmentManagerComponent->OnItemSlotChanged.AddLambda([this]() {
+			this->OnEquipmentSlotChangedDelegate.Broadcast();
 		});
 }
 
 void UBackpackWidgetController::OnDeinitialized() {
-	InventoryManagerComponent->OnItemSlotUpdatedDelegate.Remove(OnItemSlotChangedHandle);
+	InventoryManagerComponent->OnItemSlotChanged.Remove(OnItemSlotChangedHandle);
+	EquipmentManagerComponent->OnItemSlotChanged.Remove(OnEquipmentSlotChangedHandle);
 }
 
 TArray<FInventoryItemSlot> UBackpackWidgetController::GetAllItemSlots() {
@@ -30,30 +35,54 @@ TArray<FInventoryItemSlotHandle> UBackpackWidgetController::GetAllItemSlotHandle
 void UBackpackWidgetController::UseItem(UAbilitySystemComponent* TargetASC,
 							 FInventoryItemSlotHandle SlotHandle,
 							 int32 AmountToUse) {
-	UInventoryStatics::UseItem(TargetASC, SlotHandle, AmountToUse);
+	if (InventoryManagerComponent.IsValid()) {
+		InventoryManagerComponent->ServerUseItem(TargetASC, MoveTemp(SlotHandle), AmountToUse);
+	}
 }
 
 void UBackpackWidgetController::EquipItem(FInventoryItemSlotHandle SlotHandle) {
-	FInventoryItemSlot ItemSlot = InventoryManagerComponent->GetItemSlot(SlotHandle);
-	
-	FInventoryItemSlotHandle EquipmentSlotHandle = EquipmentManagerComponent->EquipItem(ItemSlot.ItemInstance);
-	if (EquipmentSlotHandle.IsValid()) {
-		int32 StackCount = EquipmentSlotHandle.GetStackCount();
-		FInventoryRemovedItemInfo RemovedItemInfo;
-		InventoryManagerComponent->RemoveItemFromSlot(SlotHandle, StackCount, RemovedItemInfo);
+	if (EquipmentManagerComponent.IsValid()) {
+		EquipmentManagerComponent->ServerMoveItem(MoveTemp(SlotHandle), EquipmentManagerComponent.Get(), 1);
+	}
+}
+
+void UBackpackWidgetController::UnequipItem(FInventoryItemSlotHandle EquipmentSlotHandle) {
+	if (EquipmentManagerComponent.IsValid()) {
+		EquipmentManagerComponent->ServerMoveItem(MoveTemp(EquipmentSlotHandle), InventoryManagerComponent.Get(), 1);
 	}
 }
 
 void UBackpackWidgetController::MoveItem(FInventoryItemSlotHandle FromSlotHandle,
-	FInventoryItemSlotHandle ToSlotHandle,
-	int32 AmountToMove) {
-	UInventoryStatics::MoveItem(FromSlotHandle, ToSlotHandle, AmountToMove);
+                                         FInventoryItemSlotHandle ToSlotHandle,
+                                         int32 AmountToMove) {
+	if (InventoryManagerComponent.IsValid()) {
+		InventoryManagerComponent->ServerMoveItemWithSlot(MoveTemp(FromSlotHandle), MoveTemp(ToSlotHandle), AmountToMove);
+	}
 }
 
-void UBackpackWidgetController::OnRightClicked(UUserWidget* UserWidget, FInventoryItemSlotHandle SlotHandle) {
+void UBackpackWidgetController::OpenContextMenu(UUserWidget* UserWidget, FInventoryItemSlotHandle SlotHandle) {
 	PreviousUserWidget = CurrentUserWidget;
 	CurrentUserWidget = UserWidget;
 	CurrentItemSlotHandle = SlotHandle;
 	CurrentItemSlotInfo = UInventoryStatics::GetItemSlotInfo(SlotHandle);
-	OnRightClickedDelegate.Broadcast();
+	OnContextMenuChangedDelegate.Broadcast();
+}
+
+void UBackpackWidgetController::CloseContextMenu() {
+	PreviousUserWidget = CurrentUserWidget;
+	CurrentUserWidget = nullptr;
+	CurrentItemSlotHandle = FInventoryItemSlotHandle::EmptyHandle;
+	CurrentItemSlotInfo = FItemSlotInfo();
+	OnContextMenuChangedDelegate.Broadcast();
+}
+
+bool UBackpackWidgetController::IsContextMenuOpened() {
+	return CurrentUserWidget != nullptr;
+}
+
+FInventoryItemSlotHandle UBackpackWidgetController::GetEquipmentSlot(FGameplayTag EquipmentTag, int32 Index) {
+	TArray<FInventoryItemSlotHandle> Result = EquipmentManagerComponent->GetItemSlotsByTag(EquipmentTag);
+	if (Index < Result.Num()) 
+		return Result[Index];
+	return FInventoryItemSlotHandle::EmptyHandle;
 }
